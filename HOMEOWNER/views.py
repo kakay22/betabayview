@@ -849,56 +849,56 @@ from django.http import JsonResponse
 from django.shortcuts import render
 
 # Set up OpenAI API Key
-openai.api_key = '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'  # Replace with your OpenAI API key
+# openai.api_key = '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'  # Replace with your OpenAI API key
 
 
-def chatbot2(request):
-    if request.method == 'POST':
-        user_input = request.POST.get('message')
-        max_retries = 5  # Set the maximum number of retries
-        wait_time = 1  # Start with a 1-second wait
+# def chatbot2(request):
+#     if request.method == 'POST':
+#         user_input = request.POST.get('message')
+#         max_retries = 5  # Set the maximum number of retries
+#         wait_time = 1  # Start with a 1-second wait
 
-        for attempt in range(max_retries):
-            try:
-                # Use the new ChatCompletion API
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": user_input}
-                    ]
-                )
-                chatbot_response = response['choices'][0]['message']['content'].strip()
-                return JsonResponse({'response': chatbot_response})
+#         for attempt in range(max_retries):
+#             try:
+#                 # Use the new ChatCompletion API
+#                 response = openai.ChatCompletion.create(
+#                     model="gpt-3.5-turbo",
+#                     messages=[
+#                         {"role": "system", "content": "You are a helpful assistant."},
+#                         {"role": "user", "content": user_input}
+#                     ]
+#                 )
+#                 chatbot_response = response['choices'][0]['message']['content'].strip()
+#                 return JsonResponse({'response': chatbot_response})
 
-            except error.AuthenticationError:
-                logging.error("Invalid API key.")
-                return JsonResponse({'response': "Invalid API key. Please check your configuration."})
+#             except error.AuthenticationError:
+#                 logging.error("Invalid API key.")
+#                 return JsonResponse({'response': "Invalid API key. Please check your configuration."})
 
-            except error.RateLimitError:
-                logging.warning(f"Rate limit exceeded. Attempt {attempt + 1} of {max_retries}.")
-                if attempt < max_retries - 1:  # If not the last attempt
-                    wait_time_message = f"Rate limit exceeded. Please wait {wait_time} seconds before trying again."
-                    print(wait_time)
-                    time.sleep(wait_time)  # Wait before retrying
-                    wait_time *= 2  # Exponentially increase the wait time
-                    return JsonResponse({'response': wait_time_message})
-                else:
-                    return JsonResponse({'response': "Rate limit exceeded. Please try again later."})
+#             except error.RateLimitError:
+#                 logging.warning(f"Rate limit exceeded. Attempt {attempt + 1} of {max_retries}.")
+#                 if attempt < max_retries - 1:  # If not the last attempt
+#                     wait_time_message = f"Rate limit exceeded. Please wait {wait_time} seconds before trying again."
+#                     print(wait_time)
+#                     time.sleep(wait_time)  # Wait before retrying
+#                     wait_time *= 2  # Exponentially increase the wait time
+#                     return JsonResponse({'response': wait_time_message})
+#                 else:
+#                     return JsonResponse({'response': "Rate limit exceeded. Please try again later."})
 
-            except error.APIConnectionError:
-                logging.error("Failed to connect to OpenAI API.")
-                return JsonResponse({'response': "Failed to connect to OpenAI API. Please check your internet connection."})
+#             except error.APIConnectionError:
+#                 logging.error("Failed to connect to OpenAI API.")
+#                 return JsonResponse({'response': "Failed to connect to OpenAI API. Please check your internet connection."})
 
-            except error.OpenAIError as e:
-                logging.error(f"OpenAI error: {e}")
-                return JsonResponse({'response': f"An error occurred: {str(e)}"})
+#             except error.OpenAIError as e:
+#                 logging.error(f"OpenAI error: {e}")
+#                 return JsonResponse({'response': f"An error occurred: {str(e)}"})
 
-            except Exception as e:
-                logging.error(f"Unexpected error: {e}")
-                return JsonResponse({'response': f"An error occurred: {str(e)}"})
+#             except Exception as e:
+#                 logging.error(f"Unexpected error: {e}")
+#                 return JsonResponse({'response': f"An error occurred: {str(e)}"})
 
-    return render(request, 'chatbot2.html')
+#     return render(request, 'chatbot2.html')
 
 
 def payment_reminder(request, pk):
