@@ -1,0 +1,13 @@
+input{
+	background: rgb(250, 249, 249);
+	border: 1px solid rgb(209, 207, 207);
+	color: rgb(112, 104, 104);
+	font-size: small;
+	border-radius: 6px;
+	width: 100%;
+	padding: 7px 6px !important;
+	transition: .05s ease;
+  }
+  input:focus{
+	outline: 4.5px solid rgb(94, 221, 243);
+  }

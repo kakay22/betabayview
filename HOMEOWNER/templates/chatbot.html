@@ -1,0 +1,62 @@
+<style>
+	#chat-container {
+    width: 400px;
+    margin: 0 auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#chat-box {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.user-message, .bot-message {
+    margin-bottom: 10px;
+}
+
+.user-message {
+    text-align: right;
+    color: blue;
+}
+
+.bot-message {
+    text-align: left;
+    color: green;
+}
+
+</style>
+
+<div id="chat-container">
+    <div id="chat-box"></div>
+    <input type="text" id="user-input" placeholder="Type your message here...">
+    <button id="send-btn">Send</button>
+</div>
+
+<script>
+	document.getElementById('send-btn').addEventListener('click', function() {
+    const userInput = document.getElementById('user-input').value;
+    if (userInput) {
+        // Display user message in the chatbox
+        const chatBox = document.getElementById('chat-box');
+        chatBox.innerHTML += `<div class="user-message">${userInput}</div>`;
+        
+        // Send user input to the server
+        fetch(`/detect_intent?query=${encodeURIComponent(userInput)}`)
+            .then(response => response.json())
+            .then(data => {
+                // Display bot response in the chatbox
+                chatBox.innerHTML += `<div class="bot-message">${data.response}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;  // Scroll to the bottom of the chatbox
+            });
+        
+        document.getElementById('user-input').value = '';  // Clear the input field
+    }
+});
+
+</script>

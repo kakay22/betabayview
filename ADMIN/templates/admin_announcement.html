@@ -1,0 +1,349 @@
+{% extends 'admin_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ user }} / {% block title %} Announcements {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+</head>
+<body class="bg-gray-100">
+	{% block content %}
+	<link rel="stylesheet" href="{% static 'css/admin-pop-up-mess.css' %}">
+
+	<!-- Loading Spinner (hidden until request is sent) -->
+	<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+		<div class="spinner-border text-primary" role="status">
+		</div>
+		<span class="">Loading...</span>
+	</div>
+
+	<!--container-->
+	<div class="w-full md:w-[85%] max-[770px]:h-full h-[90%] bg-white absolute right-0 top-[4rem] md:top-[3.8rem] mt-[.8rem] shadow-md rounded-md p-4 overflow-y-auto overflow-x-hidden">
+
+		{% for message in messages %}
+		<p id="pop-up-mess"
+			class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+			{% if message.tags == 'error' %}
+				<i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+			{% elif message.tags == 'success' %}
+				<i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+			{% else %}
+				<i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+			{% endif %}
+		</p>
+		{% endfor %}
+
+		<div class="w-full flex justify-between items-center mb-4 bg-white">
+			<div class="flex gap-2 items-center">
+				<i onclick="window.history.back()" class="bi bi-arrow-left text-[1.2rem] px-[.7rem] py-2 rounded-full hover:bg-gray-200 cursor-pointer"></i>
+				<h1 class="text-xl font-semibold">Announcements {{ announcements.count }}</h1>
+			</div>
+
+			<button class="btn btn-primary" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+				<i class="bi bi-plus"></i> <span class="lg:inline hidden">Create announcement</span>
+			</button>
+		</div>
+
+		<!-- Modal for Create Announcement -->
+		<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createAnnouncementLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg"> <!-- Larger modal for better UX -->
+				<div class="modal-content">
+					<!-- Modal Header -->
+					<div class="modal-header">
+						<h5 class="modal-title" id="createAnnouncementLabel">Create New Announcement</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					
+					<!-- Modal Body -->
+					<div class="modal-body">
+						<form id="createAnnouncementForm" method="POST" enctype="multipart/form-data">
+							{% csrf_token %}
+							
+							<!-- Title Field -->
+							<div class="mb-3">
+								<label for="title" class="form-label">Title</label>
+								{{ form.title }}
+							</div>
+
+							<!-- Content Field -->
+							<div class="mb-3">
+								<label for="content" class="form-label">Content</label>
+								{{ form.content }}
+							</div>
+						</form>
+					</div>
+
+					<!-- Modal Footer -->
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" form="createAnnouncementForm" class="btn btn-primary">Create Announcement</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Announcements List -->
+		<div id="announcement-list" class="space-y-4 mb-6">
+			{% if announcements %}
+			{% for announcement in announcements %}
+			<div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+				<div class="flex justify-between items-center mb-4">
+					<div class="flex items-center">
+						<img src="{{ announcement.profile_picture.url }}" alt="User" class="w-12 h-12 rounded-full mr-3 border-2 border-gray-300">
+						<!-- Dynamic User Info -->
+						<div>
+							<h2 class="text-lg font-semibold text-gray-800 flex gap-2 items-center">{{ announcement.created_by.username }}
+								{% if announcement.created_by.is_superuser %}
+									<span class="bg-gray-200 text-gray-700 text-sm px-2 py-1 rounded-md">Admin</span>
+								{% else %}
+									<span class="bg-gray-200 text-gray-700 text-sm px-2 py-1 rounded-md">Secretary</span>
+								{% endif %}
+							</h2>
+							<p class="text-sm text-gray-500">{{ announcement.created_at|timesince }} ago</p>
+						</div>
+					</div>
+		
+					<!-- Three-dot menu (dropdown) -->
+					<div class="relative">
+						<button id="optionsMenuButton{{ announcement.pk }}" onclick="toggleMenu('menu{{ announcement.pk }}')" class="text-gray-600 hover:text-gray-800 transition duration-150">
+							<span class="material-icons">more_vert</span>
+						</button>
+						<!-- Dropdown menu -->
+						<div id="menu{{ announcement.pk }}" class="absolute right-0 top-10 bg-white shadow-lg rounded-lg py-2 w-36 hidden z-10">
+							<button class="dropdown-item flex items-center gap-2 py-2 px-3 text-gray-700 hover:bg-gray-100 transition">
+								<span class="material-icons">visibility</span> View
+							</button>
+							<button data-toggle="modal" data-target="#editModal{{ announcement.pk }}" class="dropdown-item flex items-center gap-2 py-2 px-3 text-gray-700 hover:bg-gray-100 transition">
+								<span class="material-icons">edit</span> Edit
+							</button>
+							<button data-toggle="modal" data-target="#deleteModal{{ announcement.pk }}" class="dropdown-item flex items-center gap-2 py-2 px-3 text-gray-700 hover:bg-gray-100 transition">
+								<span class="material-icons">delete</span> Delete
+							</button>
+						</div>
+					</div>
+				</div>
+		
+				<!-- Announcement Content -->
+				<h1 class="font-semibold text-xl text-gray-900 mb-2">{{ announcement.title|title }}</h1>
+				<p class="text-gray-700 mb-4">{{ announcement.content }}</p>
+		
+				<!-- Comments Section -->
+				<button class="text-blue-500 hover:text-blue-700 font-medium" id="toggleComments{{ announcement.pk }}">
+					Show comments ({{ announcement.comments.count }})
+				</button>
+				<div id="commentsSection{{ announcement.pk }}" class="hidden space-y-2 mt-2">
+					{% for comment in announcement_comment %}
+						{% if comment.announcement.pk == announcement.pk %}
+							<div class="bg-white p-2 rounded-md shadow-sm">
+								<div class="flex items-center">
+									{% if comment.profile %}
+										<img src="{{ comment.profile.url }}" alt="User" class="rounded-full mr-2 h-10 w-10">
+									{% else %}
+										<img src="{% static 'users/admin.png' %}" alt="User" class="rounded-full mr-2 h-10 w-10">
+									{% endif %}
+									<p class="font-bold">{{ comment.user.get_full_name|default:comment.user.username }}</p>
+									{% if comment.user.homeowner.role == 'owner' %}
+										<p class="text-sm px-1 rounded-md bg-gray-100 text-gray-500 ml-2">{{ comment.user.homeowner.role }}</p>
+									{% elif comment.user.secretary.role %}
+										<p class="text-sm px-1 rounded-md bg-gray-100 text-gray-500 ml-2">{{ comment.user.secretary.role }}</p>
+									{% else %}
+										<p class="text-sm px-1 rounded-md bg-gray-100 text-gray-500 ml-2">Admin</p>
+									{% endif %}
+								</div>
+								<div class="pl-12">
+									<p>{{ comment.content }}</p>
+									<p class="text-xs text-gray-500">{{ comment.created_at|timesince }} ago</p>
+								</div>
+							</div>
+						{% endif %}
+					{% endfor %}
+				</div>
+		
+				<!-- Comment Form -->
+				<div class="mt-4">
+					<form action="{% url 'admin_announcement_comment' announcement.pk %}" method="post">
+						{% csrf_token %}
+						<div class="flex items-center mt-2">
+							{{ comment_form.content }}
+						</div>
+						<div class="text-right mt-2">
+							<button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md transition hover:bg-blue-600">Post Comment</button>
+						</div>
+					</form>
+				</div>
+		
+				<!-- Edit Modal -->
+				<div class="modal fade" id="editModal{{ announcement.pk }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel{{ announcement.pk }}" aria-hidden="true">
+					<div class="modal-dialog" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="editModalLabel{{ announcement.pk }}">Edit Announcement</h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<form action="{% url 'admin_edit_announcement' announcement.pk %}" method="post">
+								{% csrf_token %}
+								<div class="modal-body">
+									<div class="form-group">
+										<label for="title" class="font-medium">Title</label>
+										<input type="text" class="form-control mt-1 p-2 border border-gray-300 rounded-md" id="title" name="title" value="{{ announcement.title }}" required>
+									</div>
+									<div class="form-group mt-4">
+										<label for="content" class="font-medium">Content</label>
+										<textarea class="form-control mt-1 p-2 border border-gray-300 rounded-md" id="content" name="content" rows="4" required>{{ announcement.content }}</textarea>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+									<button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md transition hover:bg-blue-600">Save changes</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+		
+				<!-- Delete Modal -->
+				<div class="modal fade" id="deleteModal{{ announcement.pk }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ announcement.pk }}" aria-hidden="true">
+					<div class="modal-dialog" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="deleteModalLabel{{ announcement.pk }}">Delete Announcement</h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">
+								<p>Are you sure you want to delete this announcement?</p>
+								<strong>{{ announcement.title }}</strong>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+								<form action="{% url 'admin_delete_announcement' announcement.pk %}" method="post" style="display:inline;">
+									{% csrf_token %}
+									<button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-md transition hover:bg-red-600">Delete</button>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		{% endfor %}		
+
+		<script>
+			function toggleMenu(menuId) {
+				var menu = document.getElementById(menuId);
+				menu.classList.toggle('hidden');
+			}
+		
+			document.querySelectorAll("[id^='toggleComments']").forEach(function(button) {
+				button.addEventListener('click', function() {
+					var commentSection = document.getElementById('commentsSection' + button.id.replace('toggleComments', ''));
+					commentSection.classList.toggle('hidden');
+				});
+			});
+		</script>		
+		
+			{% else %}
+				<div class="bg-gray-100 p-4 rounded-md shadow-sm text-center w-full">
+					<i class="bi bi-bell-slash text-[4rem] text-gray-500"></i><br>
+					<p class="text-gray-700">No announcements yet.</p>
+				</div>
+			{% endif %}
+		</div>					
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+			var user = document.getElementById("user").innerText.trim();
+			if (user === 'AnonymousUser') {
+				location.href = "{% url 'adminLogin' %}";
+			}
+		});
+
+		//collapsible comment
+		document.addEventListener('DOMContentLoaded', function () {
+			// Loop through all toggle buttons and add event listeners
+			const toggleButtons = document.querySelectorAll('[id^="toggleComments"]');
+			
+			toggleButtons.forEach(function (btn) {
+				const announcementPk = btn.id.replace('toggleComments', '');
+				const commentsSection = document.getElementById('commentsSection' + announcementPk);
+
+				btn.addEventListener('click', function () {
+					if (commentsSection.classList.contains('hidden')) {
+						commentsSection.classList.remove('hidden');
+						btn.textContent = 'Hide comments';
+					} else {
+						commentsSection.classList.add('hidden');
+						btn.textContent = 'Show comments';
+					}
+				});
+			});
+		});
+
+        //hide preloader
+		// window.addEventListener('load', (e) => {
+		// 	var preloader = document.getElementById('pre-loader')
+		// 	preloader.style.display = 'none'
+		// })
+
+        //fetch unread notification
+		function fetchUnreadCount() {
+        fetch("{% url 'admin_unread_notifications_count' %}")
+            .then(response => response.json())
+            .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+</script>
+<script src="{% static 'js/admin_dropdown_menu.js' %}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Select all the buttons for toggling comments
+        document.querySelectorAll("[id^='toggleComments']").forEach(function(button) {
+            button.addEventListener('click', function() {
+                // Extract the announcement ID from the button's ID
+                var announcementId = button.id.replace('toggleComments', '');
+                var commentSection = document.getElementById('commentsSection' + announcementId);
+                
+                // Toggle the visibility of the comments section
+                if (commentSection.classList.contains('hidden')) {
+                    commentSection.classList.remove('hidden');
+                    button.textContent = 'Hide comments (' + commentSection.childElementCount + ')';
+                } else {
+                    commentSection.classList.add('hidden');
+                    button.textContent = 'Show comments (' + commentSection.childElementCount + ')';
+                }
+            });
+        });
+    });
+</script>
+
+
+{% endblock content %}
+
+</html>
+

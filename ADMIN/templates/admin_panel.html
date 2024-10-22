@@ -1,0 +1,428 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ user|title }}'s  {% block title %} {% endblock title %}</title>
+	<link rel="icon" href="{% static 'users/logo.png' %}" type="image/x-icon">
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<link rel="stylesheet" href="{% static 'css/admin_active_link.css' %}">
+	<link rel="stylesheet" href="{% static 'css/search-slide.css' %}">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<!-- Bootstrap CSS -->
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+	<!-- Material Icons -->
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+	<!-- jQuery and Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+	<style>
+		* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+		}
+		
+		/* Remove underline from all links */
+		a {
+			text-decoration: none;
+		}
+
+		/* Ensure no underline on hover */
+		a:hover {
+			text-decoration: none;
+		}
+
+		html, body {
+		width: 100vw;
+		height: 100vh;
+		overflow-x: hidden;
+		}
+	</style>
+</head>
+
+<body class="bg-gray-100 overflow-hidden h-[100vh] w-[100vw]">
+	<style>
+		*::-webkit-scrollbar {
+			width: 8px; /* Width of the scrollbar */
+			height: 8px; /* Height of the horizontal scrollbar */
+		}
+	
+		*::-webkit-scrollbar-thumb {
+			background-color: #868686; /* Scrollbar thumb color */
+			border-radius: 10px; /* Fully rounded corners for thumb */
+		}
+	
+		*::-webkit-scrollbar-thumb:hover {
+			background-color: #4a4a4a; /* Darker color on hover */
+		}
+	
+		*::-webkit-scrollbar-track {
+			background-color: transparent; /* Transparent track */
+			border-radius: 10px; /* Fully rounded corners for track */
+		}
+	
+		/* For Firefox */
+		* {
+			scrollbar-width: thin; /* Use thin scrollbar */
+			scrollbar-color: #868686 transparent; /* Thumb and track colors */
+		}
+	
+		*::-moz-scrollbar-thumb {
+			border-radius: 10px; /* Rounded corners for Firefox */
+		}
+	
+		*::-moz-scrollbar-thumb:hover {
+			background-color: #4a4a4a; /* Darker color on hover */
+		}
+
+		.dropdown-container {
+			max-height: 0;
+			overflow: hidden;
+			transition: max-height 0.3s ease, opacity 0.3s ease;
+		}
+
+		.dropdown-container.show {
+			max-height: 300px; /* Adjust this value based on your content */
+			opacity: 1;
+		}
+
+		.dropdown-container.hidden {
+			opacity: 0;
+		}
+		</style>
+
+	<!-- Header -->
+    <div class="w-full flex justify-end items-center py-[.8rem] gap-2 px-3 shadow-md bg-gray-50 relative">
+        <i id="menuBtn" class="bi bi-list p-1 bg-gray-200 rounded-lg text-[1.3rem] absolute left-1 font-semibold py-0 ml-2 md:hidden"></i>
+        <h1 class="text-left w-full md:left-[18%] left-[12%] absolute font-bold text-[1rem]">Beta Bayview Homes</h1>
+
+		<!--search | notif | profile-->
+        <div class="flex justify-center gap-2 items-center">
+			<!--search-->
+			<button id="search-button" class="pointer-events-none bi bi-search text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="seach">
+			</button>
+			
+			<!--notifications-->
+			<p id="notifBtn" onclick="gotoNotif()" class="bi bi-bell-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="notifications">
+				<span class="notification-badge absolute top-0 right-0 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs hidden">
+                    0 
+                </span>
+			</p>
+			<!--end notifications-->
+
+			<!-- PROFILE -->
+			<div class="dropdown relative rounded-full w-[2.6rem] h-[2.6rem]">
+				<button id="user" class="btn btn-secondary bg-transparent
+				 border-0 text-black" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+					<div class="w-full h-full absolute top-0 left-0 rounded-[50%] shadow-md bg-white border-black border-1 overflow-hidden"><img
+							class="w-full h-full hover:bg-gray-100" src="{% static 'users/admin.png' %}" alt="user profile"></div>
+				</button>
+				<ul id="dropdown-menu" class="dropdown-menu hidden flex flex-col mt-4 absolute right-0" aria-labelledby="dropdown-btn">
+					<li>
+						<form class="dropdown-item" action="{% url 'adminLogout' %}" method="post">
+							{% csrf_token %}
+							<button class="w-full text-left font-bold flex items-center gap-2" type="submit"><i
+									class="material-icons">logout</i> Logout</button>
+						</form>
+					</li>
+				</ul>
+			</div>
+			<span>{{ user }}</span>
+		</div>
+    </div>
+
+	<!--Sidebar-->
+	<div id="sideBar"
+		class="h-full w-[210px] md:w-[15%] sm:shadow-gray-400 sm:shadow-md bg-[#193948] z-[999999] absolute top-0 md:left-0 left-[-100%] flex flex-col transition-transform duration-300">
+		<div class="py-[.7rem]">
+			<h1 class="w-full text-center flex justify-center gap-2 items-center text-white"><img class="rounded-full w-[2rem] py-2" src="{% static 'users/admin.png' %}" alt="" srcset=""> ADMIN</h1>
+		</div>
+		<hr class="text-white">
+
+		<nav class="mt-4 flex-1 overflow-y-auto thin-scrollbar">
+		<a href="{% url 'admin_dashboard' %}"
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"><i
+				class="material-icons p-1 px-2 rounded-md bg-[#304650]">dashboard</i> Dashboard</a>
+		<!-- User Management Button -->
+		<button
+		class="btn rounded-none justify-start dropdown-btn w-full text-left text-sm border-none flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"
+		onclick="toggleDropdown()">
+		<i class="material-icons p-1 px-2 rounded-md bg-[#304650]">account_circle</i>User Management
+		<i id="down" class="bi bi-chevron-down text-[.8rem] pt-1"></i>
+		<i id="up" class="bi bi-chevron-up hidden text-[.8rem] pt-1"></i>
+		</button>
+		<!-- Dropdown Container with smooth transition -->
+		<div id="dropdown" class="dropdown-container max-h-0 overflow-hidden transition-all duration-300 ease-in-out opacity-[.9] flex flex-col bg-[#193948]">
+		<a href="{% url 'homeowners' %}"
+			class="flex items-center text-sm gap-3 ml-7 border-white px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white relative">
+			<i class="bi bi-house"></i> Homeowners
+		</a>
+		<a href="{% url 'secretaries' %}"
+			class="flex items-center text-sm gap-3 ml-7 px-4 py-3 pl-7 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white relative">
+			<i class="bi bi-person"></i> Secretaries
+		</a>
+		</div>
+
+		<a href="{% url 'residents' %}"
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"><i
+				class="material-icons p-1 px-2 rounded-md bg-[#304650]">person</i> Residents</a>
+		<a href="{% url 'pending_accounts' %}"
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"><i
+				class="material-icons p-1 px-2 rounded-md bg-[#304650]">pending_actions</i>
+			Pending accounts
+			<span id="message-indicator" class="bg-red-600 text-white hidden rounded-full px-1 text-[.7rem]"></span>
+		</a>
+		<a href="{% url 'maintenance_request_list' %}"
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"><i
+				class="material-icons p-1 px-2 rounded-md bg-[#304650]">build</i> Maintenance request
+				<span id="message-indicator2" class="bg-red-600 hidden text-gray-300 rounded-full px-2 flex items-center justify-center text-xs"></span>
+			</a>
+		<a href="{% url 'admin_maintenance_personnel_list' %}"
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"><i
+					class="material-icons p-1 px-2 rounded-md bg-[#304650]">handyman</i> Maintenance presonnels</a>
+		<a href="{% url 'properties' %}"
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"><i
+				class="material-icons p-1 px-2 rounded-md bg-[#304650]">roofing</i> Properties</a>
+		<a href="{% url 'events' %}"
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"><i
+				class="material-icons p-1 px-2 rounded-md bg-[#304650]">event</i> Events</a>
+		<a href="{% url 'admin_announcements' %}"
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"><i
+				class="material-icons p-1 px-2 rounded-md bg-[#304650]">announcement</i> Announcements</a>
+		<a href="{% url 'admin_logs' %}"
+				class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+				<i class="material-icons p-1 px-2 rounded-md bg-[#304650]">assignment</i>Activity Logs</a>
+		<a href=""
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+			<i class="bi bi-chat-dots p-1 px-2 rounded-md bg-[#304650]"></i>Chatbot Logs</a>
+		<hr class="text-white">
+		<a href="{% url 'adminLogout' %}"
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+			<i class="material-icons p-1 px-2 rounded-md bg-[#304650]">logout</i> Logout</a>
+		</nav>
+	</div>
+
+	<div class="overflow-hidden">	
+		{% block content %}
+		<script src="{% static 'js/admin_loading_submit.js' }"></script>
+		{% endblock content %}
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script src="{% static 'js/admin_search-suggestions.js' %}"></script>
+	<script>
+
+		function gotoNotif(){
+			location.href = "{% url 'admin_notifications' %}"
+		}
+
+		document.addEventListener('DOMContentLoaded', function() {
+			// Select all <form> tags in the document
+			const forms = document.querySelectorAll('form');
+			
+			// Select the loading spinner
+			const loader = document.getElementById('loadingSpinner');
+
+			// Log the forms to the console
+			forms.forEach((form) => {
+				// Event listener for form submission
+				form.addEventListener('submit', function(event) {
+					// Show the loader
+					loader.classList.remove('hidden');
+				});
+			});
+		});
+
+
+		//automatic logout when unauthenticated
+		function checkAuthentication() {
+            fetch('/check-auth-status/')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.authenticated) {
+                        // If the user is not authenticated, redirect to the main page
+                        window.location.href = '/'; // Adjust the URL based on your project
+                    }
+                })
+                .catch(error => console.log('Error checking authentication:', error));
+        }
+
+        // Check every 5 seconds (5000 ms) if the user is still authenticated
+        setInterval(checkAuthentication, 2000);
+
+		// Call this function periodically or on page load
+		document.addEventListener('DOMContentLoaded', function() {
+			checkAuthentication();
+		});
+
+
+		// Toggle dropdown with smooth collapse
+		function toggleDropdown() {
+			const dropdown = document.getElementById('dropdown');
+			const downIcon = document.getElementById('down');
+			const upIcon = document.getElementById('up');
+
+			// Toggle the height for smooth collapse/expand
+			if (dropdown.style.maxHeight) {
+				dropdown.style.maxHeight = null;
+				downIcon.classList.remove('hidden');
+				upIcon.classList.add('hidden');
+			} else {
+				dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+				downIcon.classList.add('hidden');
+				upIcon.classList.remove('hidden');
+			}
+		}
+
+		//open sidebar
+		const sideBar = document.querySelector("#sideBar")
+		const menuBtn = document.querySelector("#menuBtn")
+
+		screenWidth = window.innerWidth
+
+		//toggle sidebar when resizing
+		window.addEventListener('resize', (e) => {
+			screenWidth = window.innerWidth
+			if (screenWidth > 770) {
+				sideBar.style.transition = '.3s ease'
+				sideBar.style.left = '0'
+			} else {
+				sideBar.style.transition = '.3s ease'
+				sideBar.style.left = '-100%'
+			}
+		})
+
+		menuBtn.addEventListener('click', (e) => {
+			sideBar.style.transition = '.3s ease'
+			sideBar.style.left = '0'
+		})
+
+		document.addEventListener('click', (e) => {
+			if (screenWidth > 770) {
+				return;
+			}
+			else if (!sideBar.contains(e.target) && !menuBtn.contains(e.target)) {
+				sideBar.style.left = '-100%'
+			}
+		})
+
+		document.addEventListener("DOMContentLoaded", function () {
+			const currentURL = window.location.href
+			const menuItems = document.querySelectorAll("a")
+
+			menuItems.forEach(item => {
+				if (item.href === currentURL) {
+					item.classList.add('activeLink')
+				}
+			})
+
+		});
+
+		//fetch new pending
+		$(document).ready(function () {
+			function fetchPendingRegistrations() {
+				$.ajax({
+					url: '{% url "admin_get_pending_registrations" %}',
+					method: 'GET',
+					success: function (data) {
+						if (data.count > 0) {
+							$('#message-indicator').show();
+							$('#message-indicator').text(data.count);
+						} else {
+							$('#message-indicator').hide();
+						}
+					},
+					error: function (jqXHR, textStatus, errorThrown) {
+						console.error('Error fetching pending registrations:', textStatus, errorThrown);
+					}
+				});
+			}
+
+			// Polling every 5 seconds
+			setInterval(fetchPendingRegistrations, 3000);
+
+			// Mark messages as read and navigate to messages page
+			$('#pending_btn').click(function () {
+				$.ajax({
+					url: '{% url "admin_mark_messages_as_read" %}',  // Ensure this URL is correctly defined
+					method: 'POST',
+					headers: {
+						'X-CSRFToken': '{{ csrf_token }}'
+					},
+					success: function (data) {
+						if (data.status === 'ok') {
+							$('#message-indicator').hide();
+							window.location.href = '{% url "pending_accounts" %}';
+						}
+					},
+					error: function (jqXHR, textStatus, errorThrown) {
+						console.error('Error marking messages as read:', textStatus, errorThrown);
+					}
+				});
+			});
+		});
+
+		//fetch maintenances
+		function fetchMaintenances() {
+                $.ajax({
+                    url: '{% url "sec_get_maintenances" %}',
+                    method: 'GET',
+                    success: function(data) {
+                        if (data.count > 0) {	
+                            $('#message-indicator2').show();
+                            if(data.count > 9){
+								$('#message-indicator2').text('+9');
+							} else {
+								$('#message-indicator2').text(data.count);
+							}
+                        } else {
+                            $('#message-indicator2').hide();
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error('Error fetching maintenances:', textStatus, errorThrown);
+                    }
+                });
+            }
+
+            // Polling every 5 seconds
+            setInterval(fetchMaintenances, 3000);
+
+		//fetch unread notification
+		function fetchUnreadCount() {
+			fetch("{% url 'admin_unread_notifications_count' %}")
+				.then(response => response.json())
+				.then(data => {
+						const notificationCount = data.unread_count;
+						const notificationBadge = document.querySelector('.notification-badge');
+						if (notificationCount > 0) {
+							notificationBadge.textContent = notificationCount;
+							notificationBadge.classList.remove('hidden'); // Show badge
+						} else {
+							notificationBadge.classList.add('hidden'); // Hide badge
+						}
+					});
+			}
+			// Call this function to check unread notifications every .5 second
+			setInterval(fetchUnreadCount, 2000);
+			fetchUnreadCount();  // Initial call to set the count immediately
+	</script>
+
+	{% block extra_js %}
+	{% endblock extra_js %}
+</body>
+
+</html>

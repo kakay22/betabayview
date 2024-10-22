@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PFV Housing Management System</title>
+    <link rel="icon" href="{% static 'users/logo.png' %}" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <style>
+        .bi .bi-check-circle {
+            background-color: green;
+        }
+    </style>
+</head>
+
+<body class="relative h-[100dvh] w-[100dvw] overflow-y-scroll overflow-x-hidden">
+    <img class="absolute h-full w-full top-0 left-0" src="{% static 'users/pope-francis-village.jpg' %}" alt="">
+    <div class="shadow-md bg-gray-100 z-[99] flex justify-center items-center absolute h-[100%] w-full" style="background-color: rgba(255, 255, 255, 0.8);">
+
+        <!-- Content -->
+        <div class="rounded-md bg-white min-[900px]:flex h-[95%] min-[900px]:mb-10 min-[900px]:h-[80%] w-[95%] min-[990px]:w-[80%] min-[1075px]:w-[95%]">
+            <!--Title-->
+            <div class="relative top-0 left-0 w-full h-[180px] overflow-hidden min-[900px]:w-[45%] min-[900px]:h-full">
+                <div class="min-[900px]:w-[120%] h-[100%]">
+                    <img class="w-full h-[100%]" src="{% static 'users/pope-francis-village.jpg' %}" alt="">
+                </div>
+
+                <!--header-->
+                <div class="absolute top-0 left-0 w-full h-[300px] text-white min-[900px]:h-full">
+                    <div class="w-full py-4" style="background-color: rgba(0, 0, 0, .3);">
+                        <h1 class="w-full text-center text-[2rem] font-bold">POPE FRANCIS VILLAGE</h1>
+                        <p class="w-full text-center">Housing Management System</p>
+                    </div>
+                </div>
+            </div>
+
+            <!--User selection-->
+            <div class="w-full min-[900px]:w-[55%] min-[900px]:h-full min-[900px]:pt-[4rem] relative">
+                <div class="w-full text-right absolute top-2 px-3">
+                    <button class="text-teal-500" id="mapBtn"><i class="bi bi-map"></i> Navigate</button>
+                </div>
+                <h1 class="w-full text-teal-500 text-[1rem] text-center mt-4 mb-4 px-3 min-[900px]:mt-[4rem]">Select usertype</h1>
+
+                <div class="w-full flex justify-center gap-4">
+                    <div class="user w-[28%] shadow-sm px-3 cursor-pointer hover:scale-[1.1] hover:bg-gray-100 transition-[1s] rounded-md">
+                        <img class="mt-3" src="{% static 'users/homeOwner.png' %}" alt="home owner image">
+                        <p class="w-full text-center text-[.9rem]">Owner</p>
+                    </div>
+                    <div class="user w-[28%] shadow-sm px-3 cursor-pointer hover:scale-[1.1] hover:bg-gray-100 transition-[1s] rounded-md">
+                        <img class="mt-3" src="{% static 'users/secretary.png' %}" alt="home owner image">
+                        <p class="w-full text-center">Secretary</p>
+                    </div>
+                    <div class="user w-[28%] shadow-sm px-3 cursor-pointer hover:scale-[1.1] hover:bg-gray-100 transition-[1s] rounded-md">
+                        <img class="mt-3" src="{% static 'users/admin.png' %}" alt="home owner image">
+                        <p class="w-full text-center">Admin</p>
+                    </div>
+                </div>
+
+                <p class="w-full text-center mt-3">Login as <span class="text-teal-600" id="user"></span></p>
+
+                <div class="w-full text-center mt-5">
+                    <button id="conBtn" class="btn btn-primary bg-teal-600 border border-teal-600 min-[900px]:w-[60%] w-[90%]">Continue</button>
+                </div>
+                <p class="w-full text-center mt-2 text-teal-600"><a href="{% url 'register' %}">Create Home-owner account</a></p>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div id="mapContainer" class="hidden bg-gray-200 fixed inset-0 z-[100] bg-white bg-opacity-90 flex justify-center items-center">
+            <div class="relative w-full h-full max-w-4xl max-h-4xl">
+                <div id="map" class="w-full h-full z-[9]"></div>
+                <button id="closeMapBtn" class="absolute bottom-2 right-2 flex items-center z-[999] bg-white border border-gray-300 px-2.5 py-1 rounded cursor-pointer shadow-md hover:bg-gray-100"> Close Map<i class="bi bi-x text-[1.5rem]"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const users = document.querySelectorAll('.user');
+        const user = document.getElementById('user');
+        const conBtn = document.getElementById('conBtn');
+        const mapBtn = document.getElementById('mapBtn');
+        const mapContainer = document.getElementById('mapContainer');
+        const closeMapBtn = document.getElementById('closeMapBtn');
+
+        let selectedUserType = '';
+
+        users.forEach(userElement => {
+            userElement.addEventListener('click', () => {
+                users.forEach(u => u.style.border = 'none');
+                userElement.style.border = '2px solid teal';
+                selectedUserType = userElement.querySelector('p').textContent;
+                user.textContent = selectedUserType;
+                conBtn.textContent = 'Continue';
+            });
+        });
+
+        conBtn.addEventListener('click', () => {
+            if (selectedUserType === 'Home owner') {
+                location.href = "{% url 'ownerLogin' %}";
+            } else if (selectedUserType === 'Secretary') {
+                location.href = "{% url 'secretaryLogin' %}";
+            } else if (selectedUserType === 'Admin') {
+                location.href = "{% url 'adminLogin' %}";
+            } else {
+                conBtn.textContent = 'Please select usertype';
+            }
+        });
+
+        mapBtn.addEventListener('click', () => {
+            mapContainer.classList.remove('hidden');
+            initMap();
+        });
+
+        closeMapBtn.addEventListener('click', () => {
+            mapContainer.classList.add('hidden');
+        });
+
+        function initMap() {
+            if (document.getElementById('map').children.length > 0) return;
+
+            const map = L.map('map').setView([51.505, -0.09], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+            }).addTo(map);
+
+            const geocoder = L.Control.Geocoder.nominatim();
+            const control = L.Control.geocoder({
+                query: '',
+                placeholder: 'Search for a place...',
+                defaultMarkGeocode: false,
+                geocoder
+            }).on('markgeocode', function(e) {
+                const bbox = e.geocode.bbox;
+                const poly = L.polygon([
+                    bbox.getSouthEast(),
+                    bbox.getNorthEast(),
+                    bbox.getNorthWest(),
+                    bbox.getSouthWest()
+                ]).addTo(map);
+                map.fitBounds(poly.getBounds());
+            }).addTo(map);
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const currentLocation = L.marker([lat, lng]).addTo(map).bindPopup('Your current location').openPopup();
+                    map.setView([lat, lng], 13);
+
+                    control.on('markgeocode', function(e) {
+                        const latlng = e.geocode.center;
+                        L.Routing.control({
+                            waypoints: [
+                                L.latLng(lat, lng),
+                                L.latLng(latlng.lat, latlng.lng)
+                            ],
+                            createMarker: function(i, wp) {
+                                return L.marker(wp.latLng).bindPopup(i === 0 ? 'Start' : 'End').openPopup();
+                            }
+                        }).addTo(map);
+                    });
+                });
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,460 @@
+{% extends 'owner_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} {{ user }} / Maintenance requests {% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-gray-100">
+    {% block content %}
+
+    <!-- Loading Spinner (hidden until request is sent) -->
+		<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+			<div class="spinner-border text-primary" role="status">
+			</div>
+            <span class="">Loading...</span>
+		</div>
+
+    <!--Content container-->
+    <div
+        class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[90%] bg-white absolute md:right-0 top-[4.3rem] md:top-[4.5rem] shadow-md rounded-md max-md:p-0 overflow-y-auto overflow-x-hidden ">
+
+        {% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+
+        <div class="w-full flex justify-between items-center mb-1 max-md:p-0 p-3 gap-3">
+
+            <div class="flex items-center px-3">
+                <a href="{% url 'owner_dashboard' %}"
+                    class="bi bi-arrow-left mr-2 text-[1.5rem] px-[.7rem] flex items-center py-[.7rem] rounded-full hover:bg-gray-200 cursor-pointer">
+                </a>
+                <div>
+                    <h1 class="text-xl font-medium">Maintenance requests</h1>
+                    <p class="text-muted-foreground text-sm">View and manage your maintenance requests</p>
+                </div>
+            </div>
+    
+            <button data-bs-toggle="modal" data-bs-target="#staticBackdrop"
+                    class="btn btn-primary shadow-gray-500 shadow-md text-[1.2rem] flex items-center"><i
+                        class="bi bi-plus font-semibold"></i> <span class="min-[770px]:inline max-w-[500px]:block hidden text-sm">Request a maintenance</span>
+            </button>
+        </div>
+
+        <!-- Friendly reminder for maintenance per month -->
+        <div class="bg-blue-50 text-blue-700 p-4 rounded-md mb-4 shadow-sm">
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+                <!-- Warning with icon and progress bar -->
+                <div class="flex items-center space-x-4">
+                    <!-- Icon with tooltip -->
+                    <div class="relative group">
+                        <i class="bi bi-question-circle-fill text-blue-400 text-[2rem]"></i>
+                        <!-- Tooltip on hover (shifted to the right) -->
+                        <div class="absolute hidden group-hover:block bg-white text-gray-600 text-xs shadow-lg rounded-md p-2 top-13 left-[-25%] ml-4 z-10 w-64">
+                            <p>Maintenance Request Limit! You can submit up to 5 maintenance requests per month.</p>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="flex flex-col">
+                        {% if percentage_used %}
+                            <div class="bg-gray-300 rounded-full h-2.5 md:w-96 w-full mb-2">
+                                <!-- Progress bar based on percentage -->
+                                {% if percentage_used == 100 %}
+                                <div class="bg-red-600 h-2.5 rounded-full" style="width: {{ percentage_used }}%;"></div>
+                                {% elif percentage_used == 80 %}
+                                <div class="bg-orange-600 h-2.5 rounded-full" style="width: {{ percentage_used }}%;"></div>
+                                {% elif percentage_used == 60 %}
+                                <div class="bg-yellow-600 h-2.5 rounded-full" style="width: {{ percentage_used }}%;"></div>
+                                {% elif percentage_used == 40 %}
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ percentage_used }}%;"></div>
+                                {% else %}
+                                <div class="bg-green-600 h-2.5 rounded-full" style="width: {{ percentage_used }}%;"></div>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-gray-500">You have submitted <strong>{{ request_count }}</strong> out of <strong>5</strong> requests this month.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Filter buttons -->
+                <div class="flex items-center space-x-2">
+                    <a href="{% url 'request_maintenance_list' %}?filter=previous" class="btn border-2 border-gray-400 hover:border-gray-500 hover:bg-gray-100 px-4 py-2 rounded-md transition-all duration-200 {% if request.GET.filter == 'previous' %}border-none bg-blue-500 hover:bg-blue-600 text-white shadow-md{% endif %}">
+                        Previous months
+                    </a>
+                    <a href="{% url 'request_maintenance_list' %}?filter=current" class="btn border-2 border-gray-400 hover:border-gray-500 hover:bg-gray-100 px-4 py-2 rounded-md transition-all duration-200 {% if request.GET.filter == 'current' or not request.GET.filter %}border-none bg-blue-500 hover:bg-blue-600 text-white shadow-md{% endif %}">
+                        This Month
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="overflow-x-auto max-h-[400px] overflow-y-auto">
+            <table id="myTable" class="min-w-full divide-y divide-gray-200">
+                <thead class="sticky top-0 bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Image</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Description of issue</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Type of issue</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Location</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
+                        </th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Action</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTable" class="bg-white divide-y divide-gray-200">
+                    {% for request in page_obj %}
+                    <tr>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            {% if not request.image %}
+                                <img class="h-[4rem] w-[5rem]" src="{% static '/users/req_maintenance.jpg' %}" alt="request image" srcset="">
+                            {% else %}
+                                <img class="h-[4rem] w-[5rem]" src="{{ request.image.url }}" alt="request image" srcset="">
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ request.Description_of_issue }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ request.type_of_issue }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ request.location }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            {% if request.status == 'Done'%}
+                            <p class="bg-green-600 text-white px-1 rounded-[3rem] text-center">{{ request.status }}</p>
+                            {% elif request.status == 'In progress' %}
+                            <p class="bg-orange-500 text-white px-1 rounded-[3rem] text-center">{{ request.status }}</p>
+                            {% elif request.status == 'notverified' %}
+                            <p class="bg-red-500 text-white px-1 rounded-[3rem] text-center">{{ request.status }}</p>
+                            {% elif request.status == 'verified' %}
+                            <p class="bg-green-500 text-white px-1 rounded-[3rem] text-center">{{ request.status }}</p>
+                            {% else %}
+                            <p class="border-1 border-gray-300 text-gray-500 px-1 rounded-[3rem] text-center">{{ request.status }}</p>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ request.date_requested }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <!--ellipsis-->
+                            <button class="w-full hover:bg-gray-200 rounded-full py-2" data-bs-toggle="dropdown"
+                                aria-expanded="false"><i class="bi bi-three-dots"></i></button>
+                            <ul class="dropdown-menu">
+
+                                {% if request.status == 'Pending' %}
+                                <!--edit button for modal-->
+                                <li>
+                                    <button type="button" class="dropdown-item text-blue-500" data-bs-toggle="modal"
+                                        data-bs-target="#editModal{{ request.pk }}">
+                                        <i class="bi bi-pen-fill"></i> UPDATE
+                                    </button>
+                                </li>
+                                {% endif %}
+
+
+                                <!--delete button for modal-->
+                                <li>
+                                    <button type="button" class="dropdown-item text-red-500" data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal{{ request.pk}}">
+                                        <i class="bi bi-trash-fill"></i> DELETE
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <!-- Modal for edit-->
+                            <div class="modal fade z-[99999999]" id="editModal{{ request.pk}}" tabindex="-1"
+                                aria-labelledby="editModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editModalLabel{{ request.pk}}">Edit {{ request.Description_of_issue }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form method="post" action="{% url 'edit_request' request.pk %}">
+                                                {% csrf_token %}
+                                                <div class="mb-3">
+                                                    <label for="description" class="form-label">Description of issue</label>
+                                                    <input type="text" class="form-control" name="description"
+                                                        id="first_name" value="{{ request.Description_of_issue }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="type_of_issue" class="form-label">Type of issue</label>
+                                                    <input type="text" class="form-control" name="type_of_issue"
+                                                        id="last_name" value="{{ request.type_of_issue}}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="location" class="form-label">Location</label>
+                                                    <input type="text" class="form-control" name="location" id="location"
+                                                        value="{{ request.location }}" required>
+                                                </div>
+                                                
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--End modal for edit-->
+
+                            <!-- Modal for delete-->
+                            <div class="modal fade" id="deleteModal{{ request.pk}}" tabindex="-1"
+                                aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title w-full text-center font-semibold"
+                                                id="deleteModalLabel{{ resident.pk}}">Delete "{{ request.Description_of_issue }}" ?
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <h1 class="w-full text-center">
+                                                <i class="bi bi-x-circle text-[5rem] text-red-500"></i>
+                                            </h1>
+                                            <h1 class="w-full text-center text-wrap">Are you sure you want to delete request "{{ request.Description_of_issue }}"?</h1>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{% url 'delete_request' request.pk %}" method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--END modal for delete-->
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <!-- Check if no results and show enhanced message with icon -->
+            {% if not page_obj %}
+            <div class="flex flex-col items-center justify-center py-10 text-center">
+                <!-- Icon for better UX (consider using a relevant icon, e.g., an empty list or warning icon) -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 00-4-4H5V7h14v4h-1a4 4 0 00-4 4v2m-4 0h4" />
+                </svg>
+
+                <!-- Display appropriate message based on the filter -->
+                {% if filter_option == 'current' %}
+                    <p class="text-gray-400 mt-2">It seems you don't have any maintenance requests submitted yet for the current month.</p>
+                {% else %}
+                    <p class="text-gray-400 mt-2">No maintenance records were found for the selected previous months period.</p>
+                {% endif %}
+
+            </div>
+            {% endif %}
+
+        </div>
+        <!--pagination-->
+        <div class="p-4">
+            <nav class="block">
+                <p>Showing {{ page_obj.end_index }} out of {{ paginator.count }} results</p>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %} <li class="page-item"><a
+                            class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item opacity-[.5] pointer-events-none">
+                            <a class="page-link" href="" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item opacity-[.5] pointer-events-none">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                </ul>
+            </nav>
+        </div>
+        <div id="noResults" class="hidden w-full text-center">
+            <div class="">
+                <i class="bi bi-exclamation-circle" style="font-size: 3rem; color: gray;"></i>
+                <p class="mt-2 text-gray-600">No Results Found</p>
+            </div>
+        </div>
+
+        <!-- Modal for Request Maintenance -->
+		<div class="modal fade m-0" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+			<div class="modal-dialog modal-md">
+				<div class="modal-content rounded-lg shadow-lg">
+					<!-- Modal Header -->
+					<div class="modal-header bg-[#193948] text-white">
+						<h5 class="modal-title font-bold" id="staticBackdropLabel">Send a Maintenance Request</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					
+					<!-- Modal Body -->
+					<div class="modal-body p-4">
+						
+						<!-- Request Image -->
+						<div class="w-full flex justify-center">
+							<img src="{% static 'users/req_maintenance.jpg' %}" class="rounded-lg w-[80%] max-h-[200px] object-cover" alt="request maintenance image">
+						</div>
+
+						<!-- Form for Maintenance Request -->
+						<form id="maintenanceForm" action="{% url 'maintenance_request' %}" method="post" class="space-y-4" enctype="multipart/form-data">
+							{% csrf_token %}
+
+							<!-- Description of Issue -->
+							<div class="form-group">
+								<label for="description_of_issue" class="form-label font-medium">Description of Issue</label>
+								<input type="text" class="form-control p-3 rounded-lg shadow-sm" list="description" id="description_of_issue" name="description_of_issue" required placeholder="Describe the issue...">
+								<datalist id="description">
+									<option value="Leaky faucet"></option>
+									<option value="Clogged drain"></option>
+									<option value="Broken window"></option>
+									<option value="Power outage"></option>
+									<option value="Air conditioning not working"></option>
+									<!-- Add more options as needed -->
+								</datalist>
+							</div>
+
+							<!-- Type of Issue -->
+							<div class="form-group">
+								<label for="type_of_issue" class="form-label font-medium">Type of Issue</label>
+								<select class="form-select p-3 rounded-lg shadow-sm" name="type_of_issue" id="type_of_issue" required>
+									<option value="" selected disabled>Select the type of issue</option>
+									<option value="plumbing">Plumbing</option>
+									<option value="electrical">Electrical</option>
+									<option value="appliance">Appliance repair</option>
+									<option value="hvac">HVAC</option>
+									<option value="carpentry">Carpentry</option>
+									<option value="pest control">Pest control</option>
+									<option value="landscaping">Landscaping</option>
+								</select>
+							</div>
+
+							<!-- Location of Issue -->
+							<div class="form-group">
+								<label for="location_of_issue" class="form-label font-medium">Location of Issue</label>
+								<input class="form-control p-3 rounded-lg shadow-sm" list="locations" name="location_of_issue" placeholder="Specify the area (e.g., bathroom, kitchen)" required>
+								<datalist id="locations">
+									<option value="Kitchen"></option>
+									<option value="Bathroom"></option>
+									<option value="Living room"></option>
+									<option value="Bedroom"></option>
+									<option value="Garage"></option>
+									<option value="Basement"></option>
+									<option value="Attic"></option>
+									<option value="Roof"></option>
+									<option value="Backyard"></option>
+									<option value="Front yard"></option>
+									<option value="Laundry room"></option>
+									<option value="Hallway"></option>
+								</datalist>
+							</div>
+
+							<!-- File Upload for Image (Optional) -->
+							<div class="form-group">
+								<label for="upload" class="form-label font-medium">Attach a photo (optional)</label>
+								<input type="file" class="form-control-file" id="upload" name="image" accept="image/*">
+							</div>
+						</form>
+					</div>
+
+					<!-- Modal Footer -->
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary rounded-lg shadow-sm" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" form="maintenanceForm" class="btn btn-primary bg-[#193948] border-none rounded-lg shadow-sm px-5" id="submitRequest">Send Request</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--End modal for request maintenance-->
+    </div>
+    {% endblock content %}
+
+    {% block extra_js %}
+    <link rel="stylesheet" href="{% static 'css/pop-up-mess.css' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    
+    <script>
+        // Store the IDs of notifications that have already been displayed
+        let displayedNotificationIds = new Set();
+
+        //fetch unread notification
+		function fetchUnreadCount() {
+            fetch("{% url 'owner_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+    </script>
+    {% endblock extra_js %}
+</body>
+
+</html>

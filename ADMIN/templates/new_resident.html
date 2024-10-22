@@ -1,0 +1,168 @@
+{% extends 'admin_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ user }} / {% block title %} New resident {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+</head>
+<body class="bg-gray-100">
+	{% block content %}
+	<link rel="stylesheet" href="{% static 'css/input.css' %}">
+	<!--pre loader-->
+	<div id="pre-loader" class="w-full bg-white h-full flex justify-center items-center absolute top-0 left-0 z-[99999999]">
+		<img src="{% static 'Pulse@1x-0.7s-200px-200px.gif' %}" class="h-[4rem] w-[4rem]" alt="" srcset="">
+	</div>
+	
+	<!--Header-->
+	<div class="w-full flex justify-between items-center py-3 px-3 shadow-md bg-white relative">
+		<i id="menuBtn" class="bi bi-list text-[1.3rem] font-semibold py-0 ml-2 md:hidden"></i>
+
+		<h1 class="text-left w-full left-[18%] max-[990px]:left-[25%] absolute font-semibold">NEW RESIDENT </h1>
+
+		<div class="dropdown w-full text-right">
+			<button id="user" class="btn btn-secondary dropdown-toggle py-0 bg-white border-0 text-black" type="button"
+				data-bs-toggle="dropdown" aria-expanded="false">
+				{{ user }}
+			</button>
+			<ul class="dropdown-menu">
+				<li>
+					<form class="dropdown-item" action="{% url 'adminLogout' %}" method="post">
+						{% csrf_token %}
+						<button class="w-full text-left" type="submit"><i class="bi bi-box-arrow-right"></i>
+							Logout</button>
+					</form>
+				</li>
+			</ul>
+		</div>
+	</div>
+
+	<!--Content container-->
+	<div class="w-full md:w-[85%] max-[770px]:h-full h-[90%] bg-white absolute right-0 top-[4rem] md:top-[3.8rem] shadow-md rounded-md p-4 overflow-y-auto overflow-x-hidden">
+		{% if mess != '' %}
+			<p class="alert alert-success">{{ mess }}</p>
+		{% endif %}
+
+		<form method="post" action="{% url 'sec_new_resident' %}">
+			{% csrf_token %}
+			<fieldset class="px-4 mb-2">
+				<legend class="font-semibold mb-4"><a href="{% url 'residents' %}"><i class="bi bi-arrow-left"></i></a> Personal information</legend>
+
+				<div class="mb-2">
+					<label for="firstname" class="form-label">Firstname</label>
+					{{ form.first_name }}
+					{% for error in form.first_name.errors %}
+						<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="lastname" class="form-label">Lastname</label>
+					{{ form.last_name }}
+					{% for error in form.last_name.errors %}
+						<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="lastname" class="form-label">Date of birth</label>
+					{{ form.date_of_birth }}
+					{% for error in form.date_of_birth.errors %}
+						<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="lastname" class="form-label">Age</label>
+					{{ form.age }}
+					{% for error in form.age.errors %}
+						<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="email_address" class="form-label">Email address</label>
+					{{ form.email_address }}
+					{% for error in form.email_address.errors %}
+						<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="lastname" class="form-label">Contact number</label>
+					{{ form.contact_number }}
+					{% for error in form.contact_number.errors %}
+						<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="lastname" class="form-label">Gender</label>
+					{{ form.gender }}
+					{% for error in form.gender.errors %}
+						<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="lastname" class="form-label">Relation to household</label>
+					{{ form.relationship_to_household }}
+					{% for error in form.relationship_to_household.errors %}
+						<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="user_name" class="form-label">Occupation</label>
+					{{ form.occupation }}
+					{% for error in form.occupation.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="password" class="form-label">Household representative</label>
+					{{ form.household_representative }}
+					{% for error in form.household_representative.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+			</fieldset>
+
+			<hr class="mb-2">
+
+			<div class="w-full">
+				<button type="submit" class="btn btn-primary w-full">Submit</button>
+			</div>
+		</form>
+	</div>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+			var user = document.getElementById("user").innerText.trim();
+			if (user === 'AnonymousUser') {
+				location.href = "{% url 'adminLogin' %}";
+			}
+		});
+
+		//hide preloader
+		window.addEventListener('load', (e) => {
+			var preloader = document.getElementById('pre-loader')
+			preloader.style.display = 'none'
+		})
+</script>
+<script src="{% static 'js/profile_dropdown.js' %}"></script>
+{% endblock content %}
+
+</html>
+

@@ -1,0 +1,21 @@
+<h2>Manage Chatbot Responses</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <label for="question">Question:</label>
+    <input type="text" name="question" required>
+
+    <label for="response">Response:</label>
+    <textarea name="response" required></textarea>
+
+    <button type="submit">Save</button>
+</form>
+
+{% for entry in bot_data %}
+    <div>
+        <strong>Question:</strong> {{ entry.question }} <br>
+        <strong>Response:</strong> {{ entry.response }}
+        <!-- You can add buttons to edit or delete each entry -->
+    </div>
+{% endfor %}
+

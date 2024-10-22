@@ -1,0 +1,341 @@
+{% extends 'owner_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} {{ user }}'s Profile{% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-gray-100 text-gray-500">
+    {% block content %}
+    <link rel="stylesheet" href="{% static 'css/pop-up-mess.css' %}">
+
+    <!-- PROFILE MODAL -->
+<div class="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-lg shadow-lg">
+            <div class="modal-header bg-[#193948] text-white">
+                <h5 class="modal-title w-full text-center" id="exampleModalToggleLabel">PROFILE</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="flex justify-center py-3">
+                    <div class="w-40 h-40 shadow-lg rounded-full overflow-hidden border-4 border-white">
+                        <img class="w-full h-full object-cover" src="{{ profile }}" alt="profile pic">
+                        <button
+                            class="bi bi-pen absolute top-2 right-2 text-[1.2rem] bg-white rounded-full shadow-md p-1"
+                            data-bs-target="#exampleModalToggle2" data-bs-toggle="modal" data-bs-dismiss="modal"></button>
+                    </div>
+                </div>
+                <h1 class="text-center text-2xl font-semibold">Hello, {{ user_name }}!</h1>
+                <p class="text-center text-gray-600">Welcome to your profile. You can update your picture or view your details.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exampleModalToggle2" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-lg shadow-lg">
+            <div class="modal-header bg-[#193948] text-white">
+                <h5 class="modal-title" id="exampleModalToggleLabel2">EDIT PICTURE</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="flex justify-center py-3">
+                    <div class="w-40 h-40 shadow-lg rounded-full overflow-hidden border-4 border-white">
+                        <img id="imagePreview" class="w-full h-full object-cover" src="{{ profile }}" alt="profile pic">
+                    </div>
+                </div>
+                <div class="text-center text-gray-600 mb-4">Upload a new picture:</div>
+                <form id="form" action="{% url 'update_picture' id %}" method="post" enctype="multipart/form-data" class="flex flex-col items-center">
+                    {% csrf_token %}
+                    <input id="imageUpload" type="file" name="picture" accept="image/*" class="mb-4">
+                    <div class="flex space-x-2">
+                        <button type="submit" class="btn btn-primary">SAVE</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">CANCEL</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Content container -->
+    <div
+        class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-0 sm:p-4 top-[4rem] md:top-[4.3rem] shadow-md rounded-md overflow-y-auto overflow-x-hidden px-0">
+        {% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+
+        <div class="flex items-center justify-between p-2 sm:p-0">
+            <div class="flex mb-4">
+                <a onclick="window.history.back()"
+                    class="bi bi-arrow-left mr-2 text-[1.5rem] px-[.8rem] flex items-center py-2 rounded-full hover:bg-gray-200 cursor-pointer"></a>
+                <div>
+                    <h1 class="text-xl font-medium">Homeowner profile</h1>
+                    <p class="text-muted-foreground text-sm">Manage your profile details</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md h-[15rem] relative">
+            <!--property image-->
+            {% if my_property.photo.url %}
+                <img src="{{ my_property.photo.url }}" alt="Property Image" class="w-full h-full object-cover">
+            {% else %}
+                <img src="{% static 'users/placeholder.png' %}" alt="Property Image" class="w-full h-full object-cover">
+            {% endif %}
+
+            <!--profile image-->
+            <div class="absolute right-5 md:h-[15rem] md:w-[15rem] h-[10rem] w-[10rem] top-[-30%] md:top-[-40%] bg-white p-2 rounded-full z-30">
+                <img class="h-full shadow-md shadow-gray-700 w-full border border-white bg-gray-100 rounded-full"
+                    src="{{ profile }}" alt="my picture" srcset="">
+                <button
+                    class="material-icons px-[.7rem] text-white py-[.6rem] absolute text-[1.2rem] bottom-[2rem] right-[2rem] rounded-full shadow-md shadow-gray-600"
+                    style="background: rgba(0, 0, 0, .5);" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal"
+                    data-bs-dismiss="modal">edit</button>
+            </div>
+
+            <div class="absolute bottom-0 left-0 h-full w-full rounded-md z-[9]"
+                style="border-image: fill 0 linear-gradient(to top, #242222, #0001)">
+                <h1 class="text-2xl text-gray-50 w-full text-center absolute top-[50%] font-semibold">{{ user.first_name }} {{ user.last_name }}, ({{ user }})</h1>
+            </div>
+        </div>
+
+        <!--information-->
+
+        <style>
+            :root {
+                --background: 0 0% 100%;
+                --foreground: 240 10% 3.9%;
+                --card: 0 0% 100%;
+                --card-foreground: 240 10% 3.9%;
+                --popover: 0 0% 100%;
+                --popover-foreground: 240 10% 3.9%;
+                --primary: 240 5.9% 10%;
+                --primary-foreground: 0 0% 98%;
+                --secondary: 240 4.8% 95.9%;
+                --secondary-foreground: 240 5.9% 10%;
+                --muted: 240 4.8% 95.9%;
+                --muted-foreground: 240 3.8% 45%;
+                --accent: 240 4.8% 95.9%;
+                --accent-foreground: 240 5.9% 10%;
+                --destructive: 0 72% 51%;
+                --destructive-foreground: 0 0% 98%;
+                --border: 240 5.9% 90%;
+                --input: 240 5.9% 90%;
+                --ring: 240 5.9% 10%;
+                --chart-1: 173 58% 39%;
+                --chart-2: 12 76% 61%;
+                --chart-3: 197 37% 24%;
+                --chart-4: 43 74% 66%;
+                --chart-5: 27 87% 67%;
+                --radius: 0.5rem;
+            }
+        </style>
+        <style>
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6 {
+                font-family: 'Inter', sans-serif;
+                --font-sans-serif: 'Inter';
+            }
+        </style>
+        <style>
+            body {
+                font-family: 'Inter', sans-serif;
+                --font-sans-serif: 'Inter';
+            }
+        </style>
+
+        <div class="bg-card text-card-foreground bg-white h-full" data-v0-t="card">
+            <div class="flex flex-col space-y-1.5 p-3">
+                <h3 class="whitespace-nowrap text-xl font-semibold leading-none tracking-tight">Personal Information
+                </h3>
+            </div>
+
+            <div class="p-6 pt-3 grid gap-4">
+                <form id="form" action="{% url 'owner_profile' %}" method="post">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="first_name"> First Name </label>
+                            {{ userForm.first_name }}
+                            {% for error in userForm.first_name.errors %}
+                            <div class="text-red-500 text-sm">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="last_name"> Last Name </label>
+                            {{ userForm.last_name }}
+                            {% for error in userForm.last_name.errors %}
+                            <div class="text-red-500 text-sm">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div>
+                            <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="email"> Email </label>
+                            {{ userForm.email }}
+                            {% for error in userForm.email.errors %}
+                            <div class="text-red-500 text-sm">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div>
+                            <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="phone"> Phone </label>
+                            {{ ownerForm.contact_number }}
+                            {% for error in ownerForm.contact_number.errors %}
+                            <div class="text-red-500 text-sm">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="phone"> Date of birth </label>
+                            {{ ownerForm.date_of_birth }}
+                            {% for error in ownerForm.date_of_birth.errors %}
+                            <div class="text-red-500 text-sm">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="phone"> Age </label>
+                            {{ ownerForm.age }}
+                            {% for error in ownerForm.age.errors %}
+                            <div class="text-red-500 text-sm">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="phone"> Gender </label>
+                            {{ ownerForm.gender }}
+                            {% for error in ownerForm.gender.errors %}
+                            <div class="text-red-500 text-sm">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="phone"> Occupation </label>
+                            {{ ownerForm.occupation }}
+                            {% for error in ownerForm.occupation.errors %}
+                            <div class="text-red-500 text-sm">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="phone"> Relation to household </label>
+                            {{ ownerForm.relationship_to_household }}
+                            {% for error in ownerForm.relationship_to_household.errors %}
+                            <div class="text-red-500 text-sm">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <label
+                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                for="phone"> Username </label>
+                            {{ userForm.username }}
+                            {% for error in userForm.username.errors %}
+                            <div class="text-red-500 text-sm">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <button class="btn btn-primary bg-[#193948] w-full mt-5" type="submit">Save changes</button>
+            </div>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Loading Spinner (hidden until request is sent) -->
+		<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+			<div class="spinner-border text-primary" role="status">
+			</div>
+            <span class="">Loading...</span>
+		</div>
+    {% endblock content %}
+
+    {% block extra_js %}
+    <script src="{% static 'js/owner_loading_submit.js' %}"></script>   
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ONBsiAlrNpJw8zW/FivQc6No5E0nEyBuNb/aD4sSR/Q8+TF55hS9KN06IwcX0J2i"
+        crossorigin="anonymous"></script>
+    <script>
+        document.getElementById('imageUpload').addEventListener('change', (e) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.getElementById('imagePreview');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Store the IDs of notifications that have already been displayed
+        let displayedNotificationIds = new Set();
+
+        //fetch unread notification
+		function fetchUnreadCount() {
+            fetch("{% url 'owner_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+       
+    </script>
+    <script src="{% static 'js/closemess.js' %}"></script>
+    {% endblock extra_js %}
+</body>
+
+</html>

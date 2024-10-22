@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Home-owner login</title>
+	<link rel="icon" href="{% static 'users/logo.png' %}" type="image/x-icon">
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+	<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+	<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+	<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+	<script src="{% static 'js/preload.js' %}"></script>
+	<script src="{% static 'js/loading_submit.js' %}"></script>
+	<script src="{% static 'js/closemess.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'css/user-pop-up-mess.css' %}">
+	</link>
+</head>
+
+<body class="relative h-[100dvh] w-[100dvw] overflow-y-scroll overflow-x-hidden">
+	<!--pre loader-->
+	<div id="pre-loader"
+		class="w-full h-full flex hidden justify-center items-center absolute top-0 left-0 z-[99999999]"
+		style="background: rgba(255, 255, 255, .5);">
+		<img src="{% static 'Pulse@1x-0.7s-200px-200px.gif' %}" class="h-[4rem] w-[4rem]" alt="" srcset="">
+	</div>
+
+	<img class="absolute h-full w-full top-0 left-0" src="{% static 'users/pope-francis-village.png' %}" alt=""
+		srcset="">
+	<div class="shadow-md bg-gray-100 z-[99] flex justify-center items-center absolute h-[100%] w-full"
+		style="background-color: rgba(255, 255, 255, 0.8);">
+
+		<!--Content-->
+		<div class="w-full max-[550px]:h-full py-4 bg-white absolute max-w-[450px] shadow-md rounded-md">
+			<a class="hover:bg-gray-200 h-[1.8rem] w-[1.8rem] flex justify-center items-center mt-3 ml-3 rounded-[50%] absolute"
+				href="{% url 'main' %}"><i class="bi bi-arrow-left text-[1.5rem]"></i></a>
+
+			<div class="w-full flex justify-center py-2 mt-2">
+				<div
+					class="h-[130px] w-[130px] min-[900px]:w-[180px] min-[900px]:h-[180px] flex justify-center rounded-[50%] overflow-hidden items-center bg-gray-100">
+					<img class="h-[80%] w-[80%]" src="{% static 'users/homeOwner.png' %}" alt="homeOwner image"
+						srcset="">
+				</div>
+			</div>
+
+			<h1 class="w-full text-center py-2 text-[1.5rem] text-teal-600">Homeowner</h1>
+
+			<p class="w-full px-3 text-[1.2rem]">Login</p>
+
+			{% for message in messages %}
+			{% if message.tags == 'error' %}
+			<p id="pop-up-mess"
+				class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+				<i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+			</p>
+			{% elif message.tags == 'warning' %}
+			<p id="pop-up-mess" class="alert alert-warning absolute py-2 border-none bg-white shadow-md text-black"><i
+					class="bi bi-exclamation-circle-fill text-orange-600"></i> {{ message }}</p>
+			{% else %}
+			<p id="pop-up-mess"
+				class="alert alert-success absolute flex items-center py-2 border-none bg-white shadow-md text-black"><i
+					class="bi bi-check-circle-fill text-xlg text-green-600"></i> {{ message }}</p>
+			{% endif %}
+			{% endfor %}
+
+			<!--Form-->
+			<form id="form" method="post" class="w-full px-3 mt-3">
+				{% csrf_token %}
+				<div class="mb-2">
+					<label for="email" class="form-label text-gray-600 text-[.8rem]"> Username</label>
+					<input type="text" name="username" id="username" class="form-control py-[.70rem] bg-gray-50 focus:bg-gray-50"
+						placeholder="Enter username" value="{{ username }}" required>
+				</div>
+
+
+				<div class="mb-2">
+					<label for="email" class="form-label text-gray-600 text-[.8rem]"> Password</label>
+					<div class="relative h-full w-full">
+						<input type="password" name="password" id="password"
+							class="form-control bg-gray-50 focus:bg-gray-50 py-[.70rem]" placeholder="Enter password" required>
+						<i id="showPassBtn" class="bi bi-eye absolute bottom-[.37rem] text-[1.4rem] right-3 cursor-pointer"
+							title="show password"></i>
+						<i id="hidePassBtn"
+							class="bi bi-eye-slash hidden absolute bottom-[.37rem] text-[1.4rem] right-3 cursor-pointer"
+							title="Hide password"></i>
+					</div>
+				</div>
+
+				<div class="w-full flex justify-between text-[.8rem] items-center">
+					<p class="mb-3 text-center text-gray-500">Don't have an account? <a class="text-teal-500"
+							href="{% url 'register' %}">register</a></p>
+					<p class="mb-3 text-center text-gray-500"> <a class="text-teal-500"
+							href="{% url 'password_reset_request2' %}">Forgot password?</a></p>
+				</div>
+
+				<button type="submit" class="btn btn-primary w-full bg-teal-600 border border-teal-600 py-[.73rem] mt-2">Login</button>
+			</form>
+
+		</div>
+	</div>
+</body>
+<script>
+	document.addEventListener('DOMContentLoaded', (e) => {
+		const password = document.querySelector("#password")
+		const showPassBtn = document.querySelector("#showPassBtn")
+		const hidePassBtn = document.querySelector("#hidePassBtn")
+		showPassBtn.addEventListener('click', (e) => {
+			showPassBtn.style.display = 'none'
+			hidePassBtn.style.display = 'block'
+			password.type = 'text'
+		})
+		hidePassBtn.addEventListener('click', (e) => {
+			showPassBtn.style.display = 'block'
+			hidePassBtn.style.display = 'none'
+			password.type = 'password'
+		})
+	})
+</script>
+
+</html>

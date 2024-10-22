@@ -1,0 +1,681 @@
+{% extends 'owner_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} {{ user }}'s Household members {% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/owner_active_link.css' %}">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-gray-100">
+    {% block content %}
+    <link rel="stylesheet" href="{% static 'css/pop-up-mess.css' %}">
+    
+    <!--Content container-->
+    <div
+        class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute max-w-[550px]:p-0 p-4 px-0 md:right-0 top-[4.3rem] md:top-[4.5rem] shadow-md rounded-md overflow-y-auto overflow-x-hidden ">
+        {% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+
+        <div class="flex items-center justify-between w-full mb-6">
+            <div class="flex mb-2 px-3 w-full justify-between">
+                <div class="flex">
+                    <a href="{% url 'owner_dashboard' %}"
+                    class="bi bi-arrow-left mr-2 text-[1.2rem] px-[.8rem] flex items-center py-2 rounded-full hover:bg-gray-200 cursor-pointer"></a>
+                    <div>
+                        <h1 class="text-xl font-medium">Household members</h1>
+                        <p class="text-muted-foreground text-sm">Manage your household members</p>
+                    </div>
+                </div>
+
+                <!-- Add member button -->
+                <button href="{% url 'add_member' %}" data-bs-toggle="modal" data-bs-target="#addMemberModal"
+                    class="btn btn-primary shadow-gray-500 shadow-md hover:scale-[1.05] duration-300 transition-all">
+                    <i class="bi bi-plus font-semibold"></i>
+                    <span class="hidden min-[770px]:inline">Add Member</span>
+                </button>
+            </div>
+        </div>
+
+        
+      <!-- Modal for Add Member -->
+    <div class="modal fade" id="addMemberModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addMemberModalLabel">Add Household Member</h5>
+                    <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" id="addMemberForm" action="{% url 'add_member' %}">
+                        {% csrf_token %}
+                        <fieldset class="px-4 mb-3">
+                            <div class="row g-3">
+                                <!-- First Name -->
+                                <div class="col-md-6">
+                                    <label for="firstname" class="form-label text-gray-700">First Name</label>
+                                    <div class="flex items-center rounded-md">
+                                        <span class="input-group-text px-2"><i class="bi bi-person-fill"></i></span>
+                                        {{ form.first_name|default_if_none:""|safe }}
+                                    </div>
+                                    {% for error in form.first_name.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Last Name -->
+                                <div class="col-md-6 mb-2">
+                                    <label for="lastname" class="form-label text-gray-700">Last Name</label>
+                                    <div class="flex items-center rounded-md">
+                                        <span class="input-group-text px-2"><i class="bi bi-person-fill"></i></span>
+                                        {{ form.last_name|default_if_none:""|safe }}
+                                    </div>
+                                    {% for error in form.last_name.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- Date of Birth -->
+                                <div class="col-md-6 mb-2">
+                                    <label for="date_of_birth" class="form-label text-gray-700">Date of Birth</label>
+                                    <div class="flex items-center rounded-md">
+                                        <span class="input-group-text px-2"><i class="bi bi-calendar3"></i></span>
+                                        {{ form.date_of_birth|default_if_none:""|safe }}
+                                    </div>
+                                    {% for error in form.date_of_birth.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Age -->
+                                <div class="col-md-6 mb-2">
+                                    <label for="age" class="form-label text-gray-700">Age</label>
+                                    <div class="flex items-center rounded-md">
+                                        <span class="input-group-text px-2"><i class="bi bi-hash"></i></span>
+                                        {{ form.age|default_if_none:""|safe }}
+                                    </div>
+                                    {% for error in form.age.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- Email Address -->
+                                <div class="col-md-6 mb-2">
+                                    <label for="email_address" class="form-label text-gray-700">Email Address</label>
+                                    <div class="flex items-center rounded-md">
+                                        <span class="input-group-text px-2"><i class="bi bi-envelope"></i></span>
+                                        {{ form.email_address|default_if_none:""|safe }}
+                                    </div>
+                                    {% for error in form.email_address.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Contact Number -->
+                                <div class="col-md-6 mb-2">
+                                    <label for="contact_number" class="form-label text-gray-700">Contact Number</label>
+                                    <div class="flex items-center rounded-md">
+                                        <span class="input-group-text px-2"><i class="bi bi-telephone"></i></span>
+                                        {{ form.contact_number|default_if_none:""|safe }}
+                                    </div>
+                                    {% for error in form.contact_number.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- Gender -->
+                                <div class="col-md-6 mb-2">
+                                    <label for="gender" class="form-label text-gray-700">Gender</label>
+                                    <div class="flex items-center rounded-md">
+                                        <span class="input-group-text px-2"><i class="bi bi-gender-ambiguous"></i></span>
+                                        {{ form.gender|default_if_none:""|safe }}
+                                    </div>
+                                    {% for error in form.gender.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Relation to Household -->
+                                <div class="col-md-6 mb-2">
+                                    <label for="relationship_to_household" class="form-label text-gray-700">Relation to Household</label>
+                                    <div class="flex items-center rounded-md">
+                                        <span class="input-group-text px-2"><i class="bi bi-house-door"></i></span>
+                                        {{ form.relationship_to_household|default_if_none:""|safe }}
+                                    </div>
+                                    {% for error in form.relationship_to_household.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- Occupation -->
+                                <div class="col-md-12 mb-2">
+                                    <label for="occupation" class="form-label text-gray-700">Occupation</label>
+                                    <div class="flex items-center rounded-md">
+                                        <span class="input-group-text px-2"><i class="bi bi-briefcase"></i></span>
+                                        {{ form.occupation|default_if_none:""|safe }}
+                                    </div>
+                                    {% for error in form.occupation.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Member</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Search and sort input -->
+        <div class="mb-2 flex gap-2 items-center px-3">
+            <!-- Search input -->
+            <input type="text" id="searchInput" class="form-control" placeholder="Search for household members...">
+        
+            <!-- Sort button with dropdown -->
+            <div class="dropdown">
+                <button id="sortButton" class="btn shadow-md flex items-center bg-slate-200 justify-center transition-all duration-300 hover:bg-gray-300 hover:scale-[1.1]"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <i id="sortIcon" class="bi bi-sort-alpha-down"></i> Sort
+                </button>
+
+                <!-- Dropdown menu for sorting -->
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="?sort=name_asc">Sort by Name (A-Z)</a></li>
+                    <li><a class="dropdown-item" href="?sort=name_desc">Sort by Name (Z-A)</a></li>
+                    <li><a class="dropdown-item" href="?sort=age_asc">Sort by Age (Ascending)</a></li>
+                    <li><a class="dropdown-item" href="?sort=age_desc">Sort by Age (Descending)</a></li>
+                    <li><a class="dropdown-item" href="?sort=relationship_asc">Sort by Relationship (A-Z)</a></li>
+                    <li><a class="dropdown-item" href="?sort=relationship_desc">Sort by Relationship (Z-A)</a></li>
+                </ul>
+            </div>
+
+            <!-- Update sort icon dynamically based on current sort option -->
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const currentSort = "{{ current_sort }}";  // Get current sort option from context
+
+                    const sortIcon = document.getElementById("sortIcon");
+
+                    // Update the icon based on the sorting type
+                    if (currentSort.includes("name")) {
+                        sortIcon.className = currentSort.includes("asc") ? 'bi bi-sort-alpha-down' : 'bi bi-sort-alpha-up';
+                    } else if (currentSort.includes("age")) {
+                        sortIcon.className = currentSort.includes("asc") ? 'bi bi-sort-numeric-down' : 'bi bi-sort-numeric-up';
+                    } else if (currentSort.includes("relationship")) {
+                        sortIcon.className = currentSort.includes("asc") ? 'bi bi-people' : 'bi bi-people-fill';
+                    }
+                });
+            </script>
+        </div>
+
+        <div class="overflow-x-auto max-h-[350px] overflow-y-auto">
+            {% if page_obj.count == 0 %}
+            <p class="w-full text-center text-[5rem] text-gray-500"><i class="bi bi-person-dash"></i> </p>
+            {% endif %}
+            <table id="myTable" class="min-w-full divide-y divide-gray-200">
+                <thead class="sticky top-0 bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Firstname</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Lastname</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
+                            of birth</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age
+                        </th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email
+                            address</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Contact
+                            number</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Gender</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Relation to household</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Occupation</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Action</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTable" class="bg-white divide-y divide-gray-200">
+                    {% for resident in page_obj %}
+                    <tr>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ resident.first_name }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ resident.last_name }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ resident.date_of_birth }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ resident.age }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ resident.email_address }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ resident.contact_number }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ resident.gender }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ resident.relationship_to_household }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ resident.occupation }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <!--ellipsis-->
+                            <button class="w-full hover:bg-gray-200 rounded-full py-2" data-bs-toggle="dropdown"
+                                aria-expanded="false"><i class="bi bi-three-dots"></i></button>
+                            <ul class="dropdown-menu">
+
+                                <!--view button for modal-->
+                                <li>
+                                    <button type="button" class="dropdown-item text-blue-500" data-bs-toggle="modal"
+                                        data-bs-target="#viewModal{{ resident.pk}}">
+                                        <i class="bi bi-eye-fill"></i> VIEW
+                                    </button>
+                                </li>
+
+                                <!--edit button for modal-->
+                                <li>
+                                    <button type="button" class="dropdown-item text-green-500" data-bs-toggle="modal"
+                                        data-bs-target="#editModal{{ resident.pk}}">
+                                        <i class="bi bi-pen-fill"></i> UPDATE
+                                    </button>
+                                </li>
+
+
+                                <!--delete button for modal-->
+                                <li>
+                                    <button type="button" class="dropdown-item text-red-500" data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal{{ resident.pk}}">
+                                        <i class="bi bi-trash-fill"></i> DELETE
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <!-- View Modal -->
+                            <div class="modal fade" id="viewModal{{ resident.pk }}" tabindex="-1" aria-labelledby="viewModalLabel{{ resident.pk }}" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content shadow-lg rounded-lg">
+                                        <div class="modal-header bg-primary text-white">
+                                            <h5 class="modal-title w-full text-center font-bold" id="viewModalLabel{{ resident.pk }}">
+                                                <i class="bi bi-person-circle"></i> View Resident: {{ resident.first_name }}
+                                            </h5>
+                                            <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <!-- Other info -->
+                                            <div class="w-full py-3 flex justify-center overflow-y-auto max-h-[400px]">
+                                                <table class="table table-striped table-hover">
+                                                    <tr>
+                                                        <th class="py-2"><i class="bi bi-person-fill"></i> Name</th>
+                                                        <td>{{ resident.first_name }} {{ resident.last_name }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="py-2"><i class="bi bi-envelope-fill"></i> Email address</th>
+                                                        <td>{{ resident.email_address }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="py-2"><i class="bi bi-telephone-fill"></i> Contact no</th>
+                                                        <td>{{ resident.contact_number }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="py-2"><i class="bi bi-gender-ambiguous"></i> Gender</th>
+                                                        <td>{{ resident.gender }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="py-2"><i class="bi bi-briefcase-fill"></i> Occupation</th>
+                                                        <td>{{ resident.occupation }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th class="py-2"><i class="bi bi-house-door-fill"></i> Relation to household</th>
+                                                        <td>{{ resident.relationship_to_household }}</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer d-flex justify-content-between">
+                                            <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
+                                                <i class="bi bi-x-circle-fill"></i> Close
+                                            </button>
+                                            <button id="editBtn" type="button" class="btn btn-primary">
+                                                <i class="bi bi-pencil-fill"></i> Edit Info
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- End modal for view -->
+
+
+                            <!-- Modal for edit-->
+                            <div class="modal fade" id="editModal{{ resident.pk }}" tabindex="-1" aria-labelledby="editModalLabel{{ resident.pk }}" aria-hidden="true">
+                                <div class="modal-dialog modal-lg"> <!-- Increase modal size for better spacing -->
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-primary text-white">
+                                            <h5 class="modal-title" id="editModalLabel{{ resident.pk }}">Edit {{ resident.first_name }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form method="post" action="{% url 'edit_member' resident.pk %}">
+                                                {% csrf_token %}
+                                                <div class="container-fluid">
+                                                    <div class="row g-3"> <!-- Bootstrap grid for spacing -->
+                                                        <div class="col-md-6">
+                                                            <label for="first_name" class="form-label">Firstname</label>
+                                                            <div class="input-group">
+                                                                <span class="input-group-text"><i class="bi bi-person-fill"></i></span> <!-- Icon -->
+                                                                <input type="text" class="form-control" name="first_name" id="first_name" value="{{ resident.first_name }}" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="last_name" class="form-label">Lastname</label>
+                                                            <div class="input-group">
+                                                                <span class="input-group-text"><i class="bi bi-person"></i></span> <!-- Icon -->
+                                                                <input type="text" class="form-control" name="last_name" id="last_name" value="{{ resident.last_name }}" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="age" class="form-label">Age</label>
+                                                            <div class="input-group">
+                                                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span> <!-- Icon -->
+                                                                <input type="number" class="form-control" name="age" id="age" value="{{ resident.age }}" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="gender" class="form-label">Gender</label>
+                                                            <div class="input-group">
+                                                                <span class="input-group-text"><i class="bi bi-gender-ambiguous"></i></span> <!-- Icon -->
+                                                                <select class="form-select" name="gender" id="gender" required>
+                                                                    <option value="Male" {% if resident.gender == 'Male' %}selected{% endif %}>Male</option>
+                                                                    <option value="Female" {% if resident.gender == 'Female' %}selected{% endif %}>Female</option>
+                                                                    <option value="Other" {% if resident.gender == 'Other' %}selected{% endif %}>Other</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="contact_number" class="form-label">Contact No.</label>
+                                                            <div class="input-group">
+                                                                <span class="input-group-text"><i class="bi bi-telephone"></i></span> <!-- Icon -->
+                                                                <input type="tel" class="form-control" name="contact_number" id="contact_number" value="{{ resident.contact_number }}" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="email_address" class="form-label">Email Address</label>
+                                                            <div class="input-group">
+                                                                <span class="input-group-text"><i class="bi bi-envelope"></i></span> <!-- Icon -->
+                                                                <input type="email" class="form-control" name="email_address" id="email_address" value="{{ resident.email_address }}" required>
+                                                            </div>
+                                                            <div id="emailFeedback" class="text-danger"></div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="occupation" class="form-label">Occupation</label>
+                                                            <div class="input-group">
+                                                                <span class="input-group-text"><i class="bi bi-briefcase"></i></span> <!-- Icon -->
+                                                                <input type="text" class="form-control" name="occupation" id="occupation" value="{{ resident.occupation }}" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="relationship_to_household" class="form-label">Relation to Household</label>
+                                                            <div class="input-group">
+                                                                <span class="input-group-text"><i class="bi bi-house"></i></span> <!-- Icon -->
+                                                                <input type="text" class="form-control" name="relationship_to_household" id="relationship_to_household" value="{{ resident.relationship_to_household }}" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--End modal for edit-->
+
+
+                            <!-- Modal for delete-->
+                            <div class="modal fade" id="deleteModal{{ resident.pk }}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content rounded-lg shadow-lg">
+                                        <div class="modal-header border-b-2 border-gray-300">
+                                            <h5 class="modal-title text-lg font-semibold text-gray-800" id="deleteModalLabel{{ resident.pk }}">
+                                                Delete {{ resident.first_name }}?
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <i class="bi bi-x-circle text-[5rem] text-red-500"></i>
+                                            <p class="mt-4 text-gray-600">Are you sure you want to delete member "<strong>{{ resident.first_name }}</strong>"?</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{% url 'delete_member' resident.pk %}" method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger flex items-center">
+                                                    <i class="bi bi-trash-fill mr-2"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--END modal for delete-->
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!--pagination-->
+        <div class="py-2 px-3">
+            <nav class="block">
+                <p class="text-sm text-gray-500">Showing {{ page_obj.end_index }} out of {{ paginator.count }} results
+                </p>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %} <li class="page-item"><a
+                            class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item opacity-[.5] pointer-events-none">
+                            <a class="page-link" href="" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item opacity-[.5] pointer-events-none">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                </ul>
+            </nav>
+        </div>
+        <div id="noResults" class="hidden w-full text-center">
+            <div class="">
+                <i class="bi bi-exclamation-circle" style="font-size: 3rem; color: gray;"></i>
+                <p class="mt-2 text-gray-600">No Results Found</p>
+            </div>
+        </div>
+
+        <!-- Loading Spinner (hidden until request is sent) -->
+		<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+			<div class="spinner-border text-primary" role="status">
+			</div>
+            <span class="">Loading...</span>
+		</div>
+
+    </div>
+    {% endblock content %}
+
+    {% block extra_js %}
+    <script src="{% static 'js/inputFilter.js' %}"></script>
+    <script src="{% static 'js/sec_loading_submit.js' %}"></script>
+    <script src="{% static 'js/owner_loading_submit.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <script>
+        //submit new member
+        $('#addMemberForm').on('submit', function(e) {
+            e.preventDefault();  // Prevent the default form submission
+            
+            var formData = $(this).serialize();  // Serialize form data
+
+            $.ajax({
+                url: '{% url "add_member" %}',  // URL to the view
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        // If success, show a success message and redirect
+                        window.location.href = response.redirect_url;
+                    }
+                },
+                error: function(xhr) {
+                    // Hide the loader
+                    const loader = document.getElementById("loadingSpinner");
+                    loader.classList.add('hidden');
+                    var errors = xhr.responseJSON.errors;
+                    // Clear previous error messages
+                    $('.error-message').remove();
+                    
+                    // Display new error messages
+                    $.each(errors, function(field, messages) {
+                        var errorElement = $('<div class="error-message text-red-500"></div>').text(messages[0]);
+                        $('#id_' + field).after(errorElement);
+                    });
+                }
+            });
+        });
+
+        // Store the IDs of notifications that have already been displayed
+        let displayedNotificationIds = new Set();
+
+        //fetch unread notification
+		function fetchUnreadCount() {
+            fetch("{% url 'owner_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 900);
+        fetchUnreadCount();  // Initial call to set the count immediately
+
+        $(document).ready(function() {
+            // Check email existence in real-time
+            $('#email_address').on('blur', function() {
+                const email = $(this).val();
+                if (email) {
+                    $.ajax({
+                        url: '{% url "check_email_existence" %}',  // Adjust the URL to your email check view
+                        method: 'POST',
+                        data: {
+                            'email_address': email,
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'  // Include CSRF token for security
+                        },
+                        success: function(response) {
+                            if (!response.exists) {
+                                $('#emailFeedback').text('Email is available.').removeClass('text-danger').addClass('text-success');
+                            } else {
+                                $('#emailFeedback').text('Email already exists. Please choose another one.').removeClass('text-success').addClass('text-danger');
+                            }
+                        },
+                        error: function() {
+                            $('#emailFeedback').text('An error occurred while checking email.').addClass('text-danger');
+                        }
+                    });
+                } else {
+                    $('#emailFeedback').text('');  // Clear feedback if input is empty
+                }
+            });
+        });
+    </script>
+
+    <!-- JavaScript for handling sort selection -->
+    <script>
+        let currentSort = 'name'; // Default sort option
+
+        document.querySelectorAll('.sort-option').forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const sortType = this.getAttribute('data-sort');
+                currentSort = sortType;
+
+                // Change the sort icon or text based on selection
+                const sortIcon = document.getElementById('sortIcon');
+                if (sortType === 'name') {
+                    sortIcon.className = 'bi bi-sort-alpha-down';
+                } else if (sortType === 'age') {
+                    sortIcon.className = 'bi bi-sort-numeric-down';
+                } else if (sortType === 'relationship') {
+                    sortIcon.className = 'bi bi-people-fill';
+                }
+
+                // Implement your sorting logic here based on 'currentSort'
+                // Example: sortHouseholdMembers(currentSort);
+                console.log("Sorting by:", currentSort); // For debugging purposes
+            });
+        });
+    </script>
+    {% endblock extra_js %}
+</body>
+
+</html>

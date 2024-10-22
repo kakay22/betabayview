@@ -1,0 +1,312 @@
+{% extends 'owner_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% block title %} {{ user }}'s Dashboard {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+	<script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+	<script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.min.js"></script>
+</head>
+
+<body class="bg-gray-100 h-[100dvh] w-[100vw] relative overflow-hidden">
+	{% block content %}
+	<!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <!-- Swiper JS -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+	<link rel="stylesheet" href="{% static 'css/pop-up-mess.css' %}">
+
+	<!--pre loader-->
+	<!-- <div id="pre-loader" class="w-full bg-white h-full flex justify-center items-center absolute top-0 left-0 z-[99999999]">
+		<img src="{% static 'Pulse@1x-0.7s-200px-200px.gif' %}" class="h-[4rem] w-[4rem]" alt="" srcset="">
+	</div> -->
+
+	<p id="user" class="hidden">{{ user }}</p>
+
+	<!--content container-->
+	<div id="container"
+		class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-gray-50 absolute md:right-0 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md py-4 md:px-3 px-0 overflow-y-auto overflow-x-hidden ">
+
+    <!-- Button to open the modal -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+      <i class="bi bi-cloud-upload"></i> Upload Document
+    </button>
+
+    <!-- Modal Structure -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="uploadModalLabel"><i class="bi bi-cloud-upload"></i> Upload New Document</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          
+          <div class="modal-body">
+            <form id="uploadForm" enctype="multipart/form-data">
+              <!-- Document Type -->
+              <div class="mb-3">
+                <label for="documentType" class="form-label">Document Type</label>
+                <select id="documentType" name="document_type" class="form-select" required>
+                  <option value="" disabled selected>Select document type</option>
+                  <option value="property-title">Property Title</option>
+                  <option value="contract">Contract</option>
+                  <option value="maintenance-record">Maintenance Record</option>
+                  <option value="insurance">Insurance Document</option>
+                  <option value="other">Other</option>
+                </select>
+                <div class="invalid-feedback" id="typeError">Please select a document type.</div>
+              </div>
+
+              <!-- File Input -->
+              <div class="mb-3">
+                <label for="documentFile" class="form-label">Select File</label>
+                <input type="file" class="form-control" id="documentFile" name="file" required>
+                <div class="invalid-feedback" id="fileError">Please select a valid file.</div>
+              </div>
+
+              <!-- Upload Button -->
+              <div class="d-grid">
+                <button type="submit" class="btn btn-success"><i class="bi bi-cloud-arrow-up"></i> Upload</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Document Table Section -->
+    <div class="border rounded-lg bg-white shadow-md overflow-hidden">
+      <table class="table table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Upload Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="documentTableBody">
+          <tr>
+            <td colspan="5" class="text-center">No documents uploaded yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+	</div>
+	<!--End container--> 
+
+	{% endblock content %}
+	{% block extra_js %}
+	<script src="{% static 'js/owner_loading_submit.js' %}"></script>
+	<!-- <script src="{% static 'js/owner_preload.js' %}"></script> -->
+	<script src="{% static 'js/owner_dropdown_menu.js' %}"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="{% static 'js/response.js' %}"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+		crossorigin="anonymous"></script>
+	<script>
+		//fetch unread notification
+		function fetchUnreadCount() {
+            fetch("{% url 'owner_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+
+		//carousel for events
+        var swiper = new Swiper('.swiper-container', {
+			slidesPerView: 1,
+			spaceBetween: 10,
+			navigation: {
+				nextEl: '.swiper-button-next',
+				prevEl: '.swiper-button-prev',
+			},
+			pagination: {
+				el: '.swiper-pagination',
+				clickable: true,
+			},
+			loop: true, // Enable looping if desired
+			autoplay: {
+				delay: 3000, // Auto slide every 3 seconds
+				disableOnInteraction: false,
+			},
+			effect: 'slide', // You can change to 'fade' for a different effect
+		});
+
+		//fetch new messages
+		$(document).ready(function() {
+    function fetchMessages() {
+        $.ajax({
+            url: '{% url "get_new_messages" %}',
+            method: 'GET',
+			success: function(data) {
+                if (data.length > 0) {
+                    $('#message-indicator').text(data.length); // Show the red dot indicator with the count
+                } else {
+                    $('#message-indicator').hide(); // Hide the red dot indicator
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error fetching messages:', textStatus, errorThrown);
+            }
+        });
+    }
+
+    // Polling every 5 seconds
+    setInterval(fetchMessages, 5000);
+
+    // Mark messages as read and navigate to messages page
+    $('#message-button').click(function() {
+        $.ajax({
+            url: '{% url "mark_messages_as_read" %}',
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function(data) {
+                if (data.status === 'ok') {
+                    $('#message-indicator').hide(); // Hide the red dot indicator
+                    window.location.href = '{% url "owner_messages" %}'; // Redirect to messages page
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error marking messages as read:', textStatus, errorThrown);
+            }
+        });
+    });
+});
+	</script>
+
+<script>
+    // Embed Chatbot Config
+    window.embeddedChatbotConfig = {
+        chatbotId: "3mB7KsfJ--tsoHhcb4BC3",
+        domain: "www.chatbase.co"
+    };
+
+    // Example of how you might get the current user's name dynamically
+    const currentUser = "{{ user }}"; // Replace this with actual logic to fetch the user's authenticated username
+
+    // Function to intercept and personalize chatbot responses
+    function interceptChatbotResponse(chatbox) {
+        const observer = new MutationObserver(function(mutationsList) {
+            for (const mutation of mutationsList) {
+                if (mutation.addedNodes.length > 0) {
+                    // Find the last added message (from the chatbot)
+                    const lastMessage = mutation.addedNodes[mutation.addedNodes.length - 1];
+
+                    // Replace the placeholder with the actual username
+                    if (lastMessage && lastMessage.innerText.includes("{{username}}")) {
+                        lastMessage.innerText = lastMessage.innerText.replace("{{username}}", currentUser);
+                    }
+                }
+            }
+        });
+
+        // Start observing the chatbox for changes
+        observer.observe(chatbox, { childList: true, subtree: true });
+    }
+
+    // Initialize the Chatbase chatbot
+    document.addEventListener("DOMContentLoaded", function() {
+        // Assume the chatbox is rendered inside this element
+        const chatbox = document.querySelector(".chatbase-chat-box");
+
+        if (chatbox) {
+            // Call the function to intercept and personalize chatbot responses
+            interceptChatbotResponse(chatbox);
+        }
+    });
+</script>
+
+<!-- Embed Script from Chatbase -->
+<script
+    src="https://www.chatbase.co/embed.min.js"
+    chatbotId="3mB7KsfJ--tsoHhcb4BC3"
+    domain="www.chatbase.co"
+    defer>
+</script>
+
+<script>
+  $(document).ready(function () {
+    $('#uploadForm').on('submit', function (e) {
+      e.preventDefault();
+      
+      // Reset validation messages
+      $('#typeError, #fileError').addClass('d-none');
+      let hasError = false;
+  
+      // Validate fields
+      if (!$('#documentType').val()) {
+        $('#typeError').removeClass('d-none');
+        hasError = true;
+      }
+      if (!$('#documentFile').val()) {
+        $('#fileError').removeClass('d-none');
+        hasError = true;
+      }
+  
+      if (!hasError) {
+        // Perform AJAX request
+        const formData = new FormData(this);
+  
+        $.ajax({
+          url: "{% url 'upload_document' %}",  // Your upload URL
+          type: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function (response) {
+            if (response.success) {
+              // Show success message and refresh the page to show the updated documents
+              $('#successMessage').removeClass('d-none');
+              setTimeout(function () {
+                window.location.reload();  // Reload the page to reflect new data
+              }, 2000);
+            }
+          },
+          error: function (xhr) {
+            // Handle errors here
+            const errors = xhr.responseJSON.errors;
+            if (errors.document_type) {
+              $('#typeError').removeClass('d-none').text(errors.document_type[0]);
+            }
+            if (errors.file) {
+              $('#fileError').removeClass('d-none').text(errors.file[0]);
+            }
+          }
+        });
+      }
+    });
+  });
+  </script>
+
+
+	{% endblock %}
+</body>
+
+</html>

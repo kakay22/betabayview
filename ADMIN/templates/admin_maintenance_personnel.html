@@ -1,0 +1,454 @@
+{% extends 'admin_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ user }}'s {% block title %} Maintenance personnel list {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+</head>
+<body class="bg-gray-100">
+	{% block content %}
+	<link rel="stylesheet" href="{% static 'css/admin-pop-up-mess.css' %}">
+	<!-- Loading Spinner (hidden until request is sent) -->
+	<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+		<div class="spinner-border text-primary" role="status">
+		</div>
+		<span class="">Loading...</span>
+	</div>
+
+	<!--Content container-->
+	<div class="w-full md:w-[85%] max-[770px]:h-full h-[90%] mt-[.8rem] bg-white absolute right-0 top-[4rem] md:top-[3.8rem] shadow-md rounded-md py-4 md:px-3 overflow-y-auto overflow-x-hidden">
+
+		<div class="flex mb-4 items-center md:px-0 px-3">
+			<a onclick="history.back()"
+				class="bi bi-arrow-left mr-2 text-[1.2rem] px-[.8rem] flex items-center py-[.7rem] rounded-full hover:bg-gray-200 cursor-pointer">
+			</a>
+			<h1 class="text-xl font-medium">Maintenance personnels</h1>
+		</div>
+
+		<div class="mb-2 flex gap-2 items-center px-3 md:px-0">
+			<!--Button trigger to add new repairman-->
+			<i class="btn btn-primary shadow-gray-500 shadow-md max-[770px]:rounded-full" data-bs-toggle="modal" data-bs-target="#addRepairmanModal""
+				data-bs-target="#newHomeowner"><i class="bi bi-plus font-semibold"></i> <span
+					class="hidden min-[770px]:inline"></span></i>
+			<div class="form-control flex items-center">
+                <i class="bi bi-search text-[1rem] px-2"></i>
+            	<input type="text" id="searchInput" class="border-none py-1 pl-2 w-full outline-none" placeholder="Search for name, role, or location...">
+            </div>
+			<i id="filterBtn"
+				class="bi bi-filter cursor-pointer hover:bg-gray-200 text-[1.5rem] px-2 bg-gray-100 shadow-md"></i>
+			<!-- Button trigger for delete all repairman modal -->
+			<i class="bi bi-trash cursor-pointer hover:bg-gray-200 text-[1.5rem] px-2 bg-gray-100 shadow-md"
+			data-bs-toggle="modal" data-bs-target="#deleteAllRepairman"></i>
+		</div>
+		
+		<!-- Modal for deleting all repairmen -->
+		<div class="modal fade" id="deleteAllRepairman" tabindex="-1" aria-labelledby="deleteAllRepairmanLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="deleteAllRepairmanLabel">Delete All Repairmen</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<div class="mb-4">
+							<p class="w-full text-center"><i class="bi bi-exclamation-circle text-danger text-[5rem]"></i></p>
+							<p class="text-sm mb-0 w-full text-center">Are you sure you want to delete all ({{ personnel.count }}) repairmen? This action cannot be undone.</p>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+						<form method="post" action="{% url 'admin_delete_all_repairman' %}">
+							{% csrf_token %}
+							<button type="submit" class="btn btn-danger">Delete All</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Note for role limits -->
+		<div class="mt-4 px-3 text-sm text-gray-600 flex items-center gap-2">
+			<i class="bi bi-exclamation-triangle-fill text-yellow-500"></i> 
+			<span>A maximum of 3 repairmen per role is allowed.</span>
+		</div>
+		
+		<!-- Modal for adding new repairman -->
+		<div class="modal fade" id="addRepairmanModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="exampleModalLabel">Add New Repairman</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form id="addRepairmanForm" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+							{% csrf_token %}
+							<div class="mb-3">
+								<label for="id_full_name" class="form-label">{{ form.name.label }}</label>
+								{{ form.name }}
+								<div class="invalid-feedback">
+									{% if form.name.errors %}
+										{{ form.name.errors }}
+									{% else %}
+										Full name is required.
+									{% endif %}
+								</div>
+							</div>
+							
+							<div class="mb-3">
+								<label for="id_role" class="form-label">{{ form.role.label }}</label>
+								{{ form.role }}
+								<div class="invalid-feedback">
+									{% if form.role.errors %}
+										{{ form.role.errors }}
+									{% else %}
+										Role is required.
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="mb-3">
+								<label for="id_role" class="form-label">{{ form.phone.label }}</label>
+								{{ form.phone }}
+								<div class="invalid-feedback">
+									{% if form.phone.errors %}
+										{{ form.phone.errors }}
+									{% else %}
+										Phone number is required.
+									{% endif %}
+								</div>
+							</div>
+
+							<div class="mb-3">
+								<label for="id_role" class="form-label">{{ form.email.label }}</label>
+								{{ form.email }}
+								<div class="invalid-feedback">
+									{% if form.email.errors %}
+										{{ form.email.errors }}
+									{% else %}
+										Email is required.
+									{% endif %}
+								</div>
+							</div>
+							
+							<div class="mb-3">
+								<label for="id_location" class="form-label">{{ form.location.label }}</label>
+								{{ form.location }}
+								<div class="invalid-feedback">
+									{% if form.location.errors %}
+										{{ form.location.errors }}
+									{% else %}
+										Location is required.
+									{% endif %}
+								</div>
+							</div>
+							
+							<div class="mb-3">
+								<label for="id_image" class="form-label">{{ form.image.label }}</label>
+								{{ form.image }}
+								<div class="invalid-feedback">
+									{% if form.image.errors %}
+										{{ form.image.errors }}
+									{% else %}
+										Image is required.
+									{% endif %}
+								</div>
+							</div>
+							
+							<button type="submit" class="btn btn-primary">Save changes</button>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		{% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+
+		{% if personnel.count == 0 %}
+			<div class="w-full text-center mt-4 text-gray-400">
+				<i class="bi bi-tools text-[3rem]"></i>
+				<p>No repairman yet.</p>
+			</div>
+		{% endif %}
+
+		<div class="container mx-auto p-4">
+			<!--repairman container-->
+			<div id="repairmanContainer"  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+				{% if personnel.count == 0 %}
+					<!--proxy for id=request if no personnel -->
+					<select name="" id="request" class="hidden"></select>
+				{% endif %}
+
+			    <!-- repairman card Card -->
+			    {% for person in personnel %}
+				<div id="repairman" data-bs-target="#assignRequestModal{{ person.pk }}" data-bs-toggle="modal" class="bg-white border cursor-pointer border-gray-200 shadow-md rounded-lg p-6 transition-transform hover:scale-105 hover:shadow-2xl duration-200 ">
+					<div class="flex items-center mb-4">
+						<div class="h-16 w-16 rounded-full bg-gray-300 mr-4 flex items-center justify-center shadow-inner">
+							<img class="h-full w-full rounded-full" src="{{ person.image.url }}" alt="{{ person.name }}">
+						</div>
+						<div>
+							<h2 class="text-lg font-bold text-gray-800">{{ person.name }}</h2>
+							<span class="inline-block bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded">{{ person.role }}</span>
+							<div class="mt-2">
+								{% if person.status == 'available' %}
+								<span class="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full shadow-md">Available for Repair</span>
+								{% else %}
+								<span class="inline-block bg-red-100 text-red-800 text-xs font-semibold px-3 py-1 rounded-full shadow-md">Ongoing Repair</span>
+								{% endif %}
+							</div>
+						</div>
+					</div>
+			  
+					<div class="space-y-2">
+						<div class="flex items-center text-gray-700">
+							<i class="bi bi-telephone-fill mr-2 text-blue-600"></i>
+							<span>{{ person.phone }}</span>
+						</div>
+						<div class="flex items-center text-gray-700">
+							<i class="bi bi-envelope-fill mr-2 text-blue-600"></i>
+							<span>{{ person.email }}</span>
+						</div>
+						<div class="flex items-center text-gray-700">
+							<i class="bi bi-geo-alt-fill mr-2 text-blue-600"></i>
+							<span>{{ person.location }}</span>
+						</div>
+						</div>
+					</div>
+
+					<!-- Modal for assigning maintenance request -->
+					<div class="modal fade" id="assignRequestModal{{ person.pk }}" tabindex="-1" aria-labelledby="assignRequestModalLabel" aria-hidden="true">
+						<div class="modal-dialog modal-dialog-centered">
+						<div class="modal-content">
+							<div class="py-3 px-3 flex justify-between">
+								<h5 class="modal-title text-lg font-bold text-gray-800" id="assignRequestModalLabel">Assign Maintenance Request</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body py-0">
+								<p class="mb-4 text-sm">Assign a maintenance request to <strong>{{ person.name }}</strong></p>
+								<div class="form-group row mb-4">
+									<label for="request-{{ person.pk }}" class="col-sm-3 col-form-label">Request</label>
+									<div class="col-sm-9">
+										<select class="form-select" id="request-{{ person.pk }}">
+											<option selected disabled>
+												{% if requests.count == 0 %}
+													No requests yet
+												{% else %}
+													Select a maintenance request
+												{% endif %}
+											</option>
+											{% for req in requests %}
+												{% if req.status == 'Pending' and person.status == 'available' %}
+												{% if person.role|lower == 'plumber' and req.type_of_issue|lower == 'plumbing' %}
+												<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+													{% elif person.role|lower == 'electrician' and req.type_of_issue|lower == 'electrical' %}
+														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+													{% elif person.role|lower == 'carpenter' and req.type_of_issue|lower == 'carpentry' %}
+														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+													{% elif person.role|lower == 'appliance repair technician' and req.type_of_issue|lower == 'appliance' %}
+														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+													{% elif person.role|lower == 'landscaper' and req.type_of_issue|lower == 'landscaping' %}
+														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+													{% elif person.role|lower == 'pest control technician' and req.type_of_issue|lower == 'pest control' %}
+														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+													{% elif person.role|lower == 'hvac technician' and req.type_of_issue|lower == 'hvac' %}
+														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+													{% endif %}											
+												{% endif %}
+											{% endfor %}
+										</select>
+									</div>
+								</div>
+							</div>
+							
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+								<form id="assignForm" method="post" action="{% url 'assign_request' %}">
+									{% csrf_token %}
+									<input type="hidden" name="person_id" value="{{ person.pk }}">
+									<input type="hidden" name="request_id" id="selectedRequestId-{{ person.pk }}">
+									<input type="hidden" name="personel_name" value="{{ person.name }}">
+									<button type="submit" class="btn btn-primary" disabled id="assignButton-{{ person.pk }}">Assign Request</button>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			  	{% endfor %}
+			</div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<script src="{% static 'js/admin_dropdown_menu.js' %}"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="{% static 'js/searchRepairman.js' %}"></script>
+</body>
+<script>
+	//hide preloader
+	// window.addEventListener('load', (e) => {
+	// 		var preloader = document.getElementById('pre-loader')
+	// 		preloader.style.display = 'none'
+	// 	})
+		
+	document.addEventListener("DOMContentLoaded", function () {
+			var user = document.getElementById("user").innerText.trim();
+			if (user === 'AnonymousUser') {
+				location.href = "{% url 'adminLogin' %}";
+			}
+	});
+
+	document.addEventListener('DOMContentLoaded', function() {
+		document.querySelectorAll('.form-select').forEach(function(selectElement) {
+			const personId = selectElement.id.split('-')[1];  // Extract person.pk from the ID
+			const assignButton = document.getElementById(`assignButton-${personId}`);
+			
+			selectElement.addEventListener('change', function() {
+				if (selectElement.value) {
+					// Enable the assign button when a request is selected
+					assignButton.disabled = false;
+				} else {
+					// Disable the assign button if no request is selected
+					assignButton.disabled = true;
+				}
+				console.log('Request selected for person:', personId, selectElement.value);
+			});
+		});
+	});
+
+		//assign requestId selected to assign
+		document.addEventListener('DOMContentLoaded', function() {
+			// Loop through all select elements with class 'form-select'
+			document.querySelectorAll('.form-select').forEach(function(selectElement) {
+				// Get the person ID from the select element's ID (e.g., request-1, request-2)
+				const personId = selectElement.id.split('-')[1]; // Extract person.pk from the ID
+
+				// Add an event listener for the select dropdown change event
+				selectElement.addEventListener('change', function() {
+					var selectedRequestId = this.value; // Get the selected request's ID
+					var hiddenInput = document.getElementById(`selectedRequestId-${personId}`); // Get the corresponding hidden input by unique ID
+					var assignButton = document.getElementById(`assignButton-${personId}`); // Get the corresponding assign button by unique ID
+
+					// Set the hidden input value to the selected request ID
+					hiddenInput.value = selectedRequestId;
+
+					// Enable the assign button after a request is selected
+					assignButton.disabled = false;
+				});
+			});
+		});
+
+	//submit and show success event submittion
+	$(document).ready(function(){
+		$('#myForm').on('submit', function(e){
+			e.preventDefault();
+
+			$.ajax({
+				type: 'POST',
+				url: $(this).attr('action'),
+				data: $(this).serialize(),
+				success: function(response) {
+					$('#exampleModal').modal('hide');
+					
+					$('#exampleModal').on('hidden.bs.modal', function(){
+						$('.modal-backdrop').remove();
+						$('#staticBackdrop').modal('show');
+					})
+					
+				},
+				error: function(xhr, status, error){
+					alert('there was an error submitting the form')
+				}
+			})
+		})
+	})
+
+	$(document).ready(function () {
+    $('#addRepairmanForm').on('submit', function (e) {
+        e.preventDefault();  // Prevent form from submitting the usual way
+
+        var formData = new FormData(this);  // Create a FormData object for file upload
+
+        $.ajax({
+            url: '{% url "admin_add_repairman" %}',  // URL to Django view
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response.success) {
+                    // Handle success
+                    $('#addRepairmanForm')[0].reset();
+                    $('#addRepairmanModal').modal('hide');
+                    window.location.href = "{% url 'admin_maintenance_personnel_list' %}";
+                } else {
+                    // Handle validation errors
+                    $('#addRepairmanForm .is-invalid').removeClass('is-invalid');
+                    $('#addRepairmanForm .invalid-feedback').remove();
+
+                    $.each(response.errors, function (field, errorMessages) {
+                        var inputField = $('#addRepairmanForm').find('[name="' + field + '"]');
+                        inputField.addClass('is-invalid');
+                        $.each(errorMessages, function (i, errorMessage) {
+                            inputField.after('<div class="invalid-feedback">' + errorMessage + '</div>');
+                        });
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                window.location.href = "{% url 'admin_maintenance_personnel_list' %}"
+            }
+        });
+    });
+});
+
+
+
+	//fetch unread notification
+	function fetchUnreadCount() {
+        fetch("{% url 'admin_unread_notifications_count' %}")
+            .then(response => response.json())
+            .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+</script>
+{% endblock content %}
+
+</html>
+

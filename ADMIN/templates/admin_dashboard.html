@@ -1,0 +1,512 @@
+{% extends 'admin_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user }} / {% block title %} Dashboard {% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+    {% block extra_head %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% endblock %}
+</head>
+
+<body class="bg-gray-100">
+    {% block content %}
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <!-- Swiper JS -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+    <!--pre loader-->
+    <div id="pre-loader"
+        class="w-full bg-white h-full flex justify-center items-center absolute top-0 left-0 z-[99999999]">
+        <img src="{% static 'Pulse@1x-0.7s-200px-200px.gif' %}" class="h-[4rem] w-[4rem]" alt="" srcset="">
+    </div>
+
+    <!--content container-->
+    <div
+        class="w-full md:w-[85%] max-[770px]:h-full h-[90%] bg-gray-50 absolute mt-[.8rem] right-0 top-[4rem] md:top-[3.8rem] shadow-md rounded-md p-4 overflow-y-auto">
+        <div class="flex justify-center items-left gap-[.8rem] mb-3">
+			<img class="w-[5rem] h-[5rem] max-[770px]:w-[5rem] max-[770px]:h-[5rem] rounded-full shadow-md shadow-gray-400 hover:bg-gray-100"
+				src="{% static 'users/admin.png' %}" alt="">
+			<div class="w-full">
+				<h1 class="w-full mb-3 text-[1.5rem] text-gray-700 max-[770px]:text-[1.5rem] font-semibold">Welcome, <span
+						id="user_name" class="text-[#193948]">{{ user }}</span>!</h1>
+				<p class="inline-block bg-gray-200 text-sm text-gray-700 px-2 py-1 rounded px-1 text-gray-500" style="transform: translateY(-15px);">Admin</p>
+			</div>
+		</div>
+        <hr class="mb-2">
+
+        <div class="grid grid-cols-3 gap-4 max-[770px]:grid-cols-1 mb-4 ">
+
+            <a href="{% url 'properties' %}" class="w-full py-2 px-5 bg-white shadow-lg rounded-lg transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 relative group border-l-4 border-[#193948]">
+                <div class="flex justify-between items-center mb-2">
+                    <h1 class="text-lg font-bold text-[#193948] group-hover:text-teal-600 transition-colors duration-300">Total Properties</h1>
+                    <i class="bi bi-houses-fill text-[#193948] text-4xl group-hover:text-teal-600 transition-colors duration-300"></i>
+                </div>
+                <div class="flex items-end gap-2 mb-2">
+                    <h1 id="secretaries" class="text-5xl font-extrabold text-[#193948] leading-none group-hover:text-teal-600 transition-colors duration-300">{{ totalProperties }}</h1>
+                </div>
+                <hr class="border-gray-300 mb-2">
+                <p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">View properties <i class="bi bi-arrow-right"></i></p>
+            </a>
+            
+            <a href="{% url 'properties' %}" class="w-full py-2 px-5 bg-white shadow-lg rounded-lg transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 relative group border-l-4 border-[#193948]">
+                <div class="flex justify-between items-center mb-2">
+                    <h1 class="text-lg font-bold text-[#193948] group-hover:text-teal-600 transition-colors duration-300">Occupied properties</h1>
+                    <i class="bi bi-house-check-fill text-[#193948] text-4xl group-hover:text-teal-600 transition-colors duration-300"></i>
+                </div>
+                <div class="flex items-end gap-2 mb-2">
+                    <h1 id="secretaries" class="text-5xl font-extrabold text-[#193948] leading-none group-hover:text-teal-600 transition-colors duration-300">{{ occupied_properties.count }}</h1>
+                </div>
+                <hr class="border-gray-300 mb-2">
+                <p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">View occupancy <i class="bi bi-arrow-right"></i></p>
+            </a>
+            
+            <a href="{% url 'homeowners' %}" class="w-full py-2 px-5 bg-white shadow-lg rounded-lg transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 relative group border-l-4 border-[#193948]">
+                <div class="flex justify-between items-center mb-2">
+                    <h1 class="text-lg font-bold text-[#193948] group-hover:text-teal-600 transition-colors duration-300">Homeowners</h1>
+                    <i class="bi bi-people-fill text-[#193948] text-4xl group-hover:text-teal-600 transition-colors duration-300"></i>
+                </div>
+                <div class="flex items-end gap-2 mb-2">
+                    <h1 id="secretaries" class="text-5xl font-extrabold text-[#193948] leading-none group-hover:text-teal-600 transition-colors duration-300">{{ totalHomeowners }}</h1>
+                </div>
+                <hr class="border-gray-300 mb-2">
+                <p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">View homeowners <i class="bi bi-arrow-right"></i></p>
+            </a>
+        </div>
+
+        {% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+
+        <div class="w-full lg:flex justify-center gap-3">
+            <!-- Maintenance Requests Card -->
+        <a href="{% url 'maintenance_request_list' %}" class="w-full lg:w-[50%] overflow-hidden mb-4 bg-white shadow-lg rounded-lg relative hover:scale-[1.02] transition-transform duration-300 ease-in-out hover:shadow-2xl">
+            <h1 class="text-[1rem] flex justify-between items-center text-white py-2 px-4 bg-gradient-to-r from-[#193948] to-[#1e5165] font-semibold rounded-t-lg shadow-md">
+                <div>
+                    <p>Request Maintenance </p>
+                    <span class="flex items-center text-sm text-white font-normal mt-1">
+                        View the latest maintenance request
+                    </span>
+                </div>
+                <i class="bi bi-gear-fill text-[1.3rem]"></i>
+            </h1>
+
+            <div class="overflow-x-auto max-h-[300px] overflow-y-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="sticky top-0 bg-gray-100 z-10">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Image</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Owner</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Issue</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Date Requested</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% if maintenances.count == 0 %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">
+                                <i class="bi bi-tools text-gray-400 text-[5rem] mb-2"></i>
+                                <p class="text-gray-500">No requests yet.</p>
+                            </td>
+                        </tr>
+                        {% else %}
+                        {% for maintenance in maintenances %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-200">
+                            <td class="px-4 py-2 whitespace-nowrap">
+                                {% if not maintenance.image %}
+                                    <img src="{% static '/users/req_maintenance.jpg' %}" alt="request image" srcset="">
+                                {% else %}
+                                    <img src="{{ maintenance.image.url }}" alt="request image" srcset="">
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">{{ maintenance.name_of_owner }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap">{{ maintenance.Description_of_issue }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                {% if maintenance.status == 'Pending' %}
+                                <span class="bg-gray-300 text-gray-700 px-3 py-1 rounded-full text-xs font-medium">{{ maintenance.status }}</span>
+                                {% elif maintenance.status == 'In progress' %}
+                                <span class="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium">{{ maintenance.status }}</span>
+                                {% elif maintenance.status == 'notverified' %}
+                                <span class="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-medium">{{ maintenance.status }}</span>
+                                {% elif maintenance.status == 'verified' %}
+                                <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium">{{ maintenance.status }}</span>
+                                {% else %}
+                                <span class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">{{ maintenance.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2 whitespace-nowrap">{{ maintenance.date_requested }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </a>
+
+        <!--Events-->
+		<div class="lg:w-[50%] mb-4 max-[500px]:mt-3 w-full rounded-lg shadow-md h-[360px] bg-white overflow-hidden relative hover:scale-[1.02] transition-transform duration-300 ease-in-out">
+			<h1 class="text-[1rem] flex justify-between items-center text-white py-2 sticky z-[99] top-0 px-3 bg-[#193948] font-semibold bg-gradient-to-l from-[#193948] to-[#1e5165]">
+                <div>
+                    <span>Community Events</span> 
+				    <p class="text-sm text-white font-normal">View latest events</p>
+                </div>
+                <i class="bi bi-calendar-event text-[1.2rem]"></i>
+			</h1>
+			<div class="swiper-container h-[360px] overflow-hidden">
+				<div class="swiper-wrapper">
+					{% if events.count == 0 %}
+					<div class="swiper-slide w-full py-4 text-center">
+						<i class="bi bi-calendar-x text-[5rem] text-gray-500"></i>
+						<p class="text-sm text-gray-500 font-medium mb-3">No events yet.</p>
+						<a href="{% url 'events' %}" class="btn btn-primary border-none bg-teal-500 text-white">
+							<i class="bi bi-plus"></i> Add event
+						</a>
+					</div>
+					{% else %}
+					{% for event in events %}
+					<div class="swiper-slide relative bg-blue-500 bg-opacity-50 backdrop-blur-lg rounded-lg">
+						<a href="{% url 'event_detail' event.pk %}">
+							<img class="w-full h-full mb-3 bg-gray-100 object-cover rounded-lg" src="{{ event.image.url }}" alt="image event">
+							<span class="absolute py-2 rounded-md text-white px-3 max-w-[85%] truncate"
+								style="transform: translate(-50%, -50%); left: 50%; top: 50%; background: rgba(0, 0, 0, .7);">
+								<i class="bi bi-calendar"></i> {{ event.event_name|title }}
+							</span>
+						</a>
+					</div>
+					{% endfor %}
+					{% endif %}
+				</div>
+		
+				<!-- Add Pagination -->
+				<div class="swiper-pagination"></div>
+		
+				<!-- Add Navigation -->
+				<div class="swiper-button-next p-2"></div>
+				<div class="swiper-button-prev"></div>
+			</div>
+		</div>
+    </div>
+
+    <div class="w-full lg:flex justify-center gap-3 relative">
+        <!--Charts and Graphs-->
+        <div class="lg:w-[50%] max-h-[320px] w-full shadow-lg h-[360px] bg-white rounded-lg relative pt-4 mb-4 hover:scale-[1.02] transition-transform duration-300 ease-in-out">
+            <!-- Header Bar -->
+            <div class="absolute top-0 left-0 w-full h-8 bg-[#193948] rounded-t-lg flex items-center justify-between px-4">
+                <h1 class="text-white text-sm font-semibold">Maintenance Requests Overview</h1>
+                <i class="bi bi-bar-chart-fill text-white"></i>
+            </div>
+            <!-- Chart Container -->
+            <div class="p-4 pt-10 h-full">
+                <canvas class="w-full h-full" id="requestsPerMonthChart"></canvas>
+            </div>
+        </div>
+
+        <div class="lg:w-[50%] max-h-[320px] w-full shadow-lg h-[360px] bg-white rounded-lg relative overflow-hidden mb-4 hover:scale-[1.02] transition-transform duration-300 ease-in-out">
+            <!-- Header Bar -->
+            <div class="absolute top-0 left-0 w-full h-8 bg-[#193948] rounded-t-lg flex items-center justify-between px-4 shadow-md">
+                <h1 class="text-white text-sm font-semibold">Issue Types by Month</h1>
+                <i class="bi bi-graph-up text-white"></i>
+            </div>
+        
+            <!-- Chart Container -->
+            <div class="p-4 pt-10 w-full h-full relative">
+                <canvas class="h-full w-full" height="100" width="100" id="issueTypePerMonthChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- <style>
+            /* Ensures that the canvas fills its parent container */
+            #issueTypePerMonthChart {
+                width: 100% !important; /* Ensures full width */
+                height: 100% !important; /* Ensures full height */
+            }
+        </style> -->
+        
+    </div>
+    </div>
+    {% endblock content %}
+    {% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/admin_dropdown_menu.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <script>
+        window.onload = function () {
+            var user = document.getElementById("user").innerText.trim();
+            if (user === 'AnonymousUser') {
+                location.href = "{% url 'adminLogin' %}";
+            }
+        };
+
+        //for data analytics
+        fetch('/maintenance_requests_data/')
+        .then(response => response.json())
+        .then(data => {
+            // Format months to "Month YYYY" format
+            const months = data.requests_per_month.map(item => moment(item.month, 'YYYY-MM').format('MMMM YYYY'));
+            const requestsCount = data.requests_per_month.map(item => item.count);
+
+            // Determine the current and previous months
+            const currentMonth = months[months.length - 1];
+            const previousMonth = months.length > 1 ? months[months.length - 2] : 'No Data';
+
+            const currentMonthCount = requestsCount[requestsCount.length - 1];
+            const previousMonthCount = previousMonth !== 'No Data' ? requestsCount[requestsCount.length - 2] : 0;
+
+            // Prepare data for the line chart
+            const displayMonths = [previousMonth, currentMonth];
+            const displayCounts = [previousMonthCount, currentMonthCount];
+
+            // Line Chart for requests per month
+            const ctx1 = document.getElementById('requestsPerMonthChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: displayMonths,
+                    datasets: [{
+                        label: 'Requests Per Month',
+                        data: displayCounts,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: true,
+                        tension: 0.4, // Smooth curve
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                        pointHoverBackgroundColor: 'rgba(75, 192, 192, 1)',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#666',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Months',
+                                color: '#333',
+                                font: {
+                                    size: 16
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(200, 200, 200, 0.2)'
+                            },
+                            ticks: {
+                                beginAtZero: true,
+                                color: '#666',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Number of Requests',
+                                color: '#333',
+                                font: {
+                                    size: 16
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#333',
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            mode: 'nearest',
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return ` ${tooltipItem.raw} Requests`;
+                                }
+                            },
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 16 },
+                            bodyFont: { size: 14 }
+                        }
+                    }
+                }
+            });
+
+            // Prepare data for the pie chart
+            const issueMonths = [...new Set(data.issue_type_per_month.map(item => moment(item.month, 'YYYY-MM').format('MMMM YYYY')))];
+            const issueTypes = [...new Set(data.issue_type_per_month.map(item => item.type_of_issue))];
+            const issueCounts = issueTypes.map(type => 
+                issueMonths.map(month => 
+                    data.issue_type_per_month.find(item => moment(item.month, 'YYYY-MM').format('MMMM YYYY') === month && item.type_of_issue === type)?.count || 0
+                )
+            );
+
+            // Aggregate data for the pie chart
+            const pieData = issueTypes.map((type, index) => {
+                const totalForType = issueCounts[index].reduce((a, b) => a + b, 0);
+                return {
+                    label: `${type} (${issueMonths[0]})`,
+                    data: totalForType,
+                    backgroundColor: `rgba(${index * 50}, ${150 - index * 30}, ${200 - index * 20}, 0.7)`,
+                    borderColor: `rgba(${index * 50}, ${150 - index * 30}, ${200 - index * 20}, 1)`,
+                    borderWidth: 2
+                };
+            });
+
+            // Pie Chart for issue types per month
+            const ctx2 = document.getElementById('issueTypePerMonthChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: pieData.map(data => data.label),
+                    datasets: [{
+                        data: pieData.map(data => data.data),
+                        backgroundColor: pieData.map(data => data.backgroundColor),
+                        borderColor: pieData.map(data => data.borderColor),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#333',
+                                font: {
+                                    size: 14
+                                },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    const total = pieData.map(data => data.data).reduce((a, b) => a + b, 0);
+                                    const value = tooltipItem.raw;
+                                    const percentage = ((value / total) * 100).toFixed(2);
+                                    return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                                }
+                            },
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            titleFont: { size: 16 },
+                            bodyFont: { size: 14 }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Type of Issues',
+                            color: '#333',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    },
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 10,
+                            top: 10,
+                            bottom: 10
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error:', error));
+
+            //hide preloader
+            window.addEventListener('load', (e) => {
+                var preloader = document.getElementById('pre-loader')
+                preloader.style.display = 'none'
+            })
+
+        //carousel for events
+        var swiper = new Swiper('.swiper-container', {
+        slidesPerView: 1,
+        spaceBetween: 10,
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+        },
+        loop: true, // Enable looping if desired
+        autoplay: {
+            delay: 3000, // Auto slide every 3 seconds
+            disableOnInteraction: false,
+        },
+        effect: 'slide', // You can change to 'fade' for a different effect
+    });
+
+    //fetch unread notification
+    function fetchUnreadCount() {
+            fetch("{% url 'admin_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+
+    </script>
+    {% endblock %}
+</body>
+
+</html>

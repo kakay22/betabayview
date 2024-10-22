@@ -1,0 +1,35 @@
+#pop-up-mess {
+  z-index: 99999999;
+  top: -100%;
+  left: 50%;
+  position: fixed !important;
+  transform: translate(-50%, -50%);
+  animation: pop 3.5s ease;
+}
+
+@keyframes pop {
+  20% {
+    top: 10%;
+  }
+
+  50% {
+    top: 10%;
+  }
+
+  70% {
+    top: 10%;
+  }
+
+  80% {
+    top: 10%;
+  }
+
+  90% {
+    top: 10%;
+  }
+
+  100% {
+    display: none;
+  }
+}
+

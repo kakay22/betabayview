@@ -1,0 +1,42 @@
+.selected{
+	outline: 2px solid teal;
+
+}
+.user .bi-check-circle-fill{
+	position: absolute;
+	display: none;
+	color: teal;
+	bottom: -7%;
+	right: -5%;
+	font-size: 1.3rem;
+}
+.user.selected .bi-check-circle-fill{
+	display: inline;
+}
+#success-mess{
+  top: -100%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pop 3.5s ease;
+}
+
+@keyframes pop {
+  20%{
+	top: 10%;
+  }
+  50%{
+	top: 10%;
+  }
+  70%{
+	top: 10%;
+  }
+  80%{
+	top: 10%;
+  }
+  90%{
+	top: 10%;
+  }
+  100%{
+	top: -100%;
+  }
+}

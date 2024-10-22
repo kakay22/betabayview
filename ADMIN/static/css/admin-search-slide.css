@@ -1,0 +1,118 @@
+/* Ensure specificity by using the #search-container */
+#search-container {
+    position: relative; /* Ensure the suggestions dropdown positions correctly */
+}
+
+#search-container #search-input {
+    width: 300px; /* Set desired width for the search input */
+    opacity: 0; /* Hidden initially */
+    pointer-events: none; /* Disable interaction initially */
+    transform: scaleX(0); /* Fully collapsed initially */
+    transition: transform 0.5s ease, opacity 0.5s ease !important; /* Smooth transition */
+    transform-origin: right; /* Scale from the right */
+    background: rgb(231, 229, 229); /* Background color */
+    outline: 1px solid gray; /* Outline for better visibility */
+    padding-left: 1.5rem; /* Padding for text */
+	padding-right: 3.5rem !important; /* Padding for text */
+    border-radius: 20px; /* Optional: Add some border radius */
+    z-index: 999; /* Optional: Ensure input is above other elements */
+}
+
+/* Expanded state for search input */
+#search-container #search-input.expanded {
+    transform: scaleX(1) !important; /* Fully expand */
+    opacity: 1 !important; /* Fully visible */
+    pointer-events: auto !important; /* Enable interaction */
+}
+
+/* Hidden state for search input (optional, not necessary) */
+#search-container #search-input.hidden {
+    transform: scaleX(0) !important; /* Collapse */
+    opacity: 0 !important; /* Fully hidden */
+    pointer-events: none !important; /* Disable interaction */
+}
+
+/* Suggestions dropdown styling */
+.suggestions-dropdown {
+    position: absolute !important; /* Absolute positioning */
+    top: calc(100% + 5px); /* Position it just below the search input */
+    left: 0; /* Align to the left of the search input */
+    background-color: #FFFFFF !important; /* White background */
+    border: 1px solid #E5E7EB !important; /* Light gray border */
+    border-radius: 8px !important; /* Rounded corners */
+    width: 300px !important; /* Match the input width */
+    max-height: 200px !important; /* Limit height */
+    overflow-y: auto !important; /* Scrollable if content exceeds height */
+    z-index: 100 !important; /* Ensure it's above other content */
+    display: none !important; /* Hide by default */
+}
+
+/* Individual suggestion styles */
+.suggestions-dropdown div {
+    padding: 8px !important; /* Padding for each suggestion */
+    cursor: pointer !important; /* Change cursor on hover */
+}
+
+.suggestions-dropdown div:hover {
+    background-color: #f0f0f0 !important; /* Light gray on hover for feedback */
+}
+
+#suggestions-dropdown {
+	padding: 8px !important; /* Padding for each suggestion */
+    position: absolute;
+    background: white;
+    border: 1px solid gray;
+    z-index: 1000;
+    width: 300px; /* Match this with your input */
+    max-height: 200px; /* Optional: limit height */
+    overflow-y: auto; /* Optional: scroll if too many items */
+    display: none; /* Initially hidden */
+}
+
+.suggestion-item {
+    padding: 1rem !important; /* Add some padding */
+    cursor: pointer !important; /* Show pointer cursor on hover */
+}
+
+.suggestion-item:hover {
+    background-color: #f0f0f0 !important; /* Change background on hover */
+}
+.highlight {
+    background-color: #FFD700; /* Gold color or any color you prefer */
+    font-weight: bold; /* Optional: make it bold */
+}
+
+.suggestions-dropdown .no-results {
+    display: flex;
+    align-items: center; /* Center the icon and text vertically */
+    color: #999; /* Light gray color for the text */
+}
+
+/* Fullscreen search container */
+#fullscreen-search {
+    flex-direction: column;
+    padding: 16px; /* Add some padding */
+    background-color: white; /* White background */
+    z-index: 50; /* Ensure it sits on top of other elements */
+}
+
+/* Suggestions dropdown for fullscreen search */
+#fullscreen-suggestions-dropdown {
+    position: relative; /* Position relative for dropdown */
+    background: white; /* White background */
+    border: 1px solid gray; /* Gray border */
+    max-height: 200px; /* Limit height */
+    overflow-y: auto; /* Scroll if too many items */
+    display: none; /* Initially hidden */
+}
+
+/* Individual suggestion styles for fullscreen */
+.fullscreen-suggestion-item {
+    padding: 12px; /* Add some padding */
+    cursor: pointer; /* Show pointer cursor on hover */
+}
+
+.fullscreen-suggestion-item:hover {
+    background-color: #f0f0f0; /* Change background on hover */
+}
+

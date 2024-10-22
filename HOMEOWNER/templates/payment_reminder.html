@@ -1,0 +1,98 @@
+{% extends 'owner_panel.html' %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Payment Reminder for {{ owner.first_name }}{% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/owner_active_link.css' %}">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-gray-100">
+    {% block content %}
+
+    <!-- Email style content container -->
+		<div
+		class="mx-auto p-8 w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-0 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md overflow-y-auto overflow-x-hidden">
+
+		<!-- Header section -->
+		<div class="mb-8">
+			<h1 class="text-2xl font-bold text-gray-700 mb-2">Payment Reminder for Your Property at Beta Bayview Homes</h1>
+			<p class="text-gray-500">Dear {{ owner.first_name }} {{ owner.last_name }},</p>
+		</div>
+
+		<!-- Message body -->
+		<div class="leading-relaxed text-gray-600">
+			<p class="mb-4">
+				We hope this message finds you well. We would like to kindly remind you that your payment of
+				<strong class="text-blue-600">₱{{ reminder.amount|floatformat:2 }}</strong> for the property 
+				<strong class="text-blue-600">{{ owner.homeowner.property.property_name }}</strong> is due on
+				<strong class="text-blue-600">{{ reminder.due_date|date:"F j, Y" }}</strong>.
+			</p>
+
+			<p class="mb-4">
+				Please take a moment to review your outstanding balance and make the necessary arrangements to settle the payment
+				at your earliest convenience.
+			</p>
+
+			<p class="mb-4">
+				If you have any questions or need assistance, feel free to contact <strong>{{ reminder.sender }}</strong> at
+				<strong>{{ reminder.sender.email }}</strong>. We are here to help you in any way we can.
+			</p>
+
+			<p class="mb-8">
+				Thank you for your prompt attention to this matter. We appreciate your cooperation and continued residency
+				at Beta Bayview Homes.
+			</p>
+		</div>
+
+		<!-- Closing section -->
+		<div class="text-gray-600">
+			<p class="mb-2">Warm regards,</p>
+			<p class="font-semibold">{{ sender_name }}</p>
+			<p>{{ sender_position }}</p>
+			<p class="text-gray-500">Beta Bayview Homes Management Team</p>
+		</div>
+
+		<!-- Action/Back Button -->
+		<div class="mt-6">
+			<a href="{% url 'owner_notifications' %}" class="btn btn-primary">Back</a>
+		</div>
+		</div>
+    {% endblock content %}
+
+    {% block extra_js %}
+    <script src="{% static 'js/sec_loading_submit.js' %}"></script>
+    <script src="{% static 'js/owner_loading_submit.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+	<script>
+		//fetch unread notification
+		function fetchUnreadCount() {
+            fetch("{% url 'owner_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+	</script>
+    {% endblock extra_js %}
+</body>
+
+</html>

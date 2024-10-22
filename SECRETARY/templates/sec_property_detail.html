@@ -1,0 +1,413 @@
+{% extends 'secretary_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ user }} / {% block title %} Property detail - {{ owner_property.property_name }} {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body class="bg-gray-100">
+	{% block content %}
+    <style>
+        .swiper-button-next,
+        .swiper-button-prev {
+            color: #4A90E2; /* Change the button color */
+        }
+
+        .swiper-pagination-bullet {
+            background: #4A90E2; /* Bullet color */
+        }
+
+        .flex {
+            gap: 10px; /* Add gap between flex items */
+        }
+    </style>
+
+    <!-- Include Swiper's CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <!-- Include Swiper's JS -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+	<!--Content container-->
+	<div class="w-full md:w-[85%] max-[770px]:h-full h-[90%] bg-white absolute right-0 top-[4rem] md:top-[3.8rem] shadow-md rounded-md mt-[.8rem] md:px-3 px-0 overflow-y-auto overflow-x-hidden">
+
+		<!-- Property Card -->
+        <div class="bg-white overflow-hidden mb-2 md:px-3">
+            <div class="bg-white md:rounded-lg shadow-md overflow-hidden h-[20rem] relative">
+                <img src="{{ owner_property.photo.url }}" alt="Property Image" class="w-full h-full object-cover">
+                <div class="absolute bottom-0 h-full left-0 py-3 w-full px-3 shadow-md" style="border-image: fill 0 linear-gradient(to top, #202020, #0001)">
+                    <div class="flex gap-2 text-white items-center px-3 absolute">
+                        <i onclick="window.history.back()" class="bi bi-arrow-left text-[1.2rem] px-[.7rem] py-2 rounded-full hover:bg-gray-200 hover:text-black cursor-pointer"></i>
+                    </div>
+                    <h1 class="text-white py-10 mt-4 px-3 text-[4rem] w-full text-center">{{ owner_property.property_name|title }}</h1>
+    
+                    <p class="w-full text-center text-wrap px-5 text-white">
+                        <span><i class="bi bi-bed"></i>{{ owner_property.bedroom }} Bedroom</span> |
+                        <span><i class="bi bi-bed"></i>{{ owner_property.bathroom }} Bathroom</span> |
+                        <span><i class="bi bi-bed"></i>Block no. {{ owner_property.property_block_no }}</span> |
+                        <span><i class="bi bi-bed"></i>Lot no. {{ owner_property.property_house_no }}</span> |
+                        <span><i class="bi bi-bed"></i>Lot size {{ owner_property.lot_size }} msqr</span> |
+                        <span><i class="bi bi-bed"></i>{{ owner_property.property_description }}</span> 
+                    </p>
+                </div>
+            </div>
+
+            <!--Property images-->
+            <div class="py-4 px-3">
+                <!-- Image Filter -->
+                    <div class="w-full text-center flex justify-center gap-3 mb-6">
+                        <!-- Interior Button -->
+                        <a href="?filter=interior" class="btn p-3 py-2 
+                            {% if filter_type == 'interior' %}
+                                bg-teal-500 text-white
+                            {% else %}
+                                bg-transparent text-gray-700
+                            {% endif %}
+                            hover:bg-teal-700 font-bold rounded-md shadow-md">
+                            Interior
+                        </a>
+
+                        <!-- Exterior Button -->
+                        <a href="?filter=exterior" class="btn p-3 py-2 
+                            {% if filter_type == 'exterior' %}
+                                bg-teal-500 text-white
+                            {% else %}
+                                bg-transparent text-gray-700
+                            {% endif %}
+                            hover:bg-teal-700 font-bold rounded-md shadow-md">
+                            Exterior
+                        </a>
+                    </div>
+
+                    <!-- Grid for Interior Images and Upload Box -->
+                    {% if filter_type == 'interior' %}
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <!-- Loop through all the interior property images -->
+                        {% for image in property_images %}
+                            {% if image.interrior_image %}
+                                <div class="relative overflow-hidden">
+                                    <img src="{{ image.interrior_image.url }}" 
+                                        alt="Interior Image" 
+                                        class="w-full h-48 object-cover cursor-pointer hover:scale-110 duration-500 transition-all" 
+                                        onclick="openModal('{{ image.interrior_image.url }}')">
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Upload New Interior Image Box - always at the end of the interior images -->
+                        <div class="flex justify-center items-center h-48 bg-gray-200 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-300 transition-colors duration-300">
+                            <form method="POST" enctype="multipart/form-data" id="interiorImageForm">
+                                {% csrf_token %}
+                                <label for="newInteriorImage" class="text-gray-500 cursor-pointer flex flex-col items-center justify-center w-full h-full">
+                                    <i class="bi bi-cloud-upload text-4xl"></i>
+                                    <span class="text-sm p-2 border-1 rounded border-gray-800 font-semibold">Upload Interior Image</span>
+                                </label>
+                                <input id="newInteriorImage" type="file" name="new_interior_image" class="hidden" onchange="submitImageForm('interiorImageForm')">
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Grid for Exterior Images and Upload Box -->
+                    {% if filter_type == 'exterior' %}
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <!-- Loop through all the exterior property images -->
+                        {% for image in property_images %}
+                            {% if image.exterrior_image %}
+                                <div class="relative overflow-hidden">
+                                    <img src="{{ image.exterrior_image.url }}" 
+                                        alt="Exterior Image" 
+                                        class="w-full h-48 object-cover cursor-pointer hover:scale-110 duration-500 transition-all" 
+                                        onclick="openModal('{{ image.exterrior_image.url }}')">
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Upload New Exterior Image Box - always at the end of the exterior images -->
+                        <div class="flex justify-center items-center h-48 bg-gray-200 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-300 transition-colors duration-300">
+                            <form method="POST" enctype="multipart/form-data" id="exteriorImageForm">
+                                {% csrf_token %}
+                                <!-- Wrap the entire div content inside the label -->
+                                <label for="newExteriorImage" class="cursor-pointer w-full h-full flex flex-col items-center justify-center">
+                                    <i class="bi bi-cloud-upload text-4xl"></i>
+                                    <span class="text-sm font-semibold p-2 border-1 rounded border-gray-800">Upload Exterior Image</span>
+                                </label>
+                                <input id="newExteriorImage" type="file" name="new_exterior_image" class="hidden" onchange="submitImageForm('exteriorImageForm')">
+                            </form>
+                        </div>                                                
+                    {% endif %}
+
+
+                    <script>
+                        // Function to get CSRF token from cookies
+                        function getCookie(name) {
+                            let cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                const cookies = document.cookie.split(';');
+                                for (let i = 0; i < cookies.length; i++) {
+                                    const cookie = cookies[i].trim();
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+                        
+                        function submitImageForm(formId) {
+                        const form = document.getElementById(formId);
+                        const csrfToken = getCookie('csrftoken');  // Get CSRF token from cookie
+                        
+                        // Disable the form and show some loading feedback
+                        form.querySelector('label').innerHTML = `
+                            <i class="bi bi-cloud-upload text-4xl animate-spin"></i>
+                            <span class="text-sm font-semibold">Uploading...</span>
+                        `;
+                        form.querySelector('input').disabled = true;
+
+                        // Set CSRF token in the form before submitting
+                        const csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = 'csrfmiddlewaretoken';
+                        csrfInput.value = csrfToken;
+                        form.appendChild(csrfInput);
+
+                        // Automatically submit the form
+                        form.submit();
+                    }
+                    </script>
+
+                </div>
+
+
+                <!-- Fullscreen Modal -->
+                <div id="imageModal" class="fixed inset-0 hidden bg-black bg-opacity-75 flex items-center justify-center z-50">
+                    <div class="relative">
+                        <!-- Close Button -->
+                        <button class="absolute top-2 right-2 text-white text-3xl" onclick="closeModal()">&times;</button>
+                        
+                        <!-- Fullscreen Image -->
+                        <img id="modalImage" src="" class="w-full h-auto max-h-screen object-contain">
+                    </div>
+                </div>
+
+                <script>
+                    // Function to open the modal and display the clicked image
+                    function openModal(imageUrl) {
+                        document.getElementById('modalImage').src = imageUrl;
+                        document.getElementById('imageModal').classList.remove('hidden');
+                    }
+
+                    // Function to close the modal
+                    function closeModal() {
+                        document.getElementById('imageModal').classList.add('hidden');
+                        document.getElementById('modalImage').src = ''; // Clear image source
+                    }
+                </script>
+
+                    
+                </div>
+                
+                {% if not property_images %}
+                    <p class="w-full text-center py-7 mt-5 text-gray-500"><i class="bi bi-image"></i> No images</p>
+                {% endif %}
+            
+            <div class="py-3 md:px-4">                
+                <div class="table-responsive mb-4">
+                    <table class="table table-striped table-bordered text-start">
+                        <tr>
+                            <th><i class="bi bi-building me-2"></i> Property Name</th>
+                            <td>{{ owner_property.property_name }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-person-fill me-2"></i> Owner</th>
+                            <td>
+                                {% if owner_property.household_head %}
+                                <a href="{% url 'sec_owner_profile' owner_property.household_head.pk %}" class="text-teal-600" style="text-decoration: underline;" title="view {{ property.household_head.user.first_name }}">{{ owner_property.household_head.user.first_name }} {{ owner_property.household_head.user.last_name }}</a>
+                                {% else %}
+                                    None
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-grid-fill me-2"></i> Block Number</th>
+                            <td>{{ owner_property.property_block_no }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-arrows-fullscreen me-2"></i> Lot Size</th>
+                            <td>{{ owner_property.lot_size }} m²</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-house-fill me-2"></i> House Number</th>
+                            <td>{{ owner_property.property_house_no }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-door-open-fill me-2"></i> Bedroom</th>
+                            <td>{{ owner_property.bedroom }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-droplet-fill me-2"></i> Bathroom</th>
+                            <td>{{ owner_property.bathroom }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-file-earmark-text me-2"></i> House Description</th>
+                            <td>{{ owner_property.property_description }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-check-circle-fill me-2"></i> Availability</th>
+                            <td>
+                                {% if owner_property.availability == 'available' %}
+                                <p class="text-success">{{ owner_property.availability }}</p>
+                                {% else %}
+                                <p class="text-muted">{{ owner_property.availability }}</p>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-calendar-fill me-2"></i> Date Added</th>
+                            <td>{{ owner_property.date_registered }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!--owner maintenances records-->
+                <div class="mt-4">
+                    <div class="bg-white bg-card text-card-foreground shadow-sm" data-v0-t="card">
+                    <div class="flex py-3 px-3 justify-between">
+                        <div>
+                            <h3 class="whitespace-nowrap text-xl font-semibold leading-none tracking-tight">Maintenance Requests {{ maintenances.count }}</h3>
+                        </div>
+                    </div>
+                    <div class="py-6 md:px-3">
+                        <div class="relative w-full max-h-[20rem] overflow-y-auto">
+                        <table class="w-full caption-bottom text-sm">
+                            <thead class="[&amp;_tr]:border-b">
+                            <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                                Issue
+                                </th>
+                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                                    Type of issue
+                                </th>
+                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                                    Location
+                                </th>
+                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                                Status
+                                </th>
+                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                                    Repairman
+                                </th>
+                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                                Submitted
+                                </th>
+                                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                                Actions
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody class="[&amp;_tr:last-child]:border-0">
+                            {% for maintenance in maintenances %}
+                                <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{{ maintenance.Description_of_issue }}</td>
+                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{{ maintenance.type_of_issue }}</td>
+                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{{ maintenance.location }}</td>
+                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
+                                        {% if maintenance.status == 'Done' %}
+                                            <div
+                                                class="inline-flex w-fit text-white items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-green-500"
+                                                data-v0-t="badge"> {{ maintenance.status }} </div>
+                                        {% elif maintenance.status == 'In progress' %}
+                                        <div
+                                            class="inline-flex w-fit items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-yellow-500 text-white"
+                                            data-v0-t="badge"> {{ maintenance.status}} </div>
+                                        {% elif maintenance.status == 'verified' %}
+                                        <div
+                                            class="inline-flex w-fit items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-blue-500 text-white"
+                                            data-v0-t="badge"> {{ maintenance.status}} </div>
+                                        {% elif maintenance.status == 'notverified' %}
+                                        <div
+                                            class="inline-flex w-fit items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-yellow-500 text-yellow-900"
+                                            data-v0-t="badge"> {{ maintenance.status}} </div>
+                                        {% else %}
+                                        <div
+                                            class="inline-flex w-fit items-center whitespace-nowrap rounded-full border-1 border-gray-300 px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-gray-400"
+                                            data-v0-t="badge"> {{ maintenance.status}} </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{{ maintenance.repairman }}</td>
+                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{{ maintenance.date_requested }}</td>
+                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
+                                    <button class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3">
+                                        View
+                                    </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+<script>
+
+        //fetch unread notification
+		function fetchUnreadCount() {
+        fetch("{% url 'unread_notifications_count' %}")
+            .then(response => response.json())
+            .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+
+
+        // Initialize Swiper
+        var swiper = new Swiper('.mySwiper', {
+            loop: true,  // Enable continuous loop mode
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+        });
+
+</script>
+<script src="{% static 'js/profile_dropdown.js' %}"></script>
+{% endblock content %}
+
+</html>
+

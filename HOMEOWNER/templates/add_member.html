@@ -1,0 +1,276 @@
+{% extends 'owner_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% block title %} {{ user }} / Add member {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+	<script src="{% static 'js/closemess.js' %}"></script>
+</head>
+
+<body class="bg-gray-100">
+	{% block content %}
+	<link rel="stylesheet" href="{% static 'css/pop-up-mess.css' %}">
+
+	<!-- Header -->
+    <div class="w-full flex justify-end items-center py-[.7rem] px-3 shadow-md bg-gray-50 relative">
+        <i id="menuBtn" class="bi bi-list z-[99999] absolute left-3 text-[1.3rem] font-semibold py-0 ml-2 md:hidden"></i>
+        <h1 class="text-left w-full left-[18%] max-[990px]:left-[20%] absolute font-semibold text-gray-600">Add member</h1>
+
+        <!--chat | notif | profile-->
+        <div class="flex justify-center gap-2 items-center">
+			<!--messages-->
+			<a href="{% url 'chatbot' %}" id="message-button" class="bi bi-chat-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer z-[9999999]" title="messages">
+				<span id="message-indicator" class="bg-red-600 text-white hidden rounded-full px-1 text-[.7rem]"></span>
+			</a>
+
+			<!--notifications-->
+			<a href="{% url 'owner_notifications' %}" class="bi bi-bell-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer z-[9999999]" title="notifications">
+				<span id="notification-count" class="bg-red-500 rounded-full text-[.7rem] text-white px-1 absolute right-[4px] top-[10%]"></span>
+			</a>
+			<!--end notifications-->
+
+			<!-- PROFILE -->
+			<div class="dropdown relative rounded-full w-[2.6rem] h-[2.6rem]">
+				<button id="dropdown-btn" class="btn btn-secondary bg-transparent
+				 border-0 text-black" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+					<div class="w-full h-full absolute top-0 left-0 rounded-[50%] shadow-md bg-black border-black border-1 overflow-hidden"><img
+							class="w-full h-full hover:bg-gray-100" src="{{ profile }}" alt="user profile"></div>
+				</button>
+				<ul id="dropdown-menu" class="dropdown-menu hidden flex flex-col mt-4 absolute right-0" aria-labelledby="dropdown-btn">
+					<li class="w-full">
+						<p class="w-full text-left dropdown-item">
+							<!-- <i class="bi bi-person-circle"></i>
+							<!-- Button trigger modal -->
+							<!--<a class="" data-bs-toggle="modal" href="#exampleModalToggle" role="button">PROFILE</a> -->
+							<a href="{% url 'owner_profile' %}"><I class="bi bi-person-circle"></I> PROFILE</a>
+						</p>
+					</li>
+					<li>
+						<form class="dropdown-item" action="{% url 'ownerLogout' %}" method="post">
+							{% csrf_token %}
+							<button class="w-full text-left" type="submit"><i
+									class="bi bi-box-arrow-right"></i> LOGOUT</button>
+						</form>
+					</li>
+				</ul>
+			</div>
+			<span>{{ user }}</span>
+		</div>
+    </div>
+
+
+	<!--Content container-->
+	<div
+		class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-2 top-[4.3rem] md:top-[4.5rem] shadow-md rounded-md p-4 overflow-y-auto overflow-x-hidden ">
+
+		{% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+
+		<form method="post">
+			{% csrf_token %}
+			<fieldset class="px-4 mb-2">
+				<div class="flex mb-4">
+					<a href="{% url 'owner_dashboard' %}"
+						class="bi bi-arrow-left mr-2 text-[1.2rem] px-[.8rem] flex items-center py-2 rounded-full hover:bg-gray-200 cursor-pointer"></a>
+					<div>
+						<h1 class="text-xl font-medium">Personal information</h1>
+						<p class="text-muted-foreground text-sm">Enter member details</p>
+					</div>
+				</div>
+
+				<div class="mb-2">
+					<label for="firstname" class="form-label text-gray-600">Firstname</label>
+					{{ form.first_name }}
+					{% for error in form.first_name.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="lastname" class="form-label text-gray-600">Lastname</label>
+					{{ form.last_name }}
+					{% for error in form.last_name.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="date_of_birth" class="form-label text-gray-600">Date of birth</label>
+					{{ form.date_of_birth }}
+					{% for error in form.date_of_birth.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="age" class="form-label text-gray-600">Age</label>
+					{{ form.age }}
+					{% for error in form.age.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="email_address" class="form-label text-gray-600">Email address</label>
+					{{ form.email_address }}
+					{% for error in form.email_address.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="contact_number" class="form-label text-gray-600">Contact no</label>
+					{{ form.contact_number }}
+					{% for error in form.contact_number.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="gender" class="form-label text-gray-600">Gender</label>
+					{{ form.gender }}
+					{% for error in form.gender.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+
+				<div class="mb-2">
+					<label for="relationship_to_household" class="form-label text-gray-600">Relation to
+						household</label>
+					{{ form.relationship_to_household }}
+					{% for error in form.relationship_to_household.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+				<div class="mb-2">
+					<label for="occupation" class="form-label text-gray-600">Occupation</label>
+					{{ form.occupation }}
+					{% for error in form.occupation.errors %}
+					<div class="text-red-500 text-sm">{{ error }}</div>
+					{% endfor %}
+				</div>
+			</fieldset>
+			<div class="w-full px-3">
+				<button type="submit" class="btn btn-primary w-full">Submit</button>
+			</div>
+		</form>
+	</div>
+
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			var user = document.getElementById("user").innerText.trim();
+			if (user === 'None' || user == '') {
+				location.href = "{% url 'main' %}";
+			}
+		});
+
+		document.getElementById('imageUpload').addEventListener('change', (e) => {
+			const file = event.target.files[0]
+			if (file) {
+				const reader = new FileReader();
+				reader.onload = function (e) {
+					const img = document.getElementById('imagePreview');
+					img.src = e.target.result;
+					img.style.display = 'block'
+				}
+				reader.readAsDataURL(file);
+			}
+		})
+
+		//get notifications
+		function fetchNotifications() {
+			$.ajax({
+				url: '{% url "get_notifications" %}',
+				method: 'GET',
+				success: function (data) {
+					const notificationsList = $('#notifications-list');
+					notificationsList.empty();
+					if (data.length != 0) {
+						$('#notification-count').text(data.length/2);
+					}
+
+					data.forEach(function (notification) {
+						notificationsList.append('<div class="notification">' + notification.message + '</div>');
+					});
+
+					if (data.length > 0) {
+						$('#notification-bell').addClass('new-notifications');
+					} else {
+						$('#notification-bell').removeClass('new-notifications');
+					}
+				}
+			});
+		}
+
+		// Polling every 50 miliseconds
+		setInterval(fetchNotifications, 50);
+
+		// Store the IDs of notifications that have already been displayed
+		let displayedNotificationIds = new Set();
+
+		function fetchNotifications() {
+			$.ajax({
+				url: '{% url "get_notifications" %}',
+				method: 'GET',
+				success: function (data) {
+					const notificationsList = $('#notifications-list');
+					if(data.length != 0){
+						$('#notification-count').text(data.length);
+					}
+
+					data.forEach(function (notification) {
+						// Check if the notification has already been displayed
+						if (!displayedNotificationIds.has(notification.id)) {
+							// Add new notification to the top
+							notificationsList.prepend('<p class="py-2 px-1 hover:bg-gray-100 cursor-pointer">' + notification.message + '</p>');
+							// Add the notification ID to the set of displayed IDs
+							displayedNotificationIds.add(notification.id);
+						}
+					});
+
+					if (data.length > 0) {
+						$('#notification-bell').addClass('new-notifications');
+					} else {
+						$('#notification-bell').removeClass('new-notifications');
+					}
+				},
+				error: function (jqXHR, textStatus, errorThrown) {
+					console.error('Error fetching notifications:', textStatus, errorThrown);
+				}
+			});
+		}
+
+		// Polling every 5 seconds
+		setInterval(fetchNotifications, 500);
+	</script>
+	{% endblock content %}
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+	integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+	crossorigin="anonymous"></script>
+
+</html>

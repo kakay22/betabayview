@@ -1,0 +1,747 @@
+{% extends 'admin_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ user }} / {% block title %} Homeowners {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-gray-100">
+	{% block content %}
+	<style>
+		input {
+		height: 40px; /* Similar to h-10 in Tailwind */
+		width: 100%; /* Full width */
+		border-radius: 8px; /* Rounded corners */
+		border: 1px solid #cbd5e1; /* Light gray border */
+		background-color: #f9fafb; /* Light background color */
+		padding: 8px 12px; /* Padding for the input */
+		font-size: 14px; /* Text size */
+		color: #374151; /* Text color */
+		transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Transition effects */
+		margin-bottom: 1rem;
+	}
+
+	input::placeholder {
+		color: #9ca3af; /* Placeholder color */
+	}
+
+	/* Focus styles */
+	input:focus {
+		outline: none; /* Remove default outline */
+		border-color: #3b82f6; /* Blue border on focus */
+		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); /* Shadow effect */
+	}
+
+	/* Disabled styles */
+	input:disabled {
+		cursor: not-allowed; /* Show not-allowed cursor */
+		opacity: 0.5; /* Decrease opacity */
+	}
+	</style>
+
+	<link rel="stylesheet" href="{% static 'css/admin-pop-up-mess.css' %}">
+	<!--pre loader-->
+	<!-- <div id="pre-loader"
+		class="w-full bg-white h-full flex justify-center items-center absolute top-0 left-0 z-[99999999]">
+		<img src="{% static 'Pulse@1x-0.7s-200px-200px.gif' %}" class="h-[4rem] w-[4rem]" alt="" srcset="">
+	</div> -->
+
+	<!-- Loading Spinner (hidden until request is sent) -->
+	<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+		<div class="spinner-border text-primary" role="status">
+		</div>
+		<span class="">Loading...</span>
+	</div>
+
+	<!--Content container-->
+	<div
+		class="w-full md:w-[85%] max-[770px]:h-full h-[90%] bg-white absolute mt-[.8rem] right-0 top-[4rem] md:top-[3.8rem] shadow-md rounded-md py-4 md:px-3 overflow-y-auto overflow-x-hidden">
+
+		<div class="flex py-2 justify-between items-center md:px-0 px-4">
+			<div class="flex justify-center items-center mb-3">
+				<a onclick="history.back()"
+					class="bi bi-arrow-left mr-2 text-[1.2rem] px-[.8rem] flex items-center py-[.7rem] rounded-full hover:bg-gray-200 cursor-pointer">
+				</a>
+				<h1 class="text-xl font-medium">Homeowners</h1>
+			</div>
+
+			<div>
+				<!--Button trigger to add new homeowner-->
+				<i class="btn btn-primary shadow-gray-500 shadow-md" data-bs-toggle="modal"
+				data-bs-target="#newHomeowner"><i class="bi bi-plus font-semibold"></i> <span
+					class="hidden min-[770px]:inline">Add Homeowner</span>
+				</i>
+				<!-- Button trigger for delete all homeowners modal -->
+				<i class="bi bi-trash btn btn-danger shadow-gray-500 shadow-md"
+					data-bs-toggle="modal" data-bs-target="#exampleModal"> <span class="hidden md:inline">Delete all</span>
+				</i>
+			</div>
+		</div>
+
+		{% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+		
+		<div class="mb-2 flex justify-start md:justify-start gap-[.80rem] items-center p-4 pb-0 overflow-auto">
+			<input type="text" id="searchInput" class="form-control md:w-[650px] w-[300px] mb-0" placeholder="Search by Name...">
+			<form method="get" action="{% url 'homeowners' %}">
+				<select class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-1" name="hasProperty" id="hasProperty" onchange="this.form.submit()">
+					<option value="" {% if not has_property %}selected{% endif %}>All</option>
+					<option value="yes" {% if has_property == "yes" %}selected{% endif %}>With Property</option>
+					<option value="no" {% if has_property == "no" %}selected{% endif %}>Without Property</option>
+				</select>
+			</form>	
+
+			<!-- Block filter -->
+			<form method="get" action="{% url 'homeowners' %}">
+				<select class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-1" name="blockFilter" id="blockFilter" onchange="this.form.submit()">
+					<option value="" {% if selected_block == "" %}selected{% endif %}>All blocks</option>
+					<option value="1" {% if selected_block == "1" %}selected{% endif %}>Block 1</option>
+					<option value="2" {% if selected_block == "2" %}selected{% endif %}>Block 2</option>
+					<option value="3" {% if selected_block == "3" %}selected{% endif %}>Block 3</option>
+					<option value="4" {% if selected_block == "4" %}selected{% endif %}>Block 4</option>
+					<option value="5" {% if selected_block == "5" %}selected{% endif %}>Block 5</option>
+					<option value="6" {% if selected_block == "6" %}selected{% endif %}>Block 6</option>
+					<option value="7" {% if selected_block == "7" %}selected{% endif %}>Block 7</option>
+					<option value="8" {% if selected_block == "8" %}selected{% endif %}>Block 8</option>
+					<option value="9" {% if selected_block == "9" %}selected{% endif %}>Block 9</option>
+					<option value="10" {% if selected_block == "10" %}selected{% endif %}>Block 10</option>
+				</select>
+			</form>
+
+			<!--Property filter-->
+			<form method="get" action="{% url 'homeowners' %}">
+				<select class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-1" name="houseFilter" id="houseFilter" onchange="this.form.submit()">
+					<option value="" {% if request.GET.houseFilter == "" %}selected{% endif %}>All Property</option>
+					{% for house in houses %}
+						<option value="{{ house.property_name }}" 
+							{% if request.GET.houseFilter == house.property_name %}selected{% endif %}>
+							{{ house.property_name|title }}
+						</option>
+					{% endfor %}
+				</select>
+			</form>	
+			
+			<!-- Sort Filter -->
+			<form method="get" action="{% url 'homeowners' %}">
+				<select class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-1" name="sort" id="sort" onchange="this.form.submit()">
+					<option value="" {% if not request.GET.sort %}selected{% endif %}>Sort By</option>
+					<option value="name" {% if request.GET.sort == "name" %}selected{% endif %}>Name</option>
+					<option value="registration_date" {% if request.GET.sort == "registration_date" %}selected{% endif %}>Registration Date</option>
+				</select>
+			</form>
+		</div>	
+
+		<!-- Modal FOR DELETE ALL HOMEOWNERS-->
+		<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="w-full p-3 text-right mb-0">
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="w-full">
+						<div class="w-full text-center">
+							<i class="bi bi-exclamation-circle text-[5rem] text-orange-500"></i>
+						</div>
+						{% if homeowners.count == 0 %}
+						<h1 class="w-full text-center">No homeowners to delete</h1>
+						{% else %}
+						<h1 class="w-full text-center">Are you sure you wan't to delete all ({{ homeowners.count }}) homeowners?</h1>
+						{% endif %}
+					</div>
+
+					{% if homeowners.count == 0 %}
+					<div class="w-full text-center p-3">
+						<button type="button"
+							class="border border-gray-700 hover:border-2 py-2 rounded-md bg-transparent text-gray-700 w-[40%]"
+							data-bs-dismiss="modal">OK</button>
+					</div>
+					{% else %}
+					<div class="w-full text-center p-3">
+						<form action="{% url 'delete_all_homeowners' %}" method="post">
+							{% csrf_token %}
+							<button type="button"
+								class="border border-gray-700 hover:border-2 py-[.4rem] rounded-md bg-transparent text-gray-700 w-[40%]"
+								data-bs-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary w-[40%]">Delete
+								all</button>
+						</form>
+					</div>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+		<!--End modal for delete all secretary-->
+
+		<!-- Modal for new homeowner -->
+		<div class="modal fade" id="newHomeowner" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg"> <!-- Use modal-lg for a wider layout -->
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title text-center w-full" id="exampleModalLabel">
+							<i class="bi bi-house-fill"></i> New Homeowner
+						</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form id="homeownerForm" method="post">
+							{% csrf_token %}
+							<fieldset class="px-4 mb-2">
+								<div class="mb-2">
+									<div class="input-group">
+										<div class="flex items-center gap-2">
+											<span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+											<label for="firstname" class="form-label">Firstname</label>
+										</div>
+										{{ form.first_name }}
+									</div>
+									{% for error in form.first_name.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+									{% endfor %}
+								</div>
+
+								<div class="mb-2">
+									<div class="input-group">
+										<div class="flex items-center gap-2">
+											<span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+											<label for="firstname" class="form-label">Lastname</label>
+										</div>
+										{{ form.last_name }}
+									</div>
+									{% for error in form.last_name.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+									{% endfor %}
+								</div>
+
+								<div class="mb-2">
+									<div class="input-group">
+										<div class="flex items-center gap-2">
+											<span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+											<label for="email_address" class="form-label">Email address</label>
+										</div>
+										{{ form.email }}
+									</div>
+									{% for error in form.email.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+									{% endfor %}
+								</div>
+
+								<div class="mb-2">
+									<div class="input-group">
+										<div class="flex items-center gap-2">
+											<span class="input-group-text"><i class="bi bi-person-circle"></i></span>
+											<label for="user_name" class="form-label">Username</label>
+										</div>
+										{{ form.username }}
+									</div>
+									{% for error in form.username.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+									{% endfor %}
+								</div>
+
+								<div class="mb-2">
+									<div class="input-group">
+										<div class="flex items-center gap-2">
+											<span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+											<label for="password" class="form-label">Password</label><br>
+										</div>
+										{{ form.password1 }}
+									</div>
+									{% for error in form.password1.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+									{% endfor %}
+								</div>
+
+								<div class="mb-2">
+									<div class="input-group">
+										<div class="flex items-center gap-2">
+											<span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+											<label for="confirm_password" class="form-label">Confirm Password</label><br>
+										</div>
+										{{ form.password2 }}
+									</div>
+									{% for error in form.password2.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+									{% endfor %}
+								</div>
+							</fieldset>
+
+							<hr class="mb-2">
+
+							<div class="w-full">
+								<button type="submit" class="btn btn-primary w-full">Submit</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- End modal for new homeowner -->
+
+
+		<!--list view-->
+		<div id="listView" style="display: block;" class="overflow-x-auto max-h-[75vh] overflow-y-auto">
+			<table id="myTable" class="min-w-full divide-y divide-gray-200">
+				<thead class="bg-gray-100 sticky top-0 z-10">
+					<tr>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Image</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Owned property</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Firstname</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Lastname</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age
+						</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Contact no
+						</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email
+							address
+						</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Gender</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Relation to Household</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Occupation</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Registration date</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Action</th>
+					</tr>
+				</thead>
+				<tbody id="homeownersTable" class="bg-white divide-y divide-gray-200">
+					{% for homeowner in page_obj %}
+					<tr class="hover:bg-gray-100 cursor-pointer"> <!--nadara lageap-->
+						<td class="px-4 py-2 whitespace-nowrap">
+							<img src="{{ homeowner.profile_picture.url }}" alt="Image"
+								class="w-10 h-10 rounded-full object-cover">
+						</td>
+						<td class="px-4 py-2 whitespace-nowrap">
+							{% if homeowner.property %}
+								<a href="{% url 'admin_property_detail' homeowner.property.pk %}" class="text-teal-600" style="text-decoration: underline;">{{ homeowner.property }}</a>
+							{% else %}
+								None
+							{% endif %}
+						</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ homeowner.user.first_name }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ homeowner.user.last_name }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ homeowner.age }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ homeowner.contact_number }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ homeowner.user.email }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ homeowner.gender }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ homeowner.relationship_to_household }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ homeowner.occupation }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ homeowner.registration_date }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">
+							<!--ellipsis-->
+							<button class="w-full hover:bg-gray-200 rounded-full py-2" data-bs-toggle="dropdown"
+								aria-expanded="false"><i class="bi bi-three-dots"></i></button>
+							<ul class="dropdown-menu">
+
+								<!--view button for modal-->
+								<li>
+									<button type="button" class="dropdown-item text-blue-500" data-bs-toggle="modal"
+										data-bs-target="#viewModal{{ homeowner.pk}}">
+										<i class="bi bi-eye-fill"></i> VIEW
+									</button>
+								</li>
+
+								<!--edit button for modal-->
+								<li>
+									<button type="button" class="dropdown-item text-green-500" data-bs-toggle="modal"
+										data-bs-target="#editModal{{ homeowner.pk}}">
+										<i class="bi bi-pen-fill"></i> UPDATE
+									</button>
+								</li>
+
+
+								<!--delete button for modal-->
+								<li>
+									<button type="button" class="dropdown-item text-red-500" data-bs-toggle="modal"
+										data-bs-target="#deleteModal{{ homeowner.pk}}">
+										<i class="bi bi-trash-fill"></i> DELETE
+									</button>
+								</li>
+							</ul>
+
+							<!-- Modal for view -->
+							<div class="modal fade" id="viewModal{{ homeowner.pk }}" tabindex="-1" aria-labelledby="viewModalLabel{{ homeowner.pk }}" aria-hidden="true">
+								<div class="modal-dialog modal-md">
+									<div class="modal-content rounded-xl shadow-lg border-0">
+										<!-- Modal Header -->
+										<div class="modal-header bg-gray-100 border-0 p-2 px-4 flex justify-end items-center">
+											<h5 class="modal-title font-semibold text-md text-gray-800" id="viewModalLabel{{ homeowner.pk }}">
+												Viewing Profile: {{ homeowner.user.first_name|title }} {{ homeowner.user.last_name|title }}
+											</h5>
+											<button type="button" class="btn-close bg-gray-300 hover:bg-gray-400 rounded-full p-2" data-bs-dismiss="modal" aria-label="Close"></button>
+										</div>
+
+										<!-- Modal Body -->
+										<div class="modal-body">
+											<!-- Profile Section -->
+											<div class="flex flex-col items-center justify-center py-3">
+												<div class="relative">
+													<img src="{{ homeowner.profile_picture.url }}" class="h-[8rem] w-[8rem] rounded-full shadow-lg" alt="User Profile">
+													<div class="absolute bottom-2 right-2 bg-green-500 text-white p-2 rounded-full text-xs"></div> <!-- Optional status badge -->
+												</div>
+
+												<h2 class="text-xl font-bold text-gray-800 mt-2">{{ homeowner.user.first_name|title }} {{ homeowner.user.last_name|title }}</h2>
+												<p class="text-gray-600">Age: {{ homeowner.age }} | Gender: {{ homeowner.gender }}</p>
+											</div>
+
+											<!-- User Info Table with Icons -->
+											<div class="overflow-y-auto max-h-[400px]">
+												<table class="w-full text-left text-sm text-gray-700">
+													<tbody>
+														<tr class="border-b">
+															<th class="py-3 px-4 flex items-center text-gray-500 font-medium">
+																<i class="bi bi-person-fill mr-2 text-blue-500"></i>Full Name
+															</th>
+															<td class="py-3 px-4">{{ homeowner.user.first_name }} {{ homeowner.user.last_name }}</td>
+														</tr>
+														<tr class="border-b">
+															<th class="py-3 px-4 flex items-center text-gray-500 font-medium">
+																<i class="bi bi-envelope-fill mr-2 text-blue-500"></i>Email
+															</th>
+															<td class="py-3 px-4">{{ homeowner.user.email }}</td>
+														</tr>
+														<tr class="border-b">
+															<th class="py-3 px-4 flex items-center text-gray-500 font-medium">
+																<i class="bi bi-telephone-fill mr-2 text-blue-500"></i>Contact No
+															</th>
+															<td class="py-3 px-4">{{ homeowner.contact_number }}</td>
+														</tr>
+														<tr class="border-b">
+															<th class="py-3 px-4 flex items-center text-gray-500 font-medium">
+																<i class="bi bi-house-fill mr-2 text-blue-500"></i>Property
+															</th>
+															<td class="px-4 py-2 whitespace-nowrap">
+																{% if homeowner.property %}
+																	<a href="{% url 'sec_property_detail' homeowner.property.pk %}" class="text-teal-600" style="text-decoration: underline;">{{ homeowner.property }}</a>
+																{% else %}
+																	None
+																{% endif %}
+															</td>
+														</tr>
+														<tr class="border-b">
+															<th class="py-3 px-4 flex items-center text-gray-500 font-medium">
+																<i class="bi bi-people-fill mr-2 text-blue-500"></i>Household Members
+															</th>
+															<td class="py-3 px-4">total household members</td>
+														</tr>
+														<tr>
+															<th class="py-3 px-4 flex items-center text-gray-500 font-medium">
+																<i class="bi bi-person-lines-fill mr-2 text-blue-500"></i>Relation to Household
+															</th>
+															<td class="py-3 px-4">{{ homeowner.relationship_to_household }}</td>
+														</tr>
+														<tr></tr>
+															<th class="py-3 px-4 flex items-center text-gray-500 font-medium">
+																<i class="bi bi-person-lines-fill mr-2 text-blue-500"></i>Registration date
+															</th>
+															<td class="py-3 px-4">{{ homeowner.registration_date }}</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+
+										<!-- Modal Footer -->
+										<div class="modal-footer bg-gray-100 border-0 py-4">
+											<button type="button" class="btn btn-primary py-2 px-4 text-blue-500 bg-transparent border-1 border-blue-500" data-bs-dismiss="modal">Close</button>
+											<a href="{% url 'admin_owner_profile' homeowner.pk %}" class="btn btn-primary py-2 px-4">See more <i class="bi bi-chevron-down"></i> </a>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- End modal for view -->
+
+							<!-- Modal for Edit -->
+							<div class="modal fade" id="editModal{{ homeowner.pk }}" tabindex="-1" aria-labelledby="editModalLabel{{ homeowner.pk }}" aria-hidden="true">
+								<div class="modal-dialog modal-md">
+									<div class="modal-content rounded-xl shadow-lg border-0">
+										<!-- Modal Header -->
+										<div class="modal-header bg-gray-200 p-4 flex justify-between items-center">
+											<h5 class="modal-title font-semibold text-lg text-gray-800" id="editModalLabel{{ homeowner.pk }}">
+												Edit Profile: {{ homeowner.user.first_name|title }}
+											</h5>
+											<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+										</div>
+
+										<!-- Profile Picture -->
+										<div class="flex justify-center py-2">
+											<img src="{{ homeowner.profile_picture.url }}" class="h-28 w-28 rounded-full shadow-lg" alt="Owner Picture">
+										</div>
+
+										<!-- Modal Body -->
+										<div class="modal-body">
+											<form method="post" action="{% url 'edit_owner' homeowner.pk %}">
+												{% csrf_token %}
+												<div class="space-y-4">
+													<div>
+														<label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>
+														<div class="relative mt-1">
+															<input type="text" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 pl-10" name="first_name" id="first_name" value="{{ homeowner.user.first_name }}" required>
+															<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+																<i class="bi bi-person-fill"></i>
+															</span>
+														</div>
+													</div>
+													<div>
+														<label for="last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
+														<div class="relative mt-1">
+															<input type="text" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 pl-10" name="last_name" id="last_name" value="{{ homeowner.user.last_name }}" required>
+															<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+																<i class="bi bi-person"></i>
+															</span>
+														</div>
+													</div>
+													<div>
+														<label for="age" class="block text-sm font-medium text-gray-700">Age</label>
+														<div class="relative mt-1">
+															<input type="number" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 pl-10" name="age" id="age" value="{{ homeowner.age }}" required>
+															<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+																<i class="bi bi-calendar3"></i>
+															</span>
+														</div>
+													</div>
+													<div>
+														<label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
+														<div class="relative mt-1">
+															<input type="text" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 pl-10" name="gender" id="gender" value="{{ homeowner.gender }}" required>
+															<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+																<i class="bi bi-gender-ambiguous"></i>
+															</span>
+														</div>
+													</div>
+													<div>
+														<label for="contact_number" class="block text-sm font-medium text-gray-700">Contact No</label>
+														<div class="relative mt-1">
+															<input type="tel" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 pl-10" name="contact_number" id="contact_number" value="{{ homeowner.contact_number }}" required>
+															<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+																<i class="bi bi-telephone"></i>
+															</span>
+														</div>
+													</div>
+													<div>
+														<label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+														<div class="relative mt-1">
+															<input type="email" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 pl-10" name="email" id="email" value="{{ homeowner.user.email }}" required>
+															<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+																<i class="bi bi-envelope"></i>
+															</span>
+														</div>
+													</div>
+													<div>
+														<label for="occupation" class="block text-sm font-medium text-gray-700">Occupation</label>
+														<div class="relative mt-1">
+															<input type="text" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500 pl-10" name="occupation" id="occupation" value="{{ homeowner.occupation }}" required>
+															<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+																<i class="bi bi-briefcase"></i>
+															</span>
+														</div>
+													</div>
+												</div>
+												<!-- Modal Footer -->
+												<div class="modal-footer bg-gray-200 py-4 flex justify-between">
+													<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+													<button type="submit" class="btn btn-primary">Save changes</button>
+												</div>
+											</form>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- End Modal for Edit -->
+
+
+
+							<!-- Modal for delete-->
+							<div class="modal fade" id="deleteModal{{ homeowner.pk}}" tabindex="-1"
+								aria-labelledby="deleteModalLabel" aria-hidden="true">
+								<div class="modal-dialog">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title w-full text-center font-semibold"
+												id="deleteModalLabel{{ homeowner.pk}}">Delete
+												{{ homeowner.user.first_name }} ?</h5>
+											<button type="button" class="btn-close" data-bs-dismiss="modal"
+												aria-label="Close"></button>
+										</div>
+										<div class="modal-body">
+											<h1 class="w-full text-center">
+												<i class="bi bi-x-circle text-[5rem] text-red-500"></i>
+											</h1>
+											<h1 class="w-full text-center">Are you sure you want to delete homeowner "
+												{{ homeowner.user.first_name }}"?</h1>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary"
+												data-bs-dismiss="modal">Cancel</button>
+											<form action="{% url 'delete_owner' homeowner.pk %}" method="post">
+												{% csrf_token %}
+												<button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Delete</button>
+											</form>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!--END modal for delete-->
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+					{% if not page_obj %}
+						<p class="w-full text-center py-3 text-gray-500">No result</p>
+					{% endif %}
+		</div>
+
+		<!--grid view-->
+		<div id="gridView" style="display: none;" class="grid grid-cols-1 lg:grid-cols-3 gap-2">
+			{% for homeowner in homeowners %}
+			<div class="border-1 h-40 border-gray-200 p-4 rounded-lg shadow-sm mb-2	relative">
+				<div class="w-40 absolute top-0 left-0">
+					<img src="{{ homeowner.profile_picture.url }}" alt="" srcset="">
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+
+		<!--pagination-->
+		<div class="py-2 px-3">
+			<nav class="block">
+				<p class="text-sm text-gray-500">Showing {{ page_obj.end_index }} out of {{ paginator.count }} results
+				</p>
+				<ul class="pagination">
+					{% if page_obj.has_previous %}
+					<li class="page-item">
+						<a class="page-link" href="?page=1" aria-label="First">
+							<span aria-hidden="true">&laquo;&laquo;</span>
+						</a>
+					</li>
+					<li class="page-item">
+						<a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+							<span aria-hidden="true">&laquo;</span>
+						</a>
+					</li>
+					{% endif %}
+
+					{% for num in page_obj.paginator.page_range %}
+					{% if page_obj.number == num %}
+					<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+					{% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %} <li class="page-item"><a
+							class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+						{% endif %}
+						{% endfor %}
+
+						{% if page_obj.has_next %}
+						<li class="page-item">
+							<a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+								<span aria-hidden="true">&raquo;</span>
+							</a>
+						</li>
+						<li class="page-item">
+							<a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+								<span aria-hidden="true">&raquo;&raquo;</span>
+							</a> 
+						</li>
+						{% else %}
+						<li class="page-item opacity-[.5] pointer-events-none">
+							<a class="page-link" href="" aria-label="Next">
+								<span aria-hidden="true">&raquo;</span>
+							</a>
+						</li>
+						<li class="page-item opacity-[.5] pointer-events-none">
+							<a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+								<span aria-hidden="true">&raquo;&raquo;</span>
+							</a>
+						</li>
+						{% endif %}
+				</ul>
+			</nav>
+		</div>
+
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+		<script type="text/javascript">
+			$(document).ready(function () {
+				$("#homeownerForm").on('submit', function (event) {
+					event.preventDefault();  // Prevent default form submission
+					var formData = $(this).serialize();  // Serialize form data
+					$.ajax({
+						type: 'POST',
+						url: "{% url 'new_homeowner' %}",  // Replace with your URL name
+						data: formData,
+						success: function (response) {
+							if (response.success) {
+								// Show success message
+								$("#pop-up-mess").remove();  // Remove any existing messages
+								$("body").append("<p id='pop-up-mess' class='alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black'>" +
+									"<i class='bi bi-check-circle-fill text-green-600'></i> " + response.message + "</p>");
+								$('#newHomeowner').modal('hide'); // Hide the modal on success
+								location.href = "{% url 'homeowners' %}"
+							} else {
+								displayErrors(response.errors);  // Display form errors
+								const loader = document.getElementById("loadingSpinner")
+								loader.classList.add('hidden');
+							}
+						}
+					});
+				});
+
+				function displayErrors(errors) {
+					// Clear previous errors
+					$(".text-red-500").remove();
+
+					// Parse errors JSON if it's a string
+					if (typeof errors === 'string') {
+						errors = JSON.parse(errors);
+					}
+
+					// Loop through errors and display them
+					$.each(errors, function (field, errorList) {
+						var fieldElement = $("[name=" + field + "]");
+						// Display all error messages for the field
+						$.each(errorList, function (index, error) {
+							var errorMessageHtml = "<div class='text-red-500 text-sm'>" + error.message + "</div>";
+							fieldElement.after(errorMessageHtml);
+						});
+					});
+				}
+			});
+
+		
+		</script>
+		<script src="{% static 'js/inputFilter.js' %}"></script>
+		<script src="{% static 'js/admin_loading_submit.js' %}"></script>
+		{% endblock content %}
+		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+			integrity="sha384-oBqDVmMz4fnFO9gybBogGzG1Oj2vhH58+FWp1iJoV1RjFxo6GFaU5PaParIh6Fu9"
+			crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+			integrity="sha384-qm0nK+7D0f0Q0z3Ufh6iFa09X1I8TB65Dgwlm9fq+7HGu39TVE7aURy5GkPbbDi4"
+			crossorigin="anonymous"></script>
+</body>
+
+</html>

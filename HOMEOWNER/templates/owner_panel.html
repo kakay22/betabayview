@@ -1,0 +1,992 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% block title %} {% endblock title %}</title>
+	<link rel="icon" href="{% static 'users/logo.png' %}" type="image/x-icon">		
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+	<link rel="stylesheet" href="{% static 'css/owner_active_link.css' %}">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<style>
+		* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	}
+
+	html, body {
+	width: 100vw;
+	height: 100vh;
+	overflow-x: hidden;
+	}
+	.group:hover .feedback-container {
+			opacity: 1;
+		}
+		.feedback-container {
+		display: none; /* Initially hidden */
+		position: absolute;
+		right: 0; /* Adjust based on layout */
+		bottom: 0;
+		z-index: 999999;
+		background-color: #f0f0f0; /* Background color to make it visible */
+		padding: 5px;
+		border-radius: 5px;
+	}
+
+	.bot-response-container:hover .feedback-container {
+		display: flex; /* Show when hovering the response */
+		justify-content: space-around; /* Adjust to align buttons properly */
+	}
+	
+	.dropdown-menu2 {
+		position: absolute;
+		display: block;
+		z-index: 1000;
+		background-color: white;
+	}
+
+	.hidden {
+		display: none;
+	}
+	.tooltip2::after {
+		content: '';
+		position: absolute;
+		top: 100%; /* Positioning the arrow */
+		left: 50%;
+		margin-left: -5px; /* Center the arrow */
+		border-width: 5px;
+		border-style: solid;
+		border-color: #333 transparent transparent transparent; /* Arrow color */
+	}
+	</style>
+</head>
+
+<body class="bg-gray-100 overflow-hidden h-[100vh] w-[100vw]">
+	<link rel="stylesheet" href="{% static 'css/search-slide.css' %}">
+
+	<iframe id="chatbase-frame" class="hidden"
+			src="https://www.chatbase.co/chatbot-iframe/3mB7KsfJ--tsoHhcb4BC3" 
+			width="100%" 
+			style="height: 100%; min-height: 700px; display: none;" 
+			frameborder="0">
+	</iframe>
+	
+
+	<!-- Hide the Chatbase chat bubble -->
+	<style>
+		.chatbase-bubble {
+			display: none !important; /* Ensures the chat bubble is hidden */
+		}
+	</style>
+
+	<!-- Chatbase Script -->
+	<script>
+		window.embeddedChatbotConfig = {
+			chatbotId: "3mB7KsfJ--tsoHhcb4BC3",
+			domain: "www.chatbase.co"
+		}
+	</script>
+	<script
+		src="https://www.chatbase.co/embed.min.js"
+		chatbotId="3mB7KsfJ--tsoHhcb4BC3"
+		domain="www.chatbase.co"
+		defer>
+	</script>
+
+
+	<link rel="stylesheet" href="{% static 'css/owner_panel.css' %}">
+
+	<!-- Chat Container -->
+	<div id="chatContainer" class="hidden relative" style="display: none;">
+		<div id="chatHeader" class="px-4 py-2">
+			<div class="flex items-center">
+				<span class="flex items-center gap-2">
+					<img class="w-10 h-10 rounded-full mr-3" src="{% static 'users/bot_profile (1).avif' %}"> Housing Buddy
+				</span>
+			</div>
+
+			<div class="flex items-center gap-2">
+				<!-- Icon with tooltip -->
+				<div class="relative group">
+					<i class="bi bi-question-circle text-[1.3rem] p-2 py-1 hover:bg-[#3d4b74] rounded-md"></i>
+					<!-- Tooltip on hover (aligned to the left of the icon) -->
+					<div class="absolute tooltip2 hidden group-hover:block bg-white text-gray-600 text-xs shadow-lg rounded-md p-2 top-[120%] right-[-1%] z-10 w-64">
+						<p>This is the chatbot feature! You can ask questions, request maintenance, or chat about housing-related topics. The chatbot will assist you with all your queries in a friendly and intuitive manner.</p>
+					</div>
+				</div>
+
+
+				<!-- Globe Icon as Dropdown Toggle -->
+				<div class="dropdown">
+					<button id="dropdownToggle" class="p-0" type="button">
+					<i class="bi bi-globe text-[1.3rem] p-2 py-1 hover:bg-[#3d4b74] rounded-md"></i>
+					</button>
+				
+					<!-- Dropdown Menu -->
+					<ul id="langDropdown" class="dropdown-menu2 dropdown-menu hidden bg-white shadow-md absolute mt-2 right-0 rounded-md w-48">
+					<li><a class="dropdown-item p-2 block hover:bg-gray-100" href="?lang=en">English</a></li>
+					<li><a class="dropdown-item p-2 block hover:bg-gray-100" href="?lang=es">Spanish</a></li>
+					<li><a class="dropdown-item p-2 block hover:bg-gray-100" href="?lang=fr">French</a></li>
+					<li><a class="dropdown-item p-2 block hover:bg-gray-100" href="?lang=de">German</a></li>
+					</ul>
+				</div>
+				  
+				<button id="closeChat" class="text-white text-[2rem]"><i class="bi bi-x hover:bg-[#3d4b74] rounded-md"></i></button>
+			</div>
+		</div>
+
+		<!-- Chatbox -->
+		<div id="chatbox" class="p-4 px-2 overflow-y-auto relative"></div>
+
+		<!-- Scroll Down Button -->
+		<button id="scrollDownBtn" 
+			class="hidden fixed bottom-20 right-10 bg-gray-500 text-white md:h-[40px] md:w-[40px] h-[50px] w-[50px] flex justify-center items-center rounded-full shadow-md"
+			style="z-index: 1000; bottom: 20%; right: 45%;">
+			<i class="bi bi-arrow-down"></i>
+		</button>
+
+		<!-- Input Container -->
+		<div id="inputContainer" class="py-3 border-t border-gray-300 w-full bg-white flex-col">
+			<!-- Suggestions -->
+			<div id="suggestionsContainer" class="overflow-x-auto overflow-y-hidden flex gap-3 w-full px-4 py-2"
+				style="z-index: 2000; display: flex; align-items: center;">
+				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+						data-prompt="About my property">About my property</button>
+
+				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+						data-prompt="My maintenance request list">My maintenance request list</button>
+
+				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+						data-prompt="Submit maintenance request">Submit maintenance request</button>
+
+				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+						data-prompt="Upcoming events">Upcoming events</button>
+
+				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+						data-prompt="Latest Announcements">Latest Announcements</button>
+
+				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+						data-prompt="Support team contact info">Support team contact info</button>
+				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+						data-prompt="Tell me a joke">Tell me a joke</button>
+				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+						data-prompt="What is the time?">What is the time?</button>
+				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+						data-prompt="What is the date today?">What is the date today?</button>
+			</div>
+
+			<div class="flex items-center justify-between w-full">
+				<!-- Input Field -->
+				<input type="text" id="userMessage" 
+					class="flex-grow border-none outline-none bg-gray-200 rounded-full px-4 py-2 text-sm md:text-base placeholder-gray-500 transition-all duration-200"
+					placeholder="Type a message...">
+					
+				<!-- Send Button -->
+				<button id="sendButton" 
+						class="text-gray-700 text-[1.5rem] rounded-md p-2 px-[.60rem] py-1 hover:bg-gray-300 transition-all duration-200">
+					<i class="bi bi-send"></i>
+				</button>
+			</div>
+		</div>
+	</div>
+
+    <!-- Floating Chat Bubble -->
+    <div id="chatBubble">
+        <i id="chat-icon" class="bi bi-chat-dots-fill text-[1.5rem]"></i>
+    </div>
+
+	<!-- Header -->
+    <div id="header" class="w-[100vw] flex justify-end items-center py-[.7rem] px-3 shadow-md bg-white relative">		
+        <i id="menuBtn" class="bi bi-list absolute left-3 text-[1.3rem] font-semibold py-0 ml-2 md:hidden"></i>
+
+		<a href="{% url 'owner_dashboard' %}" class="text-left md:left-[18%] left-[12%] absolute font-bold text-[1rem] flex items-center duration-300 hover:text-teal-500">
+			<span class="text-[1.25rem]">
+				Beta Bayview
+			</span>
+		</a>		
+
+        <!--search | notif | profile-->
+        <div class="flex justify-center gap-2 items-center">
+		<body class="bg-gray-100 flex justify-center items-center min-h-screen">
+
+			<!--search-->
+			<div id="search-container" class="relative flex justify-end items-center">
+				<button id="search-button" class="bi bi-search text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="search">
+					<span id="message-indicator" class="bg-red-600 text-white hidden rounded-full px-1 text-[.7rem]"></span>
+				</button>
+				<input id="search-input" type="text" placeholder="Search..." class="absolute right-0 py-2 shadow-md shadow-gray-300 text-gray-700 bg-gray-300 rounded-full search-input-transition" />
+				
+				<!-- Suggestions dropdown -->
+				<div id="suggestions-dropdown" style="position: absolute; top: 150%; background: white; border: 1px solid gray; display: none;"></div>
+
+				<!-- Search history with delete all history button -->
+				<div id="search-history" class="search-history-container relative mt-2 p-2 border rounded shadow-md bg-white">
+					<!-- Delete All History button -->
+					<button id="clear-history" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 transition duration-200" title="Clear all history">
+						<i class="bi bi-trash text-xl"></i> <!-- Trash icon -->
+					</button>
+				</div>
+			</div>
+
+	
+
+			<script src="{% static 'js/search-suggestions.js' %}"></script>
+
+			<!--notifications-->
+			<a href="{% url 'owner_notifications' %}" class="bi bi-bell text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="notifications">
+				<span class="notification-badge absolute top-0 right-0 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs hidden">
+                    0 
+                </span>
+			</a>
+			<!--end notifications-->
+
+			<!-- PROFILE -->
+			<div class="dropdown relative rounded-full w-[2.6rem] h-[2.6rem] shadow-md">
+				<button id="dropdown-btn" class="btn btn-secondary bg-transparent
+				 border-0 text-black" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+					<div class="w-full h-full absolute top-0 left-0 rounded-[50%] shadow-md bg-gray-300 border-gray-500 border-1 overflow-hidden"><img
+							class="w-full h-full hover:bg-gray-400" src="{{ profile }}" alt="user profile"></div>
+				</button>
+				<ul id="dropdown-menu" class="dropdown-menu hidden flex justify-center min-w-60 flex-col mt-4 absolute right-0 z-[99999999] p-2" aria-labelledby="dropdown-btn">
+					<div class="w-full flex flex-col justify-center p-2 border-b-2">
+						<p class="w-full flex justify-center">
+							<img src="{{ profile }}" alt="" srcset="" class=" w-[4rem] h-[4rem] rounded-full border-2">
+						</p>
+						<p class="w-full text-center py-3">{{ user.email }}</p>
+					</div>
+					<li class="w-full">
+						<p class="btn hover:bg-gray-300 w-full text-left flex items-center gap-1 font-bold">
+							<a href="{% url 'owner_profile' %}" class="text-left flex items-center gap-1"><i class="material-icons">settings</i>	Profile setting</a>
+						</p>
+					</li>
+					<li>
+						<a href="{% url 'change_password' %}" class="btn flex items-center gap-1 font-bold hover:bg-gray-300 w-full text-left" type="submit">
+							<i class="material-icons">lock_open</i> Change Password
+						</a>
+					</li>
+					<li>
+						<button form="logoutForm" class="btn flex items-center font-bold hover:bg-gray-300 gap-1 w-full text-left" type="submit">
+							<i class="material-icons">logout</i> Logout
+						</button>
+					</li>
+				</ul>
+			</div>
+			<span>{{ user }}</span>
+		</div>
+    </div>
+
+	<!--form for logout-->
+	<form id="logoutForm" class="dropdown-item py-2 w-full" action="{% url 'ownerLogout' %}" method="post">
+		{% csrf_token %}
+		
+	</form>
+
+	<!-- Improved Sidebar -->
+	<div id="sideBar"
+		class="h-full w-[210px] md:w-[16%] sm:shadow-gray-400 sm:shadow-md bg-[#193948] z-[999999] absolute top-0 md:left-0 left-[-100%] flex flex-col transition-transform duration-300">
+		
+		<div class="py-4 flex items-center justify-center bg-[#1c2e40] shadow-lg">
+			<h1 class="text-lg font-bold text-gray-200 flex gap-1"> HOMEOWNER</h1>
+		</div>
+		
+		<hr class="border-t border-gray-600">
+
+		<nav class="mt-4 flex-1 overflow-y-auto">
+			<a href="{% url 'owner_dashboard' %}"
+				class="flex items-center gap-3 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+				<span class="material-icons p-1 px-2 rounded-md bg-[#304650]">dashboard</span>
+				<span class="text-sm">Dashboard</span>
+			</a>
+
+			<a href="{% url 'owner_profile' %}"
+				class="flex items-center gap-3 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+				<span class="material-icons p-1 px-2 rounded-md bg-[#304650]">person</span>
+				<span class="text-sm">Profile Setting</span>
+			</a>
+
+			<a href="{% url 'property_detail' %}"
+				class="flex items-center gap-3 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+				<span class="material-icons p-1 px-2 rounded-md bg-[#304650]">house</span>
+				<span class="text-sm">Property Details</span>
+			</a>
+
+			<a href="{% url 'household_members' %}"
+				class="flex items-center gap-3 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+				<span class="material-icons p-1 px-2 rounded-md bg-[#304650]">people</span>
+				<span class="text-sm">Household Members</span>
+			</a>
+			
+			<hr class="my-2 border-gray-600">
+
+			<a id="maintenance-link" href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+				<span class="material-icons p-1 px-2 rounded-md bg-[#304650]">build</span>
+				<span class="text-sm">Maintenance Request</span>
+			</a>
+
+			<a href="{% url 'owner_events' %}"
+				class="flex items-center gap-3 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+				<span class="material-icons p-1 px-2 rounded-md bg-[#304650]">event</span>
+				<span class="text-sm">Events</span>
+			</a>
+
+			<a href="{% url 'owner_announcements' %}"
+				class="flex items-center gap-3 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+				<span class="material-icons p-1 px-2 rounded-md bg-[#304650]">announcement</span>
+				<span class="text-sm">Announcements</span>
+			</a>
+			
+			<hr class="my-2 border-gray-600">
+
+			<a href="{% url 'ownerLogout' %}"
+				class="flex items-center gap-3 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+				<span class="material-icons p-1 px-2 rounded-md bg-[#304650]">logout</span>
+				<span class="text-sm">Logout</span>
+			</a>
+		</nav>
+	</div>
+
+	<!--search urls-->
+	<div id="search-suggestions"
+		data-dashboard-url="{% url 'owner_dashboard' %}"
+		data-profile-url="{% url 'owner_profile' %}"
+		data-property-details-url="{% url 'property_detail' %}"
+		data-household-members-url="{% url 'household_members' %}"
+		data-maintenance-url="{% url 'request_maintenance_list' %}"
+		data-events-url="{% url 'owner_events' %}"
+		data-announcements-url="{% url 'owner_announcements' %}"
+		data-notifications-url="{% url 'owner_notifications' %}">
+	</div>
+
+	<div id="container" class="overflow-hidden h-[100vh] w-[100vw]">
+		{% block content %}
+
+		{% endblock content %}
+	</div>
+
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script src="{% static 'js/owner_loading_submit.js' %}"></script>
+	<script>
+		function checkAuthentication() {
+			fetch('/check-auth-status/')
+				.then(response => response.json())
+				.then(data => {
+					if (!data.authenticated) {
+						// If the user is not authenticated, redirect to the main page
+						window.location.href = '/'; // Adjust the URL based on your project
+					}
+				})
+				.catch(error => console.log('Error checking authentication:', error));
+		}
+
+		// Check every 5 seconds (500 ms) if the user is still authenticated
+		setInterval(checkAuthentication, 2000);
+
+		document.addEventListener("DOMContentLoaded", function () {
+			const currentURL = window.location.href
+			const menuItems = document.querySelectorAll("#sideBar a")
+
+			menuItems.forEach(item => {
+				if (item.href === currentURL) {
+					item.classList.add('activeLink')
+				}
+			})
+
+		});
+
+		//* Loop through all dropdown buttons to toggle between hiding and showing its dropdown content - This allows the user to have multiple dropdowns without any conflict */
+		var dropdown = document.getElementsByClassName("dropdown-btn");
+		var i;
+		up = document.querySelector("#up")
+		down = document.querySelector("#down")
+
+		for (i = 0; i < dropdown.length; i++) {
+			dropdown[i].addEventListener("click", function () {
+				this.classList.toggle("active");
+				var dropdownContent = this.nextElementSibling;
+				if (dropdownContent.style.display === "block") {
+					dropdownContent.style.display = "none";
+					down.style.display = 'block'
+					up.style.display = 'none'
+				} else {
+					dropdownContent.style.display = "block";
+					down.style.display = 'none'
+					up.style.display = 'block'
+				}
+			});
+		}
+
+		//open sidebar
+		const sideBar = document.querySelector("#sideBar")
+		const menuBtn = document.querySelector("#menuBtn")
+		menuBtn.addEventListener('click', (e) => {
+			sideBar.style.transition = '.3s ease'
+			sideBar.style.left = '0'
+		})
+
+		screenWidth = window.innerWidth
+
+		//toggle sidebar when resizing
+		window.addEventListener('resize', (e) => {
+			screenWidth = window.innerWidth
+			if (screenWidth > 770) {
+				sideBar.style.transition = '.3s ease'
+				sideBar.style.left = '0'
+			} else {
+				sideBar.style.transition = '.3s ease'
+				sideBar.style.left = '-100%'
+			}
+		})
+
+		document.addEventListener('click', (e) => {
+			screenWidth = window.innerWidth
+			if (screenWidth > 770) {
+				return;
+			}
+			else if (!sideBar.contains(e.target) && !menuBtn.contains(e.target)) {
+				sideBar.style.left = '-100%'
+			}
+		})
+
+		//fetch new messages
+		$(document).ready(function () {
+			function fetchMessages() {
+				$.ajax({
+					url: '{% url "get_new_messages" %}',
+					method: 'GET',
+					success: function (data) {
+						if (data.length > 0) {
+							$('#message-indicator').show(); // Show the red dot indicator
+							$('#message-indicator').text(data.length); // Show the red dot indicator
+						} else {
+							$('#message-indicator').hide(); // Hide the red dot indicator
+						}
+					},
+					error: function (jqXHR, textStatus, errorThrown) {
+						console.error('Error fetching messages:', textStatus, errorThrown);
+					}
+				});
+			}
+
+			// Polling every 5 seconds
+			setInterval(fetchMessages, 1000);
+
+			// Mark messages as read and navigate to messages page
+			$('#message-button').click(function () {
+				$.ajax({
+					url: '{% url "mark_messages_as_read" %}',
+					method: 'POST',
+					headers: {
+						'X-CSRFToken': '{{ csrf_token }}'
+					},
+					success: function (data) {
+						if (data.status === 'ok') {
+							$('#message-indicator').hide(); // Hide the red dot indicator
+							window.location.href = '{% url "owner_messages" %}'; // Redirect to messages page
+						}
+					},
+					error: function (jqXHR, textStatus, errorThrown) {
+						console.error('Error marking messages as read:', textStatus, errorThrown);
+					}
+				});
+			});
+		})
+
+		//check if owner owns a property
+		document.addEventListener('DOMContentLoaded', function() {
+        // Function to fetch property status
+        async function fetchPropertyStatus() {
+            try {
+                const response = await fetch("{% url 'check_property' %}"); // Update this with your actual URL
+                const data = await response.json();
+
+                // Reference to the sidebar link
+                const maintenanceLink = document.getElementById('maintenance-link');
+
+                // Update the href based on whether the property exists
+                if (data.has_property) {
+                    maintenanceLink.href = "{% url 'request_maintenance_list' %}";  // URL for property detail
+                } else {
+                    maintenanceLink.href = "{% url 'property_detail' %}";  // URL for maintenance request
+                }
+
+				// Check if the current URL matches 'request_maintenance_list' and add the activeLink class
+				if (window.location.pathname === "{% url 'request_maintenance_list'  %}") { // Adjust according to your Django URL structure
+					maintenanceLink.classList.add('activeLink');
+				}
+            } catch (error) {
+                console.error('Error fetching property data:', error);
+            }
+        }
+
+        // Fetch property status when the page loads
+        fetchPropertyStatus();
+
+		function scrollToBottom() {
+			$('#chatbox').animate({
+				scrollTop: $('#chatbox')[0].scrollHeight
+			}, 500);
+		}
+
+		//chatbot
+		$(document).ready(function() {
+            $('#chatBubble').click(function() {
+				$('#chatContainer').toggle();  // Show/hide the chat container
+
+				// Check if the chat container is visible
+				if ($('#chatContainer').is(':visible')) {
+					// Scroll chatbox to the bottom
+					$('#chatbox').scrollTop($('#chatbox')[0].scrollHeight);
+					document.getElementById("chat-icon").classList.remove('bi-chat-dots-fill');
+					document.getElementById("chat-icon").classList.add('bi-caret-down');
+				} else {
+					document.getElementById("chat-icon").classList.remove('bi-caret-down');
+					document.getElementById("chat-icon").classList.add('bi-chat-dots-fill');
+				}
+			});
+
+
+            $('#closeChat').click(function() {
+                $('#chatContainer').hide();
+				document.getElementById("chat-icon").classList.add('bi-chat-dots-fill')
+				document.getElementById("chat-icon").classList.remove('bi-caret-down')
+            });
+
+			// Add event listener for suggestion buttons
+			$('.suggestion-btn').click(function() {
+				let prompt = $(this).data('prompt');  // Get the prompt from the button's data attribute
+
+				// Populate the input field with the selected prompt
+				$('#userMessage').val(prompt);
+
+				// Scroll chatbox to the bottom
+				scrollToBottom();
+			});
+
+			// Function to simulate typing by showing three dots first
+			function showTypingIndicator() {
+							$('#chatbox').append(`<div class="typing-indicator"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>`);
+						}
+
+            $('#sendButton').click(function() {
+                let message = $('#userMessage').val();
+                if (message.trim() === "") return;
+
+                // Append user message to chatbox
+                $('#chatbox').append(`<div class="user-message text-sm md:text-md">${message}</div>`);
+                $('#userMessage').val('');
+
+				showTypingIndicator();
+
+                // Scroll to the bottom after adding the user message
+                scrollToBottom();
+
+                // Send the message to the server using AJAX
+                $.ajax({
+                    url: '{% url "process_message" %}', // URL for your view
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ message: message }),
+                    success: function(data) {
+
+						// Function to remove the typing indicator once the actual message is ready
+						function removeTypingIndicator() {
+							$('.typing-indicator').remove();  // Remove the typing indicator div
+						}
+
+						$('#chatbox').animate({
+							scrollTop: $('#chatbox')[0].scrollHeight
+						}, 700);
+
+						// Append bot's message along with feedback buttons
+						$('#chatbox').append(`
+							<div class="flex items-start gap-1 message-container">
+								<img class='w-10 h-10 rounded-full' src='{% static "users/bot_profile (1).avif" %}' alt="Bot Avatar">
+								<div class="relative">
+									<div class="bot-message text-md max-w-[100%]">${data.reply}</div>
+									<div class="feedback-container absolute right-[10%] bottom-0 hidden">
+										<!-- Like Button -->
+										<button class="feedback-btn like-btn" feedback="like" data-message-id="${data.id}">
+											<i class="bi bi-hand-thumbs-up text-gray-600" title="like"></i>
+										</button>
+										<!-- Dislike Button -->
+										<button class="feedback-btn dislike-btn" feedback="dislike" data-message-id="${data.id}">
+											<i class="bi bi-hand-thumbs-down text-gray-600" title="dislike"></i>
+										</button>
+										<!-- Voice Button -->
+										<button class="feedback-btn voice-btn" data-message-id="${data.id}" data-status="play">
+											<i class="bi bi-mic text-gray-600" title="Play Voice"></i>
+										</button>
+									</div>
+									<p class="text-sm text-gray-500 px-2 transform-y-[-4px]">${data.timestamp}</p>
+								</div>
+							</div>
+						`);
+
+						$('.voice-btn').on('click', function () {
+							const botResponse = data.reply; // The text to be read aloud
+							const voiceButton = $(this);
+							const voiceStatus = voiceButton.attr('data-status');
+
+							if (voiceStatus === 'play') {
+								// Create a speech synthesis utterance
+								const utterance = new SpeechSynthesisUtterance(botResponse);
+
+								// When the speech starts
+								utterance.onstart = function () {
+									voiceButton.html('<i class="bi bi-stop-circle text-red-600" title="Stop Voice"></i>');
+									voiceButton.attr('data-status', 'stop');
+								};
+
+								// When the speech ends
+								utterance.onend = function () {
+									voiceButton.html('<i class="bi bi-mic text-gray-600" title="Play Voice"></i>');
+									voiceButton.attr('data-status', 'play');
+								};
+
+								// Speak the bot response
+								window.speechSynthesis.speak(utterance);
+							} else if (voiceStatus === 'stop') {
+								// Stop the speech
+								window.speechSynthesis.cancel();
+								voiceButton.html('<i class="bi bi-mic text-gray-600" title="Play Voice"></i>');
+								voiceButton.attr('data-status', 'play');
+							}
+						});
+
+
+											
+						// Remove typing indicator after some delay
+						removeTypingIndicator();
+
+                        // Scroll to the bottom after adding the bot message
+                        $('#chatbox').animate({
+							scrollTop: $('#chatbox')[0].scrollHeight
+						}, 700);
+
+						// Simulate receiving bot response after showing the typing indicator
+						function botResponse(data) {
+
+							// Step 2: Simulate a delay for bot "thinking" before typing the response
+							setTimeout(function () {
+								// Step 3: Append the bot's actual message and type it out
+								$('#chatbox').append(`
+									<div class="response-container group relative flex items-start mb-4">
+									<!-- Bot Avatar -->
+									<img class='w-10 h-10 rounded-full mr-3' src='{% static "users/bot_profile (1).avif" %}' alt="Bot Avatar">
+
+									<!-- Bot Message -->
+									<div class="flex flex-col max-w-[100%]">
+										<div class="bot-message bg-white md:text-md p-4 rounded-lg shadow-md text-gray-800 max-w-[100%] md:max-w-[100%]">
+											<!-- The bot response will be typed here -->
+										</div>
+									</div>
+								</div>
+								`);
+
+								// Dynamically type the bot's message (you'll implement `typeMessage` function)
+								typeMessage(data.reply, '#chatbox .bot-message:last-child');  // Type the message into the last bot-message div
+
+							}, 2000);  // Simulate a 2-second delay before typing starts (adjust as needed)
+						}
+                    },
+                    error: function() {
+                        $('#chatbox').append(`<div class="bot-message text-red-500">Error: Could not get a response.</div>`);
+
+                        // Scroll to the bottom after adding the error message
+                        scrollToBottom();
+                    }
+                });
+
+				// Allow sending message by pressing Enter key
+				$('#userMessage').keypress(function(event) {
+					if (event.which === 13) {
+						$('#sendButton').click();
+					}
+				});
+            });
+        });
+    });
+
+	document.addEventListener('DOMContentLoaded', function () {
+    const chatContainer = document.getElementById('chatContainer');
+    const chatbox = document.getElementById('chatbox');
+
+    let offset = 0;  // Tracks how many messages have been loaded
+	const limit = 7;  // The number of messages to load per request
+	let hasMore = true;  // Flag to know if more messages are available
+	const loadingIndicator = document.createElement('div');
+	loadingIndicator.innerHTML = 'Loading...';
+	loadingIndicator.classList.add('text-gray-600', 'text-center', 'py-2');
+
+	// Function to scroll to the bottom of the chatbox
+	function scrollToBottom() {
+		chatbox.scrollTop = chatbox.scrollHeight;
+	}
+
+	// Function to fetch chat history with pagination
+	function fetchChatHistory(appendToTop = false) {
+		if (!hasMore && appendToTop) return;  // Don't fetch if no more messages are available
+		
+		// Show loading indicator at the top while fetching more messages
+		if (appendToTop) {
+			chatbox.insertBefore(loadingIndicator, chatbox.firstChild);
+		}
+
+		fetch(`/chat/history/?limit=${limit}&offset=${offset}`)
+			.then(response => response.json())
+			.then(data => {
+				if (data.chat_history) {
+					// If appendToTop is true, store the current scroll position
+					const currentScrollHeight = chatbox.scrollHeight;
+
+					// Ensure messages are displayed in correct order
+					data.chat_history.reverse().forEach(chat => {
+						// Insert user's message at the top or bottom
+						const userMessageDiv = document.createElement('div');
+						userMessageDiv.textContent = chat.user_message;
+						userMessageDiv.classList.add('user-message', 'mb-4');
+						if (appendToTop) {
+							chatbox.insertBefore(userMessageDiv, chatbox.firstChild);  // Insert at the top
+						} else {
+							chatbox.appendChild(userMessageDiv);  // Insert at the bottom
+					}
+
+						// Insert bot's response at the top or bottom
+						const botResponseContainer = document.createElement('div');
+						botResponseContainer.classList.add('bot-response-container', 'flex', 'justify-start', 'gap-1', 'relative', 'mb-4');
+
+						const botImage = document.createElement('img');
+						botImage.classList.add('w-10', 'h-10', 'rounded-full', 'mb-1');
+						botImage.src = '/static/users/bot_profile (1).avif';  // Adjust path if needed
+						botImage.alt = "Bot Avatar";
+
+						const messageTextDiv = document.createElement('div');
+						messageTextDiv.innerHTML = chat.bot_response.replace(/\n/g, "<br>");
+						messageTextDiv.classList.add('bg-gray-200', 'p-[.7rem]', 'px-3', 'rounded-3xl', 'text-gray-700', 'relative');
+
+						const timestampDiv = document.createElement('div');
+						const date = new Date(chat.timestamp);
+						const options = { year: 'numeric', month: 'short', day: 'numeric' };
+						const timeOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
+						const formattedDate = date.toLocaleDateString('en-US', options);
+						const formattedTime = date.toLocaleTimeString('en-US', timeOptions);
+						timestampDiv.textContent = `${formattedDate}, ${formattedTime}`;
+						timestampDiv.classList.add('timestamp', 'text-sm', 'text-gray-500', 'px-2', 'absolute', 'left-[13%]', 'bottom-[-18px]');
+
+						// Create feedback container
+						const feedbackContainer = document.createElement('div');
+						feedbackContainer.classList.add('feedback-container');
+
+						// Create the like button
+						const likeButton = document.createElement('button');
+						likeButton.classList.add('feedback-btn', 'like-btn');
+						likeButton.setAttribute('feedback', 'like');
+						likeButton.setAttribute('data-message-id', chat.id);
+						likeButton.innerHTML = '<i class="bi bi-hand-thumbs-up text-gray-600" title="like"></i>';
+
+						// Create the dislike button
+						const dislikeButton = document.createElement('button');
+						dislikeButton.classList.add('feedback-btn', 'dislike-btn');
+						dislikeButton.setAttribute('feedback', 'dislike');
+						dislikeButton.setAttribute('data-message-id', chat.id);
+						dislikeButton.innerHTML = '<i class="bi bi-hand-thumbs-down text-gray-600" title="dislike"></i>';
+
+						// Create the voice button
+						const voiceButton = document.createElement('button');
+						voiceButton.classList.add('feedback-btn', 'voice-btn');
+						voiceButton.setAttribute('data-message-id', chat.id);
+						voiceButton.setAttribute('data-status', 'play'); // Status to track play/stop
+						voiceButton.innerHTML = '<i class="bi bi-mic text-gray-600" title="Play Voice"></i>';
+
+						// Add event listener for voice button
+						voiceButton.addEventListener('click', function () {
+							const botResponse = chat.bot_response; // The text to be read aloud
+							const voiceStatus = voiceButton.getAttribute('data-status');
+							
+							if (voiceStatus === 'play') {
+								// Create a speech synthesis utterance
+								const utterance = new SpeechSynthesisUtterance(botResponse);
+								
+								// When the speech starts
+								utterance.onstart = function () {
+									voiceButton.innerHTML = '<i class="bi bi-stop-circle text-red-600" title="Stop Voice"></i>';
+									voiceButton.setAttribute('data-status', 'stop');
+								};
+
+								// When the speech ends
+								utterance.onend = function () {
+									voiceButton.innerHTML = '<i class="bi bi-mic text-gray-600" title="Play Voice"></i>';
+									voiceButton.setAttribute('data-status', 'play');
+								};
+
+								// Speak the bot response
+								window.speechSynthesis.speak(utterance);
+							} else if (voiceStatus === 'stop') {
+								// Stop the speech
+								window.speechSynthesis.cancel();
+								voiceButton.innerHTML = '<i class="bi bi-mic text-gray-600" title="Play Voice"></i>';
+								voiceButton.setAttribute('data-status', 'play');
+							}
+						});
+
+						// Append buttons to the feedback container
+						feedbackContainer.appendChild(likeButton);
+						feedbackContainer.appendChild(dislikeButton);
+						feedbackContainer.appendChild(voiceButton);
+
+						// Append the feedback container to the bot response container
+						botResponseContainer.appendChild(botImage);
+						botResponseContainer.appendChild(messageTextDiv);
+						botResponseContainer.appendChild(timestampDiv);
+						messageTextDiv.appendChild(feedbackContainer); // Make sure this is appended last
+
+						// Append the bot's response container to the chatbox
+						chatbox.appendChild(botResponseContainer);
+
+						botResponseContainer.appendChild(botImage);
+						botResponseContainer.appendChild(messageTextDiv);
+						botResponseContainer.appendChild(timestampDiv);
+						
+						if (appendToTop) {
+							chatbox.insertBefore(botResponseContainer, chatbox.firstChild);  // Insert at the top
+						} else {
+							chatbox.appendChild(botResponseContainer);  // Insert at the bottom
+						}
+					});
+
+					// Remove the loading indicator after messages are loaded
+					if (appendToTop) {
+						chatbox.removeChild(loadingIndicator);
+
+						// Adjust the scroll position to maintain the same view
+						chatbox.scrollTop = chatbox.scrollHeight - currentScrollHeight;
+					} else {
+						// If it's the initial load, scroll to the bottom
+						scrollToBottom();
+					}
+
+					offset += limit;  // Increment offset for the next request
+					hasMore = data.chat_history.length === limit;  // Update hasMore flag
+				}
+			})
+			.catch(error => console.error('Error fetching chat history:', error));
+	}
+
+	// Detect when user scrolls to the top of the chatbox
+	chatbox.addEventListener('scroll', function() {
+		if (chatbox.scrollTop === 0 && hasMore) {
+			// Load more messages when scrolled to the top
+			fetchChatHistory(true);  // Pass true to append messages to the top
+		}
+	});
+
+	// Initial load
+	fetchChatHistory();  // Load the first batch of messages
+
+
+	// Add event listeners for feedback buttons
+	$(document).on('click', '.feedback-btn', function() {
+					const messageId = $(this).attr('data-message-id'); // Convert to integer if necessary
+					const feedbackType = $(this).attr('feedback'); // Get feedback type (like/dislike)
+					const feedbackBtn = $(this);  // Reference to the clicked button
+
+					// Send feedback to server via AJAX
+					$.ajax({
+						url: '/save-feedback/',  // Update with your feedback-saving URL
+						method: 'POST',
+						data: {
+							'conversation_id': messageId,
+							'feedback_type': feedbackType,
+							'csrfmiddlewaretoken': '{{ csrf_token }}'  // CSRF token for security
+						},
+						success: function(response) {
+							if (response.status === 'success') {
+								// Change the button to filled icon based on feedback type
+								if (feedbackType === 'like') {
+									feedbackBtn.html('<i class="bi bi-hand-thumbs-up-fill text-blue-600" title="liked"></i>');
+								} else if (feedbackType === 'dislike') {
+									feedbackBtn.html('<i class="bi bi-hand-thumbs-down-fill text-red-600" title="disliked"></i>');
+								}
+
+								// Disable both buttons to prevent further feedback submission
+								feedbackBtn.siblings('.feedback-btn').prop('disabled', true); // Disable the sibling button
+								feedbackBtn.prop('disabled', true);  // Disable clicked button
+							} else {
+								console.error('Error:', response.message);
+							}
+						},
+						error: function(xhr, status, error) {
+							console.error('Error saving feedback:', error);
+						}
+					});
+				});
+
+    // Optionally fetch chat history when the chat container is opened
+    // This can be useful if the chat container can be opened multiple times
+    document.getElementById('chatContainer').addEventListener('show', fetchChatHistory);
+});
+
+	// Chatbox and Scroll button elements
+	const chatbox = document.getElementById('chatbox');
+	const scrollDownBtn = document.getElementById('scrollDownBtn');
+
+	// Show the scroll down button when the user scrolls up
+	chatbox.addEventListener('scroll', function() {
+		// Check if the user has scrolled up
+		if (chatbox.scrollTop < chatbox.scrollHeight - chatbox.clientHeight - 10) {
+			scrollDownBtn.classList.remove('hidden');
+		} else {
+			scrollDownBtn.classList.add('hidden');
+		}
+	});
+
+	// Scroll down smoothly when the scroll down button is clicked
+	scrollDownBtn.addEventListener('click', function() {
+		chatbox.scrollTo({
+			top: chatbox.scrollHeight,
+			behavior: 'smooth'
+		});
+		scrollDownBtn.classList.add('hidden'); // Hide the button after scrolling down
+	});
+	</script>
+
+	<!-- JavaScript to handle the dropdown behavior -->
+	<script>
+		document.getElementById('dropdownToggle').addEventListener('click', function() {
+			var dropdownMenu = document.getElementById('langDropdown');
+			
+			// Toggle visibility of the dropdown menu
+			if (dropdownMenu.classList.contains('hidden')) {
+				dropdownMenu.classList.remove('hidden');
+			} else {
+				dropdownMenu.classList.add('hidden');
+			}
+			});
+		
+			// Close the dropdown when clicking outside of it
+			document.addEventListener('click', function(event) {
+			var isClickInside = document.getElementById('dropdownToggle').contains(event.target);
+		
+			if (!isClickInside) {
+				document.getElementById('langDropdown').classList.add('hidden');
+			}
+		});
+	</script>
+  
+
+	{% block extra_js %}
+	{% endblock extra_js %}
+</body>
+
+</html>

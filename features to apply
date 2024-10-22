@@ -1,0 +1,81 @@
+1. Visitor Management System
+Feature: Implement a digital logbook to manage visitors coming into the subdivision. Residents can approve or deny visitor requests, and security personnel can be notified about approved visitors.
+
+Benefit: Improves security and transparency regarding visitor access.
+
+<!-- 2. Maintenance Requests Tracking
+Feature: Allow homeowners to request maintenance services through the platform. The system can categorize requests (e.g., plumbing, electrical) and assign technicians automatically or through manual approval.
+
+Benefit: Streamlines communication between residents and maintenance staff, ensuring timely repairs and tracking 
+ongoing or completed requests. -->
+
+<!-- 4. Community Announcements and Event Management
+Feature: Add a module for announcements (e.g., power outages, subdivision meetings) and events (e.g., community gatherings) that can be broadcast to all residents.
+
+Benefit: Keeps the community informed and engaged, making communication efficient and transparent. -->
+
+<!-- 5. Household Member Management
+Feature: Allow homeowners to add, edit, or remove household members from their profile. The system could display details of each member for easy management.
+
+Benefit: Ensures accurate records of people living in each house and who can request maintenance or access other features. -->
+
+6. Automated Payment Reminders (Non-payment)
+Feature: Even if your system doesn’t handle payments directly, it can send reminders for monthly dues (e.g., HOA fees, utility bills) based on user-defined schedules.
+
+Benefit: Helps homeowners stay on top of financial obligations without needing to manually track them.
+
+<!-- 7. Interactive Route Mapping
+Feature: Use mapping features like Leaflet (as you're already using) to display key places within the community, like amenities, security outposts, and entry points. Allow users to request visits to other properties.
+
+Benefit: Enhances navigation and supports efficient visit scheduling. -->
+
+<!-- 8. Chatbot for FAQs and Assistance
+Feature: Integrate a chatbot (as you are planning) to answer frequently asked questions, assist with common requests, or guide users through the system.
+
+Benefit: Provides quick answers and improves user experience by reducing the need for direct human interaction. -->
+
+<!-- 9. Real-Time Notifications
+Feature: Send real-time push notifications or emails for things like maintenance status updates, security alerts, community announcements, or important system changes.
+
+Benefit: Keeps users up-to-date on important events and their ongoing requests. -->
+
+<!-- 10. Property Availability & Booking System
+Feature: For those properties within the community that are up for rent or sale, create a listing system where owners can showcase available units. Allow prospective renters or buyers to book viewings directly through the system.
+
+Benefit: Provides a marketplace within the community, simplifying transactions and property management. -->
+
+11. Complaint and Feedback System
+Feature: Provide homeowners with a platform to file complaints or give feedback about the community, services, or facilities. Include a tracking system so users can monitor the progress or resolution of their complaints.
+
+Benefit: Improves community management and resident satisfaction by addressing concerns.
+
+12. Energy and Utility Monitoring (Future Integration)
+Feature: Integrate energy and utility consumption monitoring systems, allowing homeowners to track their utility usage, promoting conservation and cost efficiency.
+
+Benefit: Promotes sustainability and helps homeowners manage their consumption.
+
+13. Emergency Alert System
+Feature: Create a built-in emergency alert system where residents can send SOS signals or get alerts during natural disasters, like typhoons, that might affect the community.
+
+Benefit: Ensures quick responses during emergencies, improving overall safety.
+These features can not only improve operational efficiency but also enhance the living experience for residents, providing them with tools for better property management and communication within their community.
+
+
+chatbot can:
+small talk
+tell current time
+tell current date
+tell latest announcements
+tell latest events
+tell management contact info
+tell your maintenance requests total, statuses
+tell your name
+tell infos about your property
+tell available property
+tell weather(in progress)
+
+actions:
+can command to request a maintenance
+
+
+

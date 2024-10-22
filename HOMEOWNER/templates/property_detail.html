@@ -1,0 +1,283 @@
+{% extends 'owner_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} {{ user }}'s Property detail {% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-gray-100">
+    {% block content %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/pop-up-mess.css' %}">
+
+    <p id="user" class="hidden">{{ user }}</p>
+
+        {% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+
+    <!-- Content container -->
+    <div class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-0 top-[4.3rem] md:top-[4.5rem] shadow-md rounded-md md:p-4 overflow-y-auto overflow-x-hidden">
+        <div class="flex mb-2 p-2">
+            <i onclick="window.history.back()" class="bi bi-arrow-left mr-2 text-[1.5rem] px-[.8rem] flex items-center py-2 rounded-full hover:bg-gray-200 cursor-pointer"></i>
+            <div>
+              <h1 class="text-xl font-medium">Property detail</h1>
+              <p class="text-muted-foreground text-sm">View and manage your property details</p>
+            </div>
+        </div>
+
+        <!-- Property Detail -->
+        {% if not my_property %}
+        <div>
+            <p class="w-full text-center text-[2rem] text-gray-400 mt-4">No property selected yet.</p>
+            <h1 class="w-full text-center text-[5rem]">
+                <i class="bi bi-house-door text-gray-400"></i>
+            </h1>
+            
+            <a href="{% url 'property_selection' %}" class="btn btn-primary absolute top-[50%] left-[50%]" style="transform: translate(-50%, -50%);">Select my property</a>
+        </div>
+        {% else %}
+        <div class="bg-white md:rounded-lg shadow-md overflow-hidden h-[20rem] relative">
+            <img src="{{ my_property.photo.url }}" alt="Property Image" class="w-full h-full object-cover">
+            <div class="absolute bottom-0 h-full left-0 py-3 w-full px-3 shadow-md" style="border-image: fill 0 linear-gradient(to top, #202020, #0001)">
+                <h1 class="text-white py-10 mt-4 px-3 text-[4rem] w-full text-center">{{ my_property.property_name|title }}</h1>
+
+                <p class="w-full text-center text-wrap px-5 text-white">
+                    <span><i class="bi bi-bed"></i>{{ my_property.bedroom }} Bedroom</span> |
+                    <span><i class="bi bi-bed"></i>{{ my_property.bathroom }} Bathroom</span> |
+                    <span><i class="bi bi-bed"></i>Block no. {{ my_property.property_block_no }}</span> |
+                    <span><i class="bi bi-bed"></i>Lot no. {{ my_property.property_house_no }}</span> |
+                    <span><i class="bi bi-bed"></i>Lot size {{ my_property.lot_size }} msqr</span> |
+                    <span><i class="bi bi-bed"></i>{{ my_property.property_description }}</span> 
+                </p>
+            </div>
+        </div>
+
+        <!--Property images-->
+        <div class="py-4 px-3">
+            <!-- Image Filter -->
+                <div class="w-full text-center flex justify-center gap-3 mb-6">
+                    <!-- Interior Button -->
+                    <a href="?filter=interior" class="btn p-3 py-2 
+                        {% if filter_type == 'interior' %}
+                            bg-teal-500 text-white
+                        {% else %}
+                            bg-transparent text-gray-700
+                        {% endif %}
+                        hover:bg-teal-700 font-bold rounded-md shadow-md">
+                        Interior
+                    </a>
+
+                    <!-- Exterior Button -->
+                    <a href="?filter=exterior" class="btn p-3 py-2 
+                        {% if filter_type == 'exterior' %}
+                            bg-teal-500 text-white
+                        {% else %}
+                            bg-transparent text-gray-700
+                        {% endif %}
+                        hover:bg-teal-700 font-bold rounded-md shadow-md">
+                        Exterior
+                    </a>
+                </div>
+
+               <!-- Display Property Images -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <!-- Filter only interior images when filter_type is 'interior' -->
+                {% if filter_type == 'interior' %}
+                    {% for image in property_images %}
+                        {% if image.interrior_image %}
+                            <div class="relative overflow-hidden">
+                                <img src="{{ image.interrior_image.url }}" 
+                                    alt="Interior Image" 
+                                    class="w-full h-48 object-cover cursor-pointer hover:scale-110 duration-500 transition-all" 
+                                    onclick="openModal('{{ image.interrior_image.url }}')">
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                <!-- Filter only exterior images when filter_type is 'exterior' -->
+                {% elif filter_type == 'exterior' %}
+                    {% for image in property_images %}
+                        {% if image.exterrior_image %}
+                            <div class="relative overflow-hidden">
+                                <img src="{{ image.exterrior_image.url }}" 
+                                    alt="Exterior Image" 
+                                    class="w-full h-48 object-cover cursor-pointer hover:scale-110 duration-500 transition-all" 
+                                    onclick="openModal('{{ image.exterrior_image.url }}')">
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+
+            <!-- Fullscreen Modal -->
+            <div id="imageModal" class="fixed inset-0 hidden bg-black bg-opacity-75 flex items-center justify-center z-50">
+                <div class="relative">
+                    <!-- Close Button -->
+                    <button class="absolute top-2 right-2 text-white text-3xl" onclick="closeModal()">&times;</button>
+                    
+                    <!-- Fullscreen Image -->
+                    <img id="modalImage" src="" class="w-full h-auto max-h-screen object-contain">
+                </div>
+            </div>
+
+            <script>
+                // Function to open the modal and display the clicked image
+                function openModal(imageUrl) {
+                    document.getElementById('modalImage').src = imageUrl;
+                    document.getElementById('imageModal').classList.remove('hidden');
+                }
+
+                // Function to close the modal
+                function closeModal() {
+                    document.getElementById('imageModal').classList.add('hidden');
+                    document.getElementById('modalImage').src = ''; // Clear image source
+                }
+            </script>
+
+                
+            </div>
+            
+            {% if not property_images %}
+                <p class="w-full text-center py-7 mt-5 text-gray-500"><i class="bi bi-image"></i> No images</p>
+            {% endif %}
+
+            <!--Maintenance history-->
+        <div class="mt-2">
+            <div class="bg-card text-card-foreground" data-v0-t="card">
+              <div class="flex p-3 justify-between">
+                <div>
+                    <h3 class="whitespace-nowrap text-2xl font-semibold leading-none tracking-tight">Maintenance Requests</h3>
+                    <p class="text-sm text-muted-foreground">View and manage any issues with your home</p>
+                </div>
+
+                <div>
+                    <a class="text-sm hover:bg-gray-200 py-2 px-4 rounded-lg" href="{% url 'request_maintenance_list' %}"><i class="bi bi-tools"></i> Manage</a>
+                </div>
+              </div>
+
+              <div class="p-2">
+                <div class="relative w-full max-h-[20rem] overflow-y-auto">
+                  <table class="w-full caption-bottom text-sm">
+                    <thead class="[&amp;_tr]:border-b">
+                      <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                        <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                          Issue
+                        </th>
+                        <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                            Location
+                          </th>
+                        <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                          Status
+                        </th>
+                        <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                          Submitted
+                        </th>
+                        <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="[&amp;_tr:last-child]:border-0">
+                      {% for maintenance in maintenance_history %}
+                        <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{{ maintenance.Description_of_issue }}</td>
+                            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{{ maintenance.location }}</td>
+                            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
+                                {% if maintenance.status == 'Done' %}
+                                    <div
+                                        class="inline-flex w-fit text-white items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-green-500"
+                                        data-v0-t="badge"> {{ maintenance.status }} </div>
+                                {% elif maintenance.status == 'On going' %}
+                                <div
+                                    class="inline-flex w-fit items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-yellow-500 text-yellow-900"
+                                    data-v0-t="badge"> {{ maintenance.status }} </div>
+                                {% elif maintenance.status == 'verified' %}
+                                <div
+                                    class="inline-flex w-fit items-center whitespace-nowrap rounded-full bg-blue-500 text-white px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    data-v0-t="badge"> {{ maintenance.status|title }} </div>
+                                {% elif maintenance.status == 'notverified' %}
+                                <div
+                                    class="inline-flex w-fit items-center whitespace-nowrap rounded-full bg-red-500 text-white px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    data-v0-t="badge"> Not verified </div>
+                                {% else %}
+                                <div
+                                    class="inline-flex w-fit items-center whitespace-nowrap rounded-full border-1 border-gray-300 px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-gray-400"
+                                    data-v0-t="badge"> {{ maintenance.status}} </div>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{{ maintenance.date_requested }}</td>
+                            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
+                            <a href="{% url 'request_maintenance_list' %}" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3">
+                                View
+                            </a>
+                            </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+    {% endblock content %}
+
+    {% block extra_js %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+	integrity="sha384-ONBsiAlrNpJw8zW/FivQc6No5E0nEyBuNb/aD4sSR/Q8+TF55hS9KN06IwcX0J2i"
+	crossorigin="anonymous"></script>
+<script>
+    // Store the IDs of notifications that have already been displayed
+		let displayedNotificationIds = new Set();
+
+//fetch unread notification
+function fetchUnreadCount() {
+            fetch("{% url 'owner_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+
+		// Polling every 5 seconds
+		setInterval(fetchNotifications, 500);
+
+</script>
+{% endblock extra_js %}
+</body>
+
+</html>
+

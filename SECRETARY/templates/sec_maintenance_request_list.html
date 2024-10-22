@@ -1,0 +1,276 @@
+{% extends 'secretary_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user }} / {% block title %} Maintenance requests {% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+</head>
+
+<body class="bg-gray-100">
+    {% block content %}
+    <link rel="stylesheet" href="{% static 'css/sec-pop-up-mess.css' %}">
+    <!-- Loading Spinner (hidden until request is sent) -->
+    <div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+        <div class="spinner-border text-primary" role="status">
+        </div>
+        <span class="">Loading...</span>
+    </div>
+
+    <div class="flex mb-4 items-center md:px-0 px-3">
+        <a onclick="history.back()"
+            class="bi bi-arrow-left mr-2 text-[1.2rem] px-[.8rem] flex items-center py-[.7rem] rounded-full hover:bg-gray-200 cursor-pointer">
+        </a>
+        <h1 class="text-xl font-medium">Homeowners</h1>
+    </div>
+
+    <!--Content container-->
+    <div
+        class="w-full md:w-[85%] max-[770px]:h-full h-[90%] bg-white absolute right-0 top-[4rem] md:top-[3.8rem] mt-[.8rem] shadow-md rounded-md py-4 md:px-3 overflow-y-auto overflow-x-hidden">
+
+        <div class="flex mb-4 items-center md:px-0 px-3">
+			<a onclick="history.back()"
+				class="bi bi-arrow-left mr-2 text-[1.2rem] px-[.8rem] flex items-center py-[.7rem] rounded-full hover:bg-gray-200 cursor-pointer">
+			</a>
+			<h1 class="text-xl font-medium">Maintenance request list</h1>
+		</div>
+
+        <!-- Filters -->
+        <div class="mb-2 flex gap-2 items-center px-3 md:px-0">
+            <div class="form-control flex items-center">
+                <i class="bi bi-search text-[1rem] px-2"></i>
+                <input type="text" id="searchInput" class="border-none py-1 pl-2 w-full outline-none" placeholder="Search for request...">
+            </div>
+            
+            <!-- Status Dropdown -->
+            <div class="dropdown">
+                <button class="btn dropdown-toggle bg-gray-200 px-3 py-2 rounded-md" type="button" id="statusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{ status_filter }}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="statusDropdown">
+                    <li><a class="dropdown-item" href="?status=all">All</a></li>
+                    <li><a class="dropdown-item" href="?status=notverified">Not Verified</a></li>
+                    <li><a class="dropdown-item" href="?status=verified">Verified</a></li>
+                    <li><a class="dropdown-item" href="?status=In progress">In Progress</a></li>
+                    <li><a class="dropdown-item" href="?status=Done">Done</a></li>
+                </ul>
+            </div>
+
+            <!-- Sort Dropdown -->
+            <div class="dropdown">
+                <button class="btn dropdown-toggle bg-gray-200 px-3 py-2 rounded-md" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Sort by: {{ request.GET.sort|default:"Select" }} <!-- Change button text based on selection -->
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                    <li><a class="dropdown-item {% if request.GET.sort == 'date_requested' %}active{% endif %}" href="?sort=date_requested&status={{ request.GET.status|default:'all' }}">By Date Requested</a></li>
+                    <li><a class="dropdown-item {% if request.GET.sort == 'status' %}active{% endif %}" href="?sort=status&status={{ request.GET.status|default:'all' }}">By Status</a></li>
+                    <li><a class="dropdown-item {% if request.GET.sort == 'property' %}active{% endif %}" href="?sort=property&status={{ request.GET.status|default:'all' }}">By Property</a></li>
+                    <li><a class="dropdown-item {% if request.GET.sort == 'date_resolved' %}active{% endif %}" href="?sort=date_resolved&status={{ request.GET.status|default:'all' }}">By Date Resolved</a></li> <!-- New option added -->
+                </ul>
+            </div>
+
+        </div>
+
+        {% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+
+        <div class="overflow-x-auto max-h-[75vh] overflow-y-auto">
+            <table id="myTable" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name of owner</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description of issue</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type of issue</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date requested</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date resolved</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Repairman</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 up-percase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="secretariesTable">
+                    {% for request in page_obj %}
+                    <tr>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            {% if request.image %}
+                                <img src="{{ request.image.url }}" alt="request image" srcset="">
+                            {% else %}
+                                <img src="{% static '/users/req_maintenance.jpg' %}" alt="request image" srcset="">
+                            {% endif %}
+                        </td>
+                        {% if request.property %}
+                            <td class="px-4 py-2 whitespace-nowrap"><a href="{% url 'sec_property_detail' request.name_of_owner.homeowner.property.pk %}" class="text-teal-600" style="text-decoration: underline;">{{ request.property }}</a></td>
+                        {% else %}
+                            <td class="px-4 py-2 whitespace-nowrap"> None</td>
+                        {% endif %}
+                        <td class="px-4 py-2 whitespace-nowrap"><a href="{% url 'sec_owner_profile' request.name_of_owner.homeowner.pk %}" class="text-teal-600" style="text-decoration: underline;">{{ request.name_of_owner.first_name }} {{ request.name_of_owner.last_name }}</a></td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ request.Description_of_issue }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ request.type_of_issue }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            {% if request.status == 'Done' %}
+                            <p class="bg-green-500 text-white text-center px-1 rounded-[3rem]">{{ request.status }}</p>
+                            {% elif request.status == 'In progress' %}
+                            <p class="bg-orange-500 text-white text-center px-1 rounded-[3rem]">{{ request.status }}</p>
+                            {% elif request.status == 'notverified' %}
+                            <p class="bg-red-500 text-white text-center px-1 rounded-[3rem]">{{ request.status }}</p>
+                            {% elif request.status == 'verified' %}
+                            <p class="bg-blue-500 text-white text-center px-1 rounded-[3rem]">{{ request.status }}</p>
+                            {% else %}
+                            <p class="text-gray-500 border-1 border-gray-300 px-1 text-center rounded-[3rem]">{{ request.status }}</p>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ request.date_requested }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">{{ request.date_resolved }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap" title="{{ request.feedback }}">
+                            {% if request.feedback %}
+                                <p class="max-w-[12rem] truncate">"{{ request.feedback }}"</p>
+                            {% else %}
+                                <p class="text-gray-500 text-sm p-1 px-2 rounded-md bg-gray-100">Pending for owner feedback</p>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            {% if request.repairman %}
+                                {{ request.repairman }}
+                            {% else %}
+                                none
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <button class="w-full hover:bg-gray-200 rounded-full py-2" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li class="dropdown-item">
+                                    {% if request.status == 'In progress' %}
+                                    <form action="{% url 'change_to_done' request.pk %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit"><i class="bi bi-check-circle"></i> Set as Done</button>
+                                    </form>
+                                    {% elif request.status == 'verified' or request.status == 'Done' %}
+                                        No actions
+                                    {% elif request.status == 'notverified' %}
+                                        No actions
+                                    {% else %}
+                                    <a href="{% url 'sec_maintenance_personnel_list' %}">Assign a repairman</a>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-2 text-center text-gray-500">No maintenance requests found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+            
+        <!--pagination-->
+        <div class="py-2 px-3 md:px-0">
+            <nav class="block">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        
+            <div class="text-[#6c757d] hidden w-full text-center text-[1.25rem] mt-[1.5rem]" id="noResults">
+                <i class="bi bi-search text-[2.5rem]"></i>
+                <p>No results found.</p>
+            </div>
+        </div>
+    </div>
+    {% endblock content %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    {% block extra_js %}
+    <script src="{% static 'js/inputFilter.js' %}"></script>
+    <script>
+        //hide preloader
+		// window.addEventListener('load', (e) => {
+		// 	var preloader = document.getElementById('pre-loader')
+		// 	preloader.style.display = 'none'
+		// })
+
+        //fetch unread notification
+		function fetchUnreadCount() {
+        fetch("{% url 'unread_notifications_count' %}")
+            .then(response => response.json())
+            .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+    </script>
+    
+    {% endblock extra_js %}
+</body>
+
+</html>

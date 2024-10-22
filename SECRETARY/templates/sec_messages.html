@@ -1,0 +1,152 @@
+{% extends 'secretary_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ user }} / {% block title %} Messages {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+</head>
+<body class="bg-gray-100">
+	{% block content %}
+
+	<!--Content container-->
+	<div class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-gray-50 absolute md:right-2 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md p-4 overflow-y-auto overflow-x-hidden ">
+		<div class="w-full h-full">
+			<!-- Messenger -->
+			<div class="flex flex-col h-full">
+				<!-- Messages Display Area -->
+				<div id="messages" class="flex-1 overflow-y-auto p-4 space-y-4 ">
+					<!-- Sample Messages -->
+					{% for item in messages_with_pictures %}
+						{% if item.message.sender == user.username %}
+						<div id="message" class="flex items-end justify-end space-x-1">
+							<div class="bg-blue-500 rounded-lg p-2 max-w-xs cursor-pointer" title="{{ item.message.sent_time|timesince }} ago">
+								<span class="block text-sm text-white word-break">{{ item.message.message }}</span>
+							</div>
+						</div>
+						{% else %}
+						<div id="message" class="flex items-end space-x-2 mb-4">
+							<img src="{{ item.profile_picture_url }}" class="w-8 h-8 rounded-full" alt="User Avatar">
+							<div>
+								<span id="sender" class="text-[.8rem] text-gray-600">{{ item.message.sender }}</span>
+								<div class="bg-gray-200 rounded-lg p-2 max-w-xs cursor-pointer" title="{{ message.sent_time|timesince }} ago">
+									<div>
+										<span class="block text-sm text-gray-700 word-break">{{ item.message.message}}</span>
+									</div>
+								</div>
+							</div>
+						</div>
+						{% endif %}
+					{% endfor %}
+				</div>
+				<!-- Input Area -->
+				<form method="post" class="mt-4 flex items-center space-x-2 border-t p-4">
+					{% csrf_token %}
+
+					<input id="message-input" type="text" name="message" class="flex-1 bg-gray-100 rounded-full px-4 py-2 focus:outline-none" placeholder="Type a message...">
+					<button type="submit" id="send-button" class="bg-blue-500 text-white px-4 py-2 rounded-full">Send</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script src="{% static 'js/profile_dropdown.js' %}"></script>
+</body>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+			var user = document.getElementById("user").innerText.trim();
+			if (user === 'AnonymousUser') {
+				location.href = "{% url 'adminLogin' %}";
+			}
+		});
+
+
+		document.addEventListener('DOMContentLoaded', (e) => {
+        const messagesContainer = document.getElementById("messages");
+        const currentUser = "{{ user }}"; // Get the current logged-in user's username
+
+        function fetchNewMessages() {
+            $.ajax({
+                url: '{% url "admin_get_new_messages" %}',
+                method: 'GET',
+                success: function(data) {
+                    console.log('Fetched messages:', data); // Log the response to verify
+
+                    // Clear current messages before appending new ones
+                    messagesContainer.innerHTML = '';
+
+                    // Sort the messages by created_at in ascending order
+                    data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+                    data.forEach(function(message) {
+                        let messageElement = document.createElement('div');
+                        if (message.sender === currentUser) {
+                            messageElement.className = "message flex items-end justify-end space-x-1 mb-4";
+                            messageElement.innerHTML = `
+                                <div class="bg-blue-500 rounded-lg p-2 max-w-xs">
+                                    <span class="block text-sm text-white break-words">${message.message}</span>
+                                </div>`;
+                        } else {
+                            messageElement.className = "message flex items-end space-x-2 mb-4";
+                            messageElement.innerHTML = `
+                                <img src="{% static 'users/homeOwner.png' %}" class="w-8 h-8 rounded-full" alt="User Avatar">
+                                <div>
+                                    <span class="text-[.8rem] text-gray-600">${message.sender}</span>
+                                    <div class="bg-gray-200 rounded-lg p-2 max-w-xs" title='${message.created_at}}'>
+                                        <span class="block text-sm text-gray-700 break-words">${message.message}</span>
+                                    </div>
+                                </div>`;
+                        }
+                        // Append new message to the container
+                        messagesContainer.appendChild(messageElement);
+                    });
+
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Error fetching new messages:', textStatus, errorThrown);
+                }
+            });
+        }
+
+        // Polling every 5 seconds
+        setInterval(fetchNewMessages, 5000);
+
+        // Scroll to the bottom on initial load
+        messagesContainer.scroll({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
+    });
+
+		//fetch unread notification
+        function fetchUnreadCount() {
+            fetch("{% url 'unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+</script>
+{% endblock content %}
+
+</html>
+

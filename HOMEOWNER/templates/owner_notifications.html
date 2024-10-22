@@ -1,0 +1,564 @@
+{% extends 'owner_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% block title %} {{ user }} / Notifications {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+</head>
+
+<body class="bg-gray-100 h-[100dvh] w-[100dvw] relative">
+	{% block content %}
+	<link rel="stylesheet" href="{% static 'css/pop-up-mess.css' %}">
+	<p id="user" class="hidden">{{ user }}</p>
+
+	<!--content container-->
+	<div id="container"
+		class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-2 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md p-4 px-0 overflow-y-auto overflow-x-hidden px-4">
+
+	<!-- Loading Spinner (hidden until request is sent) -->
+	<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+		<div class="spinner-border text-primary" role="status">
+		</div>
+		<span class="">Loading...</span>
+	</div>
+
+	{% for message in messages %}
+	<p id="pop-up-mess"
+		class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+		{% if message.tags == 'error' %}
+			<i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+		{% elif message.tags == 'success' %}
+			<i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+		{% else %}
+			<i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+		{% endif %}
+	</p>
+	{% endfor %}
+
+	<style>:root{--background:0 0% 100%;--foreground:240 10% 3.9%;--card:0 0% 100%;--card-foreground:240 10% 3.9%;--popover:0 0% 100%;--popover-foreground:240 10% 3.9%;--primary:240 5.9% 10%;--primary-foreground:0 0% 98%;--secondary:240 4.8% 95.9%;--secondary-foreground:240 5.9% 10%;--muted:240 4.8% 95.9%;--muted-foreground:240 3.8% 45%;--accent:240 4.8% 95.9%;--accent-foreground:240 5.9% 10%;--destructive:0 72% 51%;--destructive-foreground:0 0% 98%;--border:240 5.9% 90%;--input:240 5.9% 90%;--ring:240 5.9% 10%;--chart-1:173 58% 39%;--chart-2:12 76% 61%;--chart-3:197 37% 24%;--chart-4:43 74% 66%;--chart-5:27 87% 67%;--radius:0.5rem;}img[src="/placeholder.svg"],img[src="/placeholder-user.jpg"]{filter:sepia(.3) hue-rotate(-60deg) saturate(.5) opacity(0.8) }</style>
+	<style>h1, h2, h3, h4, h5, h6 { font-family: 'Inter', sans-serif; --font-sans-serif: 'Inter'; }
+	</style>
+	<style>body { font-family: 'Inter', sans-serif; --font-sans-serif: 'Inter'; }
+	</style>
+	<div class="flex flex-col h-full px-0">
+
+	<div class="flex items-center justify-between p-3">
+        <h2 class="text-lg font-bold"><i onclick="window.history.back()" class="bi bi-arrow-left p-[.5rem] text-[1.5rem] rounded-full hover:bg-gray-200 cursor-pointer"></i> Notifications</h2>
+        
+		<div class="flex justify-center gap-2">
+			<button id="read_notifications_btn" class="bg-gray-200 transition-all duration-[.4s] inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-accent hover:bg-gray-400 hover:text-accent-foreground h-9 rounded-md px-0 hover:pr-2">
+				<i class="bi bi-check-circle-fill  px-3 md:px-0 md:bg-transparent text-[1rem] p-2 bg-gray-200 rounded-md"></i> <span class="hidden md:inline pr-3">Mark all as read</span>
+			</button>
+			<!-- Delete Button to Trigger Modal -->
+			<button 
+				class="bg-gray-200 transition-all duration-[.4s] inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:bg-gray-400 hover:text-accent-foreground h-9 rounded-md px-0 hover:pr-2"
+				data-bs-toggle="modal" data-bs-target="#deleteModal">
+				<i class="bi bi-trash-fill px-3 md:px-0 md:bg-transparent text-[1rem] p-2 bg-gray-200 rounded-md"></i>
+				<span class="hidden md:inline pr-3">Delete all</span>
+			</button>
+		</div>
+    </div>
+
+
+
+
+	<!-- Bootstrap Modal -->
+	<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<!-- Modal Header -->
+			<div class="modal-header">
+			<h2 class="modal-title text-xl font-semibold text-gray-700" id="deleteModalLabel">Delete All Homeowners</h2>
+			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<!-- Modal Body -->
+			<div class="modal-body">
+			<p class="text-gray-600">Are you sure you want to delete all notifications?</p>
+			</div>
+			<!-- Modal Footer -->
+			<div class="modal-footer justify-end">
+			<button 
+				type="button" 
+				class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" 
+				data-bs-dismiss="modal">Cancel</button>
+			<form method="POST" action="{% url 'owner_delete_all_notif' user.pk %}">
+				{% csrf_token %}
+				<button 
+				type="submit"
+				class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600">
+				Delete All
+				</button>
+			</form>
+			</div>
+		</div>
+		</div>
+	</div>
+
+
+  <main class="flex-1 overflow-y-auto mt-2 px-0">
+    <div class="px-0">
+      <div class="px-0">
+        	{% if notifications.count == 0 %}
+				<h1 class="w-full text-center py-4">
+					<i class="bi bi-bell-slash text-[5rem] text-gray-500"></i>
+				</h1>
+				<p class="text-center text-gray-600 w-full">No notifications</p>
+			{% else %}
+				{% for notif in notifications %}
+					{% if notif.is_read == True %} <!--if notif is read-->
+						{% if notif.icon == 'bi-check-circle' %}
+							<div type="button" data-bs-toggle="modal"
+								data-bs-target="#viewModal{{ notif.pk}}"
+								class="notification-item flex justify-start gap-2 items-center border p-3 bg-white hover:bg-gray-300 transition-all duration-75 text-card-foreground shadow-sm cursor-pointer"
+								data-url=""
+								data-id="{{ notif.pk }}"
+								onclick="redirectToUrl(this)">
+								{% if notif.icon == 'bi-x-circle' %}
+									<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% elif notif.icon == 'bi-check-circle' %}
+									<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% else %}
+									<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% endif %}
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+							</div>
+						<!--If the notification id for event-->
+						{% elif notif.icon == 'bi-calendar-event' %}
+							<a href="{% url 'owner_events' %}" type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-white text-card-foreground shadow-sm" data-v0-t="card"
+								data-id="{{ notif.pk }}">
+								{% if notif.icon == 'bi-x-circle' %}
+									<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% elif notif.icon == 'bi-check-circle' %}
+									<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% else %}
+									<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% endif %}
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+								https://2zcl4v96-8000.asse.devtunnels.ms/
+							</a>
+						{% elif notif.icon == 'bi-megaphone' %}
+							<a href="{% url 'owner_announcements' %}" type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-white text-card-foreground shadow-sm" data-v0-t="card"
+								data-id="{{ notif.pk }}">
+								{% if notif.icon == 'bi-x-circle' %}
+									<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% elif notif.icon == 'bi-check-circle' %}
+									<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% else %}
+									<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% endif %}
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+							</a>
+						{% else %}
+							{% if notif.notif_url %}
+							<div onclick="location.href='{{ notif.notif_url }}'" class="notification-item cursor-pointer border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-white text-card-foreground shadow-sm" data-v0-t="card">
+								{% if notif.icon == 'bi-x-circle' %}
+									<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% elif notif.icon == 'bi-check-circle' %}
+									<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% else %}
+									<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% endif %}
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+							</div>
+							{% else %}
+							<div type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-white text-card-foreground shadow-sm" data-v0-t="card"
+								data-id="{{ notif.pk }}">
+								{% if notif.icon == 'bi-x-circle' %}
+									<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% elif notif.icon == 'bi-check-circle' %}
+									<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% else %}
+									<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% endif %}
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+							</div>
+							{% endif %}
+						{% endif %}
+
+					{% else %} <!--if notif is unread-->
+						{% if notif.icon == 'bi-check-circle' %}
+							<div type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card"
+							data-id="{{ notif.pk }}"
+							data-bs-toggle="modal" 
+							data-bs-target="#viewModal{{ notif.pk}}"
+							onclick="redirectToUrl(this)">
+							{% if notif.icon == 'bi-x-circle' %}
+								<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+							{% elif notif.icon == 'bi-check-circle' %}
+								<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+							{% else %}
+								<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+							{% endif %}
+							<div>
+								<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+								<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+							</div>
+							</div>
+						<!--If the notification id for event-->
+						{% elif notif.icon == 'bi-calendar-event' %}
+							<a href="{% url 'owner_events' %}" type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card"
+								data-id="{{ notif.pk }}">
+								{% if notif.icon == 'bi-x-circle' %}
+									<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% elif notif.icon == 'bi-check-circle' %}
+									<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% else %}
+									<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% endif %}
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+							</a>
+						{% elif notif.icon == 'bi-megaphone' %}
+							<a href="{% url 'owner_announcements' %}" type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card"
+								data-id="{{ notif.pk }}">
+								{% if notif.icon == 'bi-x-circle' %}
+									<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% elif notif.icon == 'bi-check-circle' %}
+									<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% else %}
+									<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% endif %}
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+							</a>
+						{% else %}
+							{% if notif.notif_url %}
+							<div onclick="location.href='{{ notif.notif_url }}'" class="notification-item cursor-pointer border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card" data-id="{{ notif.pk }}">
+								
+								{% if notif.icon == 'bi-x-circle' %}
+									<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% elif notif.icon == 'bi-check-circle' %}
+									<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% else %}
+									<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% endif %}
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+							</div>
+							{% else %}
+							<div type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card"
+								data-id="{{ notif.pk }}">
+								{% if notif.icon == 'bi-x-circle' %}
+									<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% elif notif.icon == 'bi-check-circle' %}
+									<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% else %}
+									<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								{% endif %}
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+							</div>
+							{% endif %}
+						{% endif %}
+					{% endif %}
+
+
+				<!-- <div type="button" data-bs-toggle="modal" data-id="{{ notif.pk }}"
+							data-bs-target="#viewModal{{ notif.pk}}" class="notification-item border py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card">
+							<p class="text-sm">{{ notif.message|safe }} </p> <p class="text-sm text-gray-500">{{ notif.maintenance_request.date_requested }}</p>
+							</div> -->
+
+
+				<!-- verfication Modal for notification -->
+				<div class="modal fade z-[9999999999]" id="viewModal{{ notif.pk }}" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+						
+						<div class="w-full p-4 flex justify-end items-center">
+							<h1 class="text-[.8rem] w-full text-center font-semibold">Maintenance request verification {{ notif.maintenance_request.pk }}.</h1>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+							
+						<div class="modal-body">
+						<div>
+							<h2 class="text-sm font-semibold mb-3">Request details</h2>
+							<table class="text-sm w-[60%] mb-4">
+								<tr>
+									<th>Date:</th>
+									<td>{{ notif.maintenance_request.date_requested }}</td>
+								</tr>
+								<tr>
+									<th>Description:</th>
+									<td>{{ notif.maintenance_request.Description_of_issue }}</td>
+								</tr>
+								<tr>
+									<th>Status:</th>
+									<td>
+										{% if notif.maintenance_request.status == 'verified' %}
+											<p class="text-green-500">{{  notif.maintenance_request.status  }}</p>
+										{% elif notif.maintenance_request.status == 'notverified' %}
+											<p class="text-red-500">{{  notif.maintenance_request.status  }}</p>
+										{% else %}
+											<p class="text-gray-400">{{  notif.maintenance_request.status  }}</p>
+										{% endif %}
+									</td>
+								</tr>
+								<tr></tr>
+									<th>Repairman:</th>
+									<td>{{ notif.maintenance_request.repairman }}</td>
+								</tr>
+							</table>
+							
+							<form action="{% url 'request_verification' %}" method="post">
+								<input type="hidden" name="request_pk" value="{{ notif.maintenance_request.pk }}">
+								{% csrf_token %}
+								<h2 class="text-sm font-semibold mb-1">Verify completion</h2>
+								<div class="flex justify-start space-x-2 gap-2 items-center mb-4">
+									<div class="flex justify-center space-x-4 items-center">
+										<!-- Verified Button -->
+										<label class="text-sm p-2 border border-gray-400 rounded-lg cursor-pointer transition-colors duration-200 ease-in-out flex items-center 
+										{% if notif.maintenance_request.status == 'verified' %}bg-green-600 text-white{% endif %}">
+											<input type="radio" 
+												   class="hidden peer" 
+												   value="verified" 
+												   name="verification" 
+												   {% if notif.maintenance_request.status == "verified" %} checked {% endif %} 
+												   required>
+											<span class="flex items-center">
+												<i class="bi bi-check text-[1.5rem]"></i>
+												<span class="ml-2">Verified</span>
+											</span>
+										</label>
+									
+										<!-- Not Verified Button -->
+										<label class="text-sm p-2 border border-gray-400 rounded-lg cursor-pointer transition-colors duration-200 ease-in-out flex items-center 
+										{% if notif.maintenance_request.status == 'notverified' %}bg-red-600 text-white{% endif %}">
+											<input type="radio" 
+												   class="hidden peer" 
+												   value="notverified" 
+												   name="verification" 
+												   {% if notif.maintenance_request.status == "notverified" %} checked {% endif %} 
+												   required>
+											<span class="flex items-center">
+												<i class="bi bi-x text-[1.5rem]"></i>
+												<span class="ml-2">Not Verified</span>
+											</span>
+										</label>
+									</div>															
+								</div>
+
+								<h2 class="text-sm font-semibold mb-1">Feedback</h2>
+								<textarea name="feedback" class="form-control text-sm" value="{{ notif.maintenance_request.feedback }}" id="feedback" placeholder="My recent feedback: {{ notif.maintenance_request.feedback }}" required></textarea>
+
+								</div>
+
+								</div>
+								<div class="w-full flex justify-end px-3 py-3 gap-2">
+									<button type="button" class="btn btn-secondary"
+										data-bs-dismiss="modal">Close</button>
+									<button type="submit" class="btn btn-primary"
+										>Submit</button>
+								</div>
+							</form>
+							</div>
+						</div>
+					</div>
+					<!--End modal for verification-->
+				{% endfor %}
+			{% endif %}
+      </div>
+    </div>
+  </main>
+</div>
+
+	</div>
+	<!--End container--> 
+	
+
+	{% endblock content %}
+	{% block extra_js %}
+	<script src="{% static 'js/owner_dropdown_menu.js' %}"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+		crossorigin="anonymous"></script>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			var user = document.getElementById("user").innerText.trim();
+			if (user === 'None') {
+				location.href = "{% url 'main' %}";
+			}
+
+		});
+
+		// Store the IDs of notifications that have already been displayed
+		let displayedNotificationIds = new Set();
+
+		//fetch unread notification
+		function fetchUnreadCount() {
+            fetch("{% url 'owner_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+
+		// Mark as read and toggle visibility of notifications list
+		$('#read_notifications_btn').click(function() {
+			const notificationsList = $('#notifications-list');
+			
+			if (notificationsList.is(':visible')) {
+				notificationsList.hide();
+			} else {
+				$.ajax({
+					url: '{% url "mark_notifications_as_read" %}',
+					method: 'POST',
+					headers: {
+						'X-CSRFToken': '{{ csrf_token }}'
+					},
+					success: function(data) {
+						if (data.status === 'ok') {
+							$('#notification-count').text('0');
+							$('#notification-bell').removeClass('new-notifications');
+							notificationsList.show();
+							window.location.href = "{% url 'owner_notifications' %}"
+						}
+					},
+					error: function(jqXHR, textStatus, errorThrown) {
+						console.error('Error marking notifications as read:', textStatus, errorThrown);
+					}
+				});
+			}
+		});
+
+		//mark as read a single notif
+		$(document).on('click', '.notification-item', function() {
+			const notificationId = $(this).data('id');  // Get the notification ID
+			$(this).css('background-color', 'white');
+			$.ajax({
+				url: `/mark_single_notification_as_read/${notificationId}/`,  // Use the dynamic URL with notification ID
+				method: 'POST',
+				headers: {
+					'X-CSRFToken': '{{ csrf_token }}'
+				},
+				success: function(data) {
+					if (data.status === 'ok') {
+						// Optionally mark the notification visually as read (e.g., dim it)
+						$(`li[data-id=${notificationId}]`).addClass('read');
+						// Update notification count if necessary
+						let currentCount = parseInt($('#notification-count').text());
+						$('#notification-count').text(currentCount - 1);
+					}
+				},
+				error: function(jqXHR, textStatus, errorThrown) {
+					console.error('Error marking notification as read:', textStatus, errorThrown);
+				}
+			});
+		});
+
+		//fetch new messages
+		$(document).ready(function() {
+    function fetchMessages() {
+        $.ajax({
+            url: '{% url "get_new_messages" %}',
+            method: 'GET',
+			success: function(data) {
+                if (data.length > 0) {
+                    $('#message-indicator').text(data.length); // Show the red dot indicator with the count
+                } else {
+                    $('#message-indicator').hide(); // Hide the red dot indicator
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error fetching messages:', textStatus, errorThrown);
+            }
+        });
+    }
+
+    // Polling every 5 seconds
+    setInterval(fetchMessages, 5000);
+
+    // Mark messages as read and navigate to messages page
+    $('#message-button').click(function() {
+        $.ajax({
+            url: '{% url "mark_messages_as_read" %}',
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function(data) {
+                if (data.status === 'ok') {
+                    $('#message-indicator').hide(); // Hide the red dot indicator
+                    window.location.href = '{% url "owner_messages" %}'; // Redirect to messages page
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error marking messages as read:', textStatus, errorThrown);
+            }
+        });
+    });
+});
+
+//for verification selection
+const labels = document.querySelectorAll('label');
+
+labels.forEach(label => {
+	const input = label.querySelector('input');
+
+	// Initial state
+	if (input.checked) {
+		if (input.value === 'verified') {
+			label.classList.add('bg-green-600', 'text-white');
+		} else if (input.value === 'notverified') {
+			label.classList.add('bg-red-600', 'text-white');
+		}
+	}
+
+	// Change state on selection
+	input.addEventListener('change', () => {
+		labels.forEach(l => l.classList.remove('bg-green-600', 'bg-red-600', 'text-white'));
+		if (input.value === 'verified' && input.checked) {
+			label.classList.add('bg-green-600', 'text-white');
+		} else if (input.value === 'notverified' && input.checked) {
+			label.classList.add('bg-red-600', 'text-white');
+		}
+	});
+});
+	</script>
+	{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,265 @@
+{% extends 'admin_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% block title %} Notifications {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+</head>
+
+<body class="bg-gray-100 h-[100dvh] w-[100dvw] relative">
+	{% block content %}
+	<link rel="stylesheet" href="{% static 'css/pop-up-mess.css' %}">
+	<p id="user" class="hidden">{{ user }}</p>
+
+	<!--content container-->
+	<div id="container"
+		class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-gray-50 absolute md:right-2 mt-[.8rem] top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md py-4 px-0 md:px-5 overflow-y-auto overflow-x-hidden ">
+
+		{% for message in messages %}
+		<p id="pop-up-mess"
+			class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+			{% if message.tags == 'error' %}
+				<i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+			{% elif message.tags == 'success' %}
+				<i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+			{% else %}
+				<i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+			{% endif %}
+		</p>
+	{% endfor %}
+
+	<style>:root{--background:0 0% 100%;--foreground:240 10% 3.9%;--card:0 0% 100%;--card-foreground:240 10% 3.9%;--popover:0 0% 100%;--popover-foreground:240 10% 3.9%;--primary:240 5.9% 10%;--primary-foreground:0 0% 98%;--secondary:240 4.8% 95.9%;--secondary-foreground:240 5.9% 10%;--muted:240 4.8% 95.9%;--muted-foreground:240 3.8% 45%;--accent:240 4.8% 95.9%;--accent-foreground:240 5.9% 10%;--destructive:0 72% 51%;--destructive-foreground:0 0% 98%;--border:240 5.9% 90%;--input:240 5.9% 90%;--ring:240 5.9% 10%;--chart-1:173 58% 39%;--chart-2:12 76% 61%;--chart-3:197 37% 24%;--chart-4:43 74% 66%;--chart-5:27 87% 67%;--radius:0.5rem;}img[src="/placeholder.svg"],img[src="/placeholder-user.jpg"]{filter:sepia(.3) hue-rotate(-60deg) saturate(.5) opacity(0.8) }</style>
+	<style>h1, h2, h3, h4, h5, h6 { font-family: 'Inter', sans-serif; --font-sans-serif: 'Inter'; }
+	</style>
+	<style>body { font-family: 'Inter', sans-serif; --font-sans-serif: 'Inter'; }
+	</style>
+
+	<div class="flex flex-col h-full">
+		<div class="flex items-center justify-between px-3">
+			<h2 class="text-lg font-medium"><i onclick="window.history.back()" class="bi bi-arrow-left px-2 py-2 rounded-full hover:bg-gray-200 cursor-pointer"></i> Notifications</h2>
+			<button id="read_notifications_btn" class="hover:bg-gray-200 transition-all duration-[.4s] inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3">
+			Mark all as read
+			</button>
+		</div>
+	<main class="flex-1 overflow-y-auto py-6 px-0 md:px-3">
+		<div class="space-y-4 md:px-3">
+			<div>
+				{% if notifications.count == 0 %}
+					<h1 class="w-full text-center py-4">
+						<i class="bi bi-bell-slash text-[5rem] text-gray-500"></i>
+					</h1>
+					<p class="text-center text-gray-600 w-full">No notifications</p>
+				{% else %}
+					{% for notif in notifications %}
+						{% if notif.is_read == True %} <!--if notif is read-->
+						<div type="button"
+							class="notification-item flex justify-start gap-2 items-center border py-3 p-3 bg-white hover:bg-gray-300 transition-all duration-75 text-card-foreground shadow-sm cursor-pointer"
+							data-url=""
+							data-id="{{ notif.pk }}"
+							onclick="redirectToUrl(this)">
+							{% if notif.icon == 'bi-x-circle' %}
+								<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+							{% elif notif.icon == 'bi-check-circle' %}
+								<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+							{% else %}
+								<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+							{% endif %}
+							<div>
+								<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+								<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+							</div>
+						</div>
+						{% else %} <!--if notif is unread-->
+							<div type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card"
+							data-url="" 
+							data-id="{{ notif.pk }}"
+							onclick="redirectToUrl(this)">
+							{% if notif.icon == 'bi-x-circle' %}
+								<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+							{% elif notif.icon == 'bi-check-circle' %}
+								<i class="bi {{ notif.icon }} text-green-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+							{% else %}
+								<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+							{% endif %}
+							<div>
+								<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+								<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+							</div>
+							</div>
+						{% endif %}
+					{% endfor %}
+				{% endif %}
+		</div>
+	</main>
+	</div>
+
+	</div>
+	<!--End container--> 
+
+	{% endblock content %}
+	{% block extra_js %}
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="{% static 'js/response.js' %}"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+		crossorigin="anonymous"></script>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			var user = document.getElementById("user").innerText.trim();
+			if (user === 'None') {
+				location.href = "{% url 'main' %}";
+			}
+
+		});
+
+		//redirection of clicking notification
+		document.addEventListener('DOMContentLoaded', function() {
+			// Select all notification items
+			const notificationItems = document.querySelectorAll('.notification-item');
+
+			// Iterate through each notification item
+			notificationItems.forEach(item => {
+				// Find the message content inside the notification item
+				const messageContent = item.querySelector('.notif-message');
+				const link = messageContent ? messageContent.querySelector('a') : null;
+
+				// Check if all required elements are present
+				if (messageContent && link) {
+					let originalUrl = link.href;
+					// Replace the URL based on conditions and set icon class accordingly
+					if (originalUrl.includes('sec_pending_accounts')) {
+						originalUrl = originalUrl.replace('sec_pending_accounts', 'pending_accounts');
+					} else if (originalUrl.includes('sec_maintenance_request_list')) {
+						originalUrl = originalUrl.replace('sec_maintenance_request_list', 'maintenance_request_list');
+
+					}
+
+					// Set the modified URL to the data-url attribute
+					item.setAttribute('data-url', originalUrl);
+				} else {
+					console.warn('Some elements are missing in the notification item:', item);
+				}
+			});
+		});
+
+		// Function to handle the click event and redirect
+		function redirectToUrl(element) {
+			const url = element.getAttribute('data-url');
+			if (url) {
+				window.location.href = url;
+			}
+		}
+
+		// Store the IDs of notifications that have already been displayed
+		let displayedNotificationIds = new Set();
+
+		// Mark as read and toggle visibility of notifications list
+		$('#read_notifications_btn').click(function() {
+			const notificationsList = $('#notifications-list');
+			
+			if (notificationsList.is(':visible')) {
+				notificationsList.hide();
+			} else {
+				$.ajax({
+					url: '{% url "mark_notifications_as_read" %}',
+					method: 'POST',
+					headers: {
+						'X-CSRFToken': '{{ csrf_token }}'
+					},
+					success: function(data) {
+						if (data.status === 'ok') {
+							$('#notification-count').text('0');
+							$('#notification-bell').removeClass('new-notifications');
+							notificationsList.show();
+							window.location.href = "{% url 'admin_notifications' %}"
+						}
+					},
+					error: function(jqXHR, textStatus, errorThrown) {
+						console.error('Error marking notifications as read:', textStatus, errorThrown);
+					}
+				});
+			}
+		});
+
+		//mark as read a single notif
+		$(document).on('click', '.notification-item', function() {
+			const notificationId = $(this).data('id');  // Get the notification ID
+			$(this).css('background-color', 'white');
+			$.ajax({
+				url: `/admin_mark_single_notification_as_read/${notificationId}/`,  // Use the dynamic URL with notification ID
+				method: 'POST',
+				headers: {
+					'X-CSRFToken': '{{ csrf_token }}'
+				},
+				success: function(data) {
+					if (data.status === 'ok') {
+						// Optionally mark the notification visually as read (e.g., dim it)
+						$(`li[data-id=${notificationId}]`).addClass('read');
+						// Update notification count if necessary
+						let currentCount = parseInt($('#notification-count').text());
+						$('#notification-count').text(currentCount - 1);
+					}
+				},
+				error: function(jqXHR, textStatus, errorThrown) {
+					console.error('Error marking notification as read:', textStatus, errorThrown);
+				}
+			});
+		});
+
+		//fetch new messages
+		$(document).ready(function() {
+    function fetchMessages() {
+        $.ajax({
+            url: '{% url "get_new_messages" %}',
+            method: 'GET',
+			success: function(data) {
+                if (data.length > 0) {
+                    $('#message-indicator').text(data.length); // Show the red dot indicator with the count
+                } else {
+                    $('#message-indicator').hide(); // Hide the red dot indicator
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error fetching messages:', textStatus, errorThrown);
+            }
+        });
+    }
+
+    // Polling every 5 seconds
+    setInterval(fetchMessages, 5000);
+});
+
+		//fetch unread notification
+        function fetchUnreadCount() {
+            fetch("{% url 'admin_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+
+		</script>
+	{% endblock %}
+</body>
+
+</html>

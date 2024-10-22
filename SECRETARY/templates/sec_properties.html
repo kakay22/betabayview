@@ -1,0 +1,754 @@
+{% extends 'secretary_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user }} / {% block title %} Properties {% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+</head>
+
+<body class="bg-gray-100">
+    {% block content %}
+
+    <!-- Loading Spinner (hidden until request is sent) -->
+	<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+		<div class="spinner-border text-primary" role="status">
+		</div>
+		<span class="">Loading...</span>
+	</div>
+
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <!-- Swiper JS -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+    <link rel="stylesheet" href="{% static 'css/sec-pop-up-mess.css' %}">
+    <!--pre loader-->
+    <!-- <div id="pre-loader"
+        class="w-full bg-white h-full flex justify-center items-center absolute top-0 left-0 [999999z-99]">
+        <img src="{% static 'Pulse@1x-0.7s-200px-200px.gif' %}" class="h-[4rem] w-[4rem]" alt="" srcset="">
+    </div> -->
+
+    <!-- Header -->
+    <div class="w-full flex justify-end items-center py-[.7rem] gap-2 px-3 shadow-md bg-white relative">
+        <i id="menuBtn" class="bi bi-list text-[1.3rem] absolute left-3 font-semibold py-0 ml-2 md:hidden"></i>
+        <h1 class="text-left w-full left-[18%] max-[990px]:left-[20%] absolute font-semibold">Properties</h1>
+
+		<!--chat | notif | profile-->
+        <div class="flex justify-center gap-2 items-center">
+			<!--messages-->
+			<a href="{% url 'sec_messages' %}" id="message-button" class="bi bi-chat-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="messages">
+				<span id="message-indicator" class="bg-red-600 text-white hidden rounded-full px-1 text-[.7rem]"></span>
+			</a>
+
+			<!--notifications-->
+			<a href="{% url 'sec_notifications' %}" class="bi bi-bell-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="notifications">
+				<span class="notification-badge absolute top-0 right-0 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs hidden">
+                    0 
+                </span>
+			</a>
+			<!--end notifications-->
+
+			<!-- PROFILE -->
+			<div class="dropdown relative rounded-full w-[2.6rem] h-[2.6rem]">
+				<button id="dropdown-btn" class="btn btn-secondary bg-transparent
+				 border-0 text-black" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+					<div class="w-full h-full absolute top-0 left-0 rounded-[50%] shadow-md bg-white border-black border-1 overflow-hidden"><img
+							class="w-full h-full hover:bg-gray-100" src="{% static 'users/admin.png' %}" alt="user profile"></div>
+				</button>
+				<ul id="dropdown-menu" class="dropdown-menu hidden flex flex-col mt-4 absolute right-0" aria-labelledby="dropdown-btn">
+					<li>
+						<form class="dropdown-item" action="{% url 'secretaryLogout' %}" method="post">
+							{% csrf_token %}
+							<button class="w-full text-left" type="submit"><i
+									class="bi bi-box-arrow-right"></i> LOGOUT</button>
+						</form>
+					</li>
+				</ul>
+			</div>
+			<span>{{ user }}</span>
+		</div>
+    </div>
+
+    <!--Content container-->
+    <div
+        class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-0 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md py-4 overflow-y-auto overflow-x-hidden px-3">
+
+        <div class="flex mb-4 items-center justify-between px-3">
+			<div class="flex gap-2 items-center">
+                <a onclick="history.back()"
+                    class="bi bi-arrow-left mr-2 text-[1.2rem] px-[.8rem] flex items-center py-[.7rem] rounded-full hover:bg-gray-200 cursor-pointer">
+                </a>
+                <h1 class="text-xl font-medium">Properties</h1>
+            </div>
+
+            <!--Button trigger for add property modal-->
+            <i data-bs-toggle="modal" data-bs-target="#exampleModal" class="btn btn-primary shadow-gray-500 shadow-md max-[770px]:rounded-full">
+                <i class="bi bi-plus font-semibold"></i> 
+                <span class="hidden min-[770px]:inline">Add Property</span>
+            </i>
+		</div>
+
+        {% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+
+
+        <!-- Search Input and Filters Container -->
+        <div class="flex flex-col md:flex-row items-center gap-2 py-4">
+
+            <!-- Search Input -->
+            <div class="form-control flex items-center w-full md:w-1/3">
+                <i class="bi bi-search text-[1rem] px-2"></i>
+                <input type="search" id="searchInput" class="border-none py-[.15rem] pl-2 w-full outline-none" placeholder="Search filter...">
+            </div>            
+
+            <form method="get" action="{% url 'sec_properties' %}" class="flex flex-col md:flex-row gap-2 w-full md:w-2/3">
+                <!-- Filter by Availability -->
+                <select class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none truncate w-full md:w-auto focus:ring-2 focus:ring-blue-500 focus:border-blue-500" name="availability" id="availability" onchange="this.form.submit()">
+                    <option value="" {% if not availability_filter %}selected{% endif %}>All</option>
+                    <option value="available" {% if availability_filter == "available" %}selected{% endif %}>Available</option>
+                    <option value="occupied" {% if availability_filter == "occupied" %}selected{% endif %}>Occupied</option>
+                    <option value="under_maintenance" {% if availability_filter == "under_maintenance" %}selected{% endif %}>Under Maintenance</option>
+                </select>
+            
+                <!-- Filter by Block -->
+                <select class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" name="block" id="block" onchange="this.form.submit()">
+                    <option value="" {% if not block_filter %}selected{% endif %}>All Blocks</option>
+                    <option value="1" {% if block_filter == "1" %}selected{% endif %}>Block 1</option>
+                    <option value="2" {% if block_filter == "2" %}selected{% endif %}>Block 2</option>
+                    <option value="3" {% if block_filter == "3" %}selected{% endif %}>Block 3</option>
+                    <!-- Add more block options as needed -->
+                </select>
+            </form>            
+
+            <div class="w-full flex justify-end">
+                <!-- Toggle View Type -->
+                <div class="cursor-pointer hover:bg-gray-200 text-[1.5rem] px-2 bg-gray-100 shadow-md flex items-center gap-2">
+                    <i id="listViewBtn" class="bi bi-list-ul" title="list view"></i>
+                    <i id="gridViewBtn" class="bi bi-grid hidden" title="grid view"></i>
+                </div>
+                
+                <!-- Delete All Property Button -->
+                <i data-bs-toggle="modal" title="delete all" data-bs-target="#deleteAllProp" class="bi bi-trash cursor-pointer hover:bg-gray-200 text-[1.5rem] px-2 bg-gray-100 shadow-md"></i>
+            </div>
+        </div>
+
+        <!-- No results message with Search Icon -->
+        <div id="noResultsFound" class="w-full absolute text-gray-600 text-center py-10" style="display:none; left: 50%; right: 50%; transform: translate(-50%, 40%);">
+            <i class="bi bi-search me-2" style="font-size: 1.5rem;"></i> <!-- Bootstrap search icon -->
+            <span>No results found</span>
+        </div>
+
+        
+        <!-- Modal for delete all properties -->
+        <div class="modal fade" id="deleteAllProp" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title w-full text-center" id="exampleModalLabel">Delete all property</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="w-full text-center">
+                        <i class="bi bi-exclamation-circle text-orange-500 text-[5rem]"></i>
+                    </p>
+                    {% if properties.count == 0 %}
+                        <h1 class="w-full text-center">No properties to delete.</h1>
+                    {% else %}
+                        <h1 class="w-full text-center">Are you sure you want delete all the properties?</h1>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                {% if properties.count != 0 %}
+                    <form action="{% url 'delete_all_properties' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">Delete all</button>
+                    </form>
+                {% endif %}
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- Modal for Add Property -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content shadow-lg border-0">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title text-center w-100" id="exampleModalLabel">
+                            <i class="bi bi-house-door-fill me-2"></i> Add Property
+                        </h5>
+                        <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body px-4">
+                        <form id="propertyForm" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <fieldset class="md:px-4 px-1 mb-2">
+                                <div class="mb-2">
+                                    <label for="property_name" class="form-label font-sm">Property name</label>
+                                    {{ form.property_name }}
+                                    {% for error in form.property_name.errors %}
+                                    <div class="text-red-500 text-sm">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+        
+                                <div class="mb-2">
+                                    <label for="property_block_no" class="form-label font-sm">Block number</label>
+                                    {{ form.property_block_no }}
+                                    {% for error in form.property_block_no.errors %}
+                                    <div class="text-red-500 text-sm">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+        
+                                <div class="mb-2">
+                                    <label for="property_house_no" class="form-label">House number</label>
+                                    {{ form.property_house_no }}
+                                    {% for error in form.property_house_no.errors %}
+                                    <div class="text-red-500 text-sm">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="lot_size" class="form-label">Lot size m&sup2</label>
+                                    {{ form.lot_size }}
+                                    {% for error in form.lot_size.errors %}
+                                    <div class="text-red-500 text-sm">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+        
+                                <div class="mb-2">
+                                    <label for="bedroom" class="form-label">Bed room</label>
+                                    {{ form.bedroom }}
+                                    {% for error in form.bedroom.errors %}
+                                    <div class="text-red-500 text-sm">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+        
+                                <div class="mb-2">
+                                    <label for="bathroom" class="form-label">Bath room</label>
+                                    {{ form.bathroom }}
+                                    {% for error in form.bathroom.errors %}
+                                    <div class="text-red-500 text-sm">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+        
+                                <div class="mb-2">
+                                    <label for="property_description" class="form-label">Property description</label>
+                                    {{ form.property_description }}
+                                    {% for error in form.property_description.errors %}
+                                    <div class="text-red-500 text-sm">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+        
+                                <div class="mb-2">
+                                    <label for="photo" class="form-label">Property Image</label>
+                                    {{ form.photo }}
+                                    {% for error in form.photo.errors %}
+                                    <div class="text-red-500 text-sm">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+        
+                            </fieldset>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+                </div>
+            </div>
+        </div>
+
+
+
+    <!-- Grid View -->
+    <div id="gridView" class="bg-background text-foreground min-h-screen flex flex-col">
+        <div class="flex-1 p-4 overflow-y-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Property Cards -->
+                {% for property in properties %}
+                <div class="property-card bg-gray-50 text-gray-800 py-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 relative group">
+                    <!-- Profile Image with Upload Button -->
+                    <div class="relative w-full flex justify-center items-center">
+                        {% if property.availability == 'available' %}
+                            <span class="availability-status absolute top-2 right-2 bg-green-600 text-white text-xs font-semibold rounded-full shadow-lg">
+                                {{ property.availability|title }}
+                            </span>
+                        {% else %}
+                            <span class="availability-status absolute top-2 right-2 bg-gray-200 border-1 border-gray-700 text-gray-900 text-xs font-semibold py-1 px-3 rounded-full shadow-lg">
+                                {{ property.availability|title }}
+                            </span>
+                        {% endif %}
+
+                        <!-- Check if there are property images -->
+                        {% if property.images.exists %}
+                            <!-- Swiper Carousel for Property Images -->
+                            <div class="swiper-container mySwiper w-full h-[13rem] overflow-hidden">
+                                <div class="swiper-wrapper" id="image-carousel overflow-hidden">
+                                    <!-- Loop through all the images associated with the property -->
+                                    {% for image in property_images %}
+                                        {% if image.property.pk == property.pk %}
+                                            <div class="swiper-slide">
+                                                {% if image.interrior_image %}
+                                                    <img src="{{ image.interrior_image.url }}" class="w-full h-[13rem] object-cover swiper-image" alt="Property Image">
+                                                {% elif image.exterrior_image %}
+                                                <img src="{{ image.exterrior_image.url }}" class="w-full h-[13rem] object-cover swiper-image" alt="Property Image">
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <!-- Swiper pagination and navigation -->
+                                <div class="swiper-pagination"></div>
+                                <div class="swiper-button-next"></div>
+                                <div class="swiper-button-prev"></div>
+                            </div>
+                            <!-- Fullscreen exit button -->
+                            <button id="exitFullscreenBtn" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 9999; background-color: red; color: white; border: none; padding: 10px 15px; font-size: 18px; border-radius: 50%; cursor: pointer;">X</button>
+                        {% else %}
+                            <!-- Property Cover Image (shown if no images) -->
+                            <img src="{{ property.photo.url }}" class="h-[13rem] w-full object-cover" alt="Property Image">
+                        {% endif %}
+                    </div>
+
+                    <!-- Property Name & Owner Info -->
+                    <div class="mb-3">
+                        <h2 class="text-lg font-bold truncate">{{ property.property_name }}</h2>
+                        {% if property.household_head %}
+                            <a href="{% url 'sec_owner_profile' property.household_head.pk %}" class="text-sm text-gray-500">Owned by: <strong class="underline">{{ property.household_head.user.first_name }} {{ property.household_head.user.last_name }}</strong></a>
+                        {% else %}
+                            <p class="text-sm text-gray-500">Owned by: <strong>None</strong></p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Property Information -->
+                    <div class="space-y-1 text-sm">
+                        <!-- Block & House Number -->
+                        <p class="text-gray-600 flex items-center">
+                            <i class="bi bi-grid-1x2-fill text-gray-400 mr-2"></i>
+                            Block No: <strong>{{ property.property_block_no }}</strong>
+                        </p>
+                        <p class="text-gray-600 flex items-center">
+                            <i class="bi bi-house-fill text-gray-400 mr-2"></i>
+                            House No: <strong>{{ property.property_house_no }}</strong>
+                        </p>
+                        
+                        <!-- Lot Size -->
+                        <p class="text-gray-600 flex items-center">
+                            <i class="bi bi-rulers text-gray-400 mr-2"></i>
+                            Lot Size: <strong>{{ property.lot_size }} m&sup2;</strong>
+                        </p>
+                        
+                        <!-- Bedrooms and Bathrooms -->
+                        <p class="text-gray-600 flex items-center">
+                            <i class="bi bi-door-open-fill text-gray-400 mr-2"></i>
+                            Bedrooms: <strong>{{ property.bedroom }}</strong>
+                        </p>
+
+                        <p class="text-gray-600 flex items-center">
+                            <i class="bi bi-door-open-fill text-gray-400 mr-2"></i>
+                            Bathrooms: <strong>{{ property.bathroom }}</strong>
+                        </p>
+
+                        <!-- Property Type -->
+                        <p class="text-gray-600 flex items-center">
+                            <i class="bi bi-building text-gray-400 mr-2"></i>
+                            Type: <strong>{{ property.property_description }}</strong>
+                        </p>
+
+                        <!-- Status -->
+                        <p class="text-gray-600 flex items-center">
+                            <i class="bi bi-info-circle-fill text-gray-400 mr-2"></i>
+                            Status: {% if property.availability == 'available' %}
+                                        <strong class="text-green-500">{{ property.availability }}</strong>
+                                    {% else %}
+                                        <strong>{{ property.availability }}</strong>
+                                    {% endif %}
+                        </p>
+
+                        <a href="{% url 'sec_property_detail' property.pk %}" class="flex items-center justify-center bg-blue-500 text-white px-4 py-2 mt-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-300">
+                            <span class="mr-2">See more</span>
+                            <i class="bi bi-chevron-down text-[1rem]"></i> <!-- Using Bootstrap Icons -->
+                        </a> 
+
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!--list view-->
+    <div id="listView" style="display: none;" class="overflow-x-auto max-h-[75vh] overflow-y-auto">
+        <table id="myTable" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-100 sticky top-0 z-10">
+                <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Image</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Owner</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Property name</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Bedroom</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Bathroom</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Block no</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Lot size</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        House no</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Description</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Action
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="homeownersTable">
+                {% for property in properties %}
+                <tr class="hover:bg-gray-100">
+                    <td class="py-2 whitespace-nowrap"><img src="{{ property.photo.url }}"
+                            class="w-20 h-15 rounded-sm object-cover shadow-md shadow-gray-400" alt="secretary profile"
+                            srcset=""></td>
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        {% if property.household_head %}
+                            <a href="{% url 'sec_owner_profile' property.household_head.pk %}" class="text-teal-600 hover:bg-gray-400 p-2 transition-all duration-500 hover:text-white rounded-md text-underline" title="view {{ property.household_head.user.first_name }}">{{ property.household_head.user.first_name }} {{ property.household_head.user.last_name }} <i class="bi bi-eye-fill"></i></a>
+                        {% else %}
+                            none
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap">{{ property.property_name }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">{{ property.bedroom }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">{{ property.bathroom }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">{{ property.property_block_no }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">{{ property.lot_size }} m&sup2</td>
+                    <td class="px-4 py-2 whitespace-nowrap">{{ property.property_house_no }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">{{ property.property_description }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        {% if property.availability == 'available' %}
+                        <p class="text-center bg-green-600 rounded-[3rem] px-2 text-white">{{ property.availability }}
+                        </p>
+                        {% else %}
+                        <p class="text-gray-600 border-1 rounded-[3rem] px-2 border-gray-300 text-center">
+                            {{ property.availability }}</p>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        <!--ellipsis-->
+                        <button class="w-[100%] hover:bg-gray-200 rounded-full px-2 py-" data-bs-toggle="dropdown"
+                            aria-expanded="false"><i class="bi bi-three-dots"></i></button>
+                        <ul class="dropdown-menu">
+
+                            <!--view button for modal-->
+                            <li>
+                                <a href="{% url 'sec_property_detail' property.pk %}" type="button" class="dropdown-item">
+                                    <i class="bi bi-eye-fill"></i> VIEW
+                                </a>
+                            </li>
+
+                            <!--update button for modal-->
+                            <li>
+                                <button type="button" class="dropdown-item" data-bs-toggle="modal"
+                                    data-bs-target="#updateModal{{ property.pk}}">
+                                    <i class="bi bi-pen-fill"></i> UPDATE
+                                </button>
+                            </li>
+
+                            <!--delete button for modal-->
+                            <li>
+                                <button type="button" class="dropdown-item" data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal{{ property.pk}}">
+                                    <i class="bi bi-trash-fill"></i> DELETE
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Modal for updating property -->
+                        <div class="modal fade" id="updateModal{{ property.pk }}" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg"> <!-- Increased modal size for better user experience -->
+                                <div class="modal-content">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title w-full text-center font-semibold" id="updateModalLabel">
+                                            <i class="bi bi-pencil-square"></i> Update Property "{{ property.property_name }}"
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        
+                                        <!-- Property Image Section -->
+                                        <div class="w-full flex justify-center mb-4">
+                                            <img src="{{ property.photo.url }}" class="rounded h-[13rem] w-full object-cover" alt="Property Image">
+                                        </div>
+
+                                        <!-- Form for updating property details -->
+                                        <form action="{% url 'sec_edit_property' property.pk %}" method="post">
+                                            {% csrf_token %}
+                                            <div class="row">
+                                                <!-- Property Name -->
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="property_name" class="form-label">
+                                                        <i class="bi bi-house-door-fill"></i> Property Name
+                                                    </label>
+                                                    <input type="text" value="{{ property.property_name }}" name="property_name" id="property_name"
+                                                        class="form-control rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                                                </div>
+
+                                                <!-- Block Number -->
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="block_no" class="form-label">
+                                                        <i class="bi bi-grid-3x3-gap-fill"></i> Block Number
+                                                    </label>
+                                                    <input type="number" value="{{ property.property_block_no }}" name="block_no" id="block_no"
+                                                        class="form-control rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                                                </div>
+
+                                                <!-- Lot Number -->
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="lot_no" class="form-label">
+                                                        <i class="bi bi-map-fill"></i> House Number
+                                                    </label>
+                                                    <input type="number" value="{{ property.property_house_no }}" name="lot_no" id="lot_no"
+                                                        class="form-control rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                                                </div>
+
+                                                <!-- Lot Number -->
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="lot_size" class="form-label">
+                                                        <i class="bi bi-arrows-fullscreen me-2"></i> Lot size
+                                                    </label>
+                                                    <input type="number" value="{{ property.lot_size }}" name="lot_size" id="lot_size"
+                                                        class="form-control rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                                                </div>
+
+                                                <!-- Bedrooms -->
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="bedroom" class="form-label">
+                                                        <i class="bi bi-door-closed-fill"></i> Bedrooms
+                                                    </label>
+                                                    <input type="number" value="{{ property.bedroom }}" name="bedroom" id="bedroom"
+                                                        class="form-control rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                                                </div>
+
+                                                <!-- Bathrooms -->
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="bathroom" class="form-label">
+                                                        <i class="bi bi-droplet-fill"></i> Bathrooms
+                                                    </label>
+                                                    <input type="number" value="{{ property.bathroom }}" name="bathroom" id="bathroom"
+                                                        class="form-control rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary">
+                                                </div>
+
+                                                <!-- Property Description -->
+                                                <div class="col-md-12 mb-3">
+                                                    <label for="property_description" class="form-label">
+                                                        <i class="bi bi-card-text"></i> Description
+                                                    </label>
+                                                    <textarea name="property_description" id="property_description" rows="3"
+                                                        class="form-control rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-primary">{{ property.property_description }}</textarea>
+                                                </div>
+                                            </div>
+
+                                            <!-- Submit Button -->
+                                            <button class="btn btn-primary w-100" type="submit">
+                                                <i class="bi bi-check-circle-fill"></i> Save Changes
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End of Modal -->
+
+                        <!-- Modal for deleting property -->
+                    <div class="modal fade" id="deleteModal{{ property.pk }}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered"> <!-- Centered modal for better presentation -->
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title w-full text-center font-semibold" id="deleteModalLabel">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Delete Property "{{ property.property_name }}"?
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <!-- Warning Icon -->
+                                    <div class="mb-3">
+                                        <i class="bi bi-x-circle text-danger" style="font-size: 5rem;"></i>
+                                    </div>
+                                    <!-- Warning Text -->
+                                    <h4 class="mb-4">Are you sure you want to delete this property "{{ property.property_name }}"?</h4>
+                                </div>
+                                <div class="modal-footer d-flex justify-content-between">
+                                    <!-- Cancel Button -->
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="bi bi-arrow-left-circle"></i> Cancel
+                                    </button>
+                                    <!-- Delete Button -->
+                                    <form action="{% url 'sec_delete_property' property.pk %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="bi bi-trash-fill"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End of delete property modal -->
+
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="12" class="px-4 py-2 text-center text-gray-500">No properties yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+    <script src="{% static 'js/sec_inputFilter.js' %}"></script>
+    {% endblock content %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    {% block extra_js %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{% static 'js/toggleView.js' %}"></script>
+    <script>
+    
+        $(document).ready(function(){
+            $('#propertyForm').on('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+
+                // Clear previous error messages
+                $('.text-red-500').remove();
+
+                let formData = new FormData(this);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');  // Ensure CSRF token is sent
+
+                $.ajax({
+                    type: 'POST',
+                    url: "/properties/",  // Correct URL for your view
+                    data: formData,
+                    processData: false,  // Don't process the data
+                    contentType: false,  // Don't set contentType
+                    success: function(response) {
+                        if (response.success) {
+                            // Redirect or reload page on success
+                            window.location.reload();
+                        } else {
+                            // Display form errors
+                            let errors = response.errors;
+                            for (let field in errors) {
+                                let errorMessages = errors[field].map(function(error) {
+                                    return `<div class="text-red-500 text-sm">${error.message}</div>`;
+                                }).join('');
+                                $(`#id_${field}`).after(errorMessages);
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("An error occurred: " + error);
+                    }
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Swiper
+        var swiper = new Swiper('.swiper-container', {
+            slidesPerView: 1,
+            spaceBetween: 10,
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            loop: true, // Enable looping if desired
+            autoplay: {
+                delay: 3000, // Auto slide every 3 seconds
+                disableOnInteraction: false,
+            },
+            effect: 'slide', // You can change to 'fade' for a different effect
+        });
+    });
+
+
+    //   function updateCarousel(images) {
+    //     const swiperWrapper = document.querySelector('.swiper-wrapper');
+        
+    //     // Clear the current slides
+    //     swiperWrapper.innerHTML = '';
+
+    //     // Create and append new slides
+    //     images.forEach(image => {
+    //         const slide = document.createElement('div');
+    //         slide.classList.add('swiper-slide');
+    //         slide.innerHTML = `<img src="${image.url}" class="w-full h-[13rem] object-cover" alt="Property Image">`;
+    //         swiperWrapper.appendChild(slide);
+    //     });
+
+    //     // Update the Swiper instance
+    //     const swiperInstance = Swiper.getInstance('.mySwiper'); // Assuming you have a way to get the Swiper instance
+    //     swiperInstance.update();
+    // }
+
+        //hide preloader
+        // window.addEventListener('load', (e) => {
+        //     var preloader = document.getElementById('pre-loader')
+        //     preloader.style.display = 'none'
+        // })
+
+        //fetch unread notification
+		function fetchUnreadCount() {
+        fetch("{% url 'unread_notifications_count' %}")
+            .then(response => response.json())
+            .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+    </script>
+
+    {% endblock extra_js %}
+</body>
+
+</html>

@@ -1,0 +1,554 @@
+{% extends 'owner_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% block title %} {{ user }}'s Dashboard {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+	<script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+	<script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.min.js"></script>
+</head>
+
+<body class="bg-gray-100 h-[100dvh] w-[100vw] relative overflow-hidden">
+	{% block content %}
+	<!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <!-- Swiper JS -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+	<link rel="stylesheet" href="{% static 'css/pop-up-mess.css' %}">
+
+	<!--pre loader-->
+	<!-- <div id="pre-loader" class="w-full bg-white h-full flex justify-center items-center absolute top-0 left-0 z-[99999999]">
+		<img src="{% static 'Pulse@1x-0.7s-200px-200px.gif' %}" class="h-[4rem] w-[4rem]" alt="" srcset="">
+	</div> -->
+
+	<p id="user" class="hidden">{{ user }}</p>
+
+	<!--content container-->
+	<div id="container"
+		class="w-full md:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-0 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md p-4 overflow-y-auto overflow-x-hidden ">
+
+		<div class="w-full md:flex md:justify-between items-center">
+			<div class="flex justify-center items-left gap-[.8rem] mb-3">
+				<img id="profilePic" onclick="fullScreen()" class="w-[5rem] h-[5rem] max-[770px]:w-[5rem] max-[770px]:h-[5rem] rounded-full shadow-md shadow-gray-400 hover:bg-gray-100"
+					src="{{ profile }}" alt="">
+				<div class="w-full">
+					<h1 class="w-full mb-3 text-[1.5rem] text-gray-700 max-[770px]:text-[1.5rem] font-semibold">Welcome, <span
+							id="user_name" class="text-[#193948]">{{ user }}</span>!</h1>
+							<p class="inline-block bg-gray-200 text-sm py-1 rounded px-1 text-gray-600" style="transform: translateY(-15px);">Homeowner</p>
+				</div>
+			</div>
+
+			<script>
+				function fullScreen(element){
+					const profilePic = document.getElementById('profilePic')
+					profilePic.requestFullscreen()
+				}
+			</script>
+
+			<!--Quick actions-->
+			<div>
+				<div class="flex gap-2 mb-2">
+					<!--Button trigger for request modal-->
+					{% if my_property is not None %}
+					<button
+						class="btn btn-primary w-full shadow-md shadow-gray-400 md:w-[180px] bg-[#193948] border-0 hover:opacity-[.9] hover:bg-[#193948] flex items-center transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300"
+						data-bs-toggle="modal" data-bs-target="#staticBackdrop"><span
+							class="w-[30%] material-icons">build</span> <span
+							class="w-[60%] text-left overflow-hidden ellipsis text-sm">Request maintenance</span></button>
+					{% else %}
+					<a href="{% url 'property_detail' %}"
+						class="btn btn-primary w-full shadow-md shadow-gray-400 md:w-[180px] bg-[#193948] border-0 hover:opacity-[.9] hover:bg-[#193948] flex items-center transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300"><span
+							class="w-[30%] material-icons">build</span> <span
+							class="w-[60%] text-left overflow-hidden ellipsis text-sm">Request maintenance</span></a>
+					{% endif %}
+					<button id="askBtn"
+						class="btn btn-primary text-sm w-full shadow-md shadow-gray-400 md:w-[180px] bg-[#178a2b8] border-0 hover:opacity-[.9] transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 items-center gap-1"
+						data-bs-toggle="modal" data-bs-target="#feedbackModal">
+						<i class="bi bi-chat-left-text-fill w-[30%]"></i> 
+						<span class="w-[60%] text-left overflow-hidden ellipsis text-sm">Submit Feedback</span>
+					</button>
+			</div>
+		</div>
+
+		</div>
+		
+		  
+		<hr class="mb-2">
+
+		<div class="grid grid-cols-3 gap-4 max-[770px]:grid-cols-1">
+			
+			<a href="{% url 'property_detail' %}" class="w-full py-2 px-5 bg-white shadow-lg rounded-lg transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 relative group border-l-4 border-[#193948]">
+				<div class="flex justify-between items-center mb-2">
+					<h1 class="text-lg font-bold text-[#193948] group-hover:text-teal-600 transition-colors duration-300">Property Overview</h1>
+					<i class="bi bi-house-fill opacity-[.8] text-[#193948] text-4xl group-hover:text-teal-600 transition-colors duration-300"></i>
+				</div>
+				<div class="flex items-end gap-2 mb-2">
+					<p class="text-[.8rem] text-gray-600">View and manage details about your property</p>
+				</div>
+				<hr class="border-gray-300 mb-2">
+				<p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">See more <i class="bi bi-arrow-right"></i></p>
+			</a>			
+
+			<!--Check if owner owns a property-->
+			{% if my_property is not None %}
+				<a href="{% url 'request_maintenance_list' %}" class="w-full py-2 px-5 bg-white shadow-lg rounded-lg transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 relative group border-l-4 border-[#193948]">
+					<div class="flex justify-between items-center mb-2">
+						<h1 class="text-lg font-bold text-[#193948] group-hover:text-teal-600 transition-colors duration-300">Maintenance Request</h1>
+						<i class="material-icons opacity-[.8] text-[#193948] text-4xl group-hover:text-teal-600 transition-colors duration-300">build</i>
+					</div>
+					<div class="flex items-end gap-2 mb-2">
+						<p class="text-[.8rem] text-gray-600">Submit and track maintenance requests for your property.</p>
+						<h1 id="totalReq" class="font-semibold text-5xl text-[#193948] leading-none group-hover:text-teal-600 transition-colors duration-300">{{ totalMaintenanceReq.count }}</h1>
+					</div>
+					<hr class="border-gray-300 mb-2">
+					<p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">See more <i class="bi bi-arrow-right"></i></p>
+				</a>			
+			{% else %}
+				<a href="{% url 'property_detail' %}" class="w-full py-2 px-5 bg-white shadow-lg rounded-lg transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 relative group border-l-4 border-[#193948]">
+					<div class="flex justify-between items-center mb-2">
+						<h1 class="text-lg font-bold text-[#193948] group-hover:text-teal-600 transition-colors duration-300">Maintenance Request</h1>
+						<i class="bi bi-tools opacity-[.8] text-[#193948] text-4xl group-hover:text-teal-600 transition-colors duration-300"></i>
+					</div>
+					<div class="flex items-end gap-2 mb-2">
+						<p class="text-[.8rem] text-gray-600">Submit and track maintenance requests for your property.</p>
+						<h1 id="totalReq" class="font-semibold text-5xl text-[#193948] leading-none group-hover:text-teal-600 transition-colors duration-300">{{ totalMaintenanceReq.count }}</h1>
+					</div>
+					<hr class="border-gray-300 mb-2">
+					<p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">See more <i class="bi bi-arrow-right"></i></p>
+				</a>	
+			{% endif %}
+			<a href="{% url 'household_members' %}" class="w-full py-2 px-5 bg-white shadow-lg rounded-lg transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 relative group border-l-4 border-[#193948]">
+				<div class="flex justify-between items-center mb-2">
+					<h1 id="pendings" class="text-lg font-bold text-[#193948] group-hover:text-teal-600 transition-colors duration-300">Household Members</h1>
+					<i class="material-icons opacity-[.8] text-[#193948] text-4xl group-hover:text-teal-600 transition-colors duration-300">people</i>
+				</div>
+				<div class="flex items-end gap-2 mb-2">
+					<p class="text-[.8rem] text-gray-600">View and manage details about your household members</p>
+					<h1 id="totalRes" class="font-semibold text-5xl text-[#193948] leading-none group-hover:text-teal-600 transition-colors duration-300">{{ totalResidents.count }}</h1>
+				</div>
+				<hr class="border-gray-300 mb-2">
+				<p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">See more <i class="bi bi-arrow-right"></i></p>
+			</a>
+			
+
+		<!-- Modal for Request Maintenance -->
+		<div class="modal fade m-0" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+			<div class="modal-dialog modal-md">
+				<div class="modal-content rounded-lg shadow-lg">
+					<!-- Modal Header -->
+					<div class="modal-header bg-[#193948] text-white">
+						<h5 class="modal-title font-bold" id="staticBackdropLabel">Send a Maintenance Request</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					
+					<!-- Modal Body -->
+					<div class="modal-body p-4">
+						
+						<!-- Request Image -->
+						<div class="w-full flex justify-center">
+							<img src="{% static 'users/req_maintenance.jpg' %}" class="rounded-lg w-[80%] max-h-[200px] object-cover" alt="request maintenance image">
+						</div>
+
+						<!-- Form for Maintenance Request -->
+						<form id="maintenanceForm" action="{% url 'maintenance_request' %}" method="post" class="space-y-4" enctype="multipart/form-data">
+							{% csrf_token %}
+
+							<!-- Description of Issue -->
+							<div class="form-group">
+								<label for="description_of_issue" class="form-label font-medium">Description of Issue</label>
+								<input type="text" class="form-control p-3 rounded-lg shadow-sm" list="description" id="description_of_issue" name="description_of_issue" required placeholder="Describe the issue...">
+								<datalist id="description">
+									<option value="Leaky faucet"></option>
+									<option value="Clogged drain"></option>
+									<option value="Broken window"></option>
+									<option value="Power outage"></option>
+									<option value="Air conditioning not working"></option>
+									<!-- Add more options as needed -->
+								</datalist>
+							</div>
+
+							<!-- Type of Issue -->
+							<div class="form-group">
+								<label for="type_of_issue" class="form-label font-medium">Type of Issue</label>
+								<select class="form-select p-3 rounded-lg shadow-sm" name="type_of_issue" id="type_of_issue" required>
+									<option value="" selected disabled>Select the type of issue</option>
+									<option value="plumbing">Plumbing</option>
+									<option value="electrical">Electrical</option>
+									<option value="appliance">Appliance repair</option>
+									<option value="hvac">HVAC</option>
+									<option value="carpentry">Carpentry</option>
+									<option value="pest control">Pest control</option>
+									<option value="landscaping">Landscaping</option>
+								</select>
+							</div>
+
+							<!-- Location of Issue -->
+							<div class="form-group">
+								<label for="location_of_issue" class="form-label font-medium">Location of Issue</label>
+								<input class="form-control p-3 rounded-lg shadow-sm" list="locations" name="location_of_issue" placeholder="Specify the area (e.g., bathroom, kitchen)" required>
+								<datalist id="locations">
+									<option value="Kitchen"></option>
+									<option value="Bathroom"></option>
+									<option value="Living room"></option>
+									<option value="Bedroom"></option>
+									<option value="Garage"></option>
+									<option value="Basement"></option>
+									<option value="Attic"></option>
+									<option value="Roof"></option>
+									<option value="Backyard"></option>
+									<option value="Front yard"></option>
+									<option value="Laundry room"></option>
+									<option value="Hallway"></option>
+								</datalist>
+							</div>
+
+							<!-- File Upload for Image (Optional) -->
+							<div class="form-group">
+								<label for="upload" class="form-label font-medium">Attach a photo (optional)</label>
+								<input type="file" class="form-control-file" id="upload" name="image" accept="image/*">
+							</div>
+						</form>
+					</div>
+
+					<!-- Modal Footer -->
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary rounded-lg shadow-sm" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" form="maintenanceForm" class="btn btn-primary bg-[#193948] border-none rounded-lg shadow-sm px-5" id="submitRequest">Send Request</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--End modal for request maintenance-->
+
+		<!-- Success Message Modal -->
+		<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content text-center">
+					<div class="modal-body">
+						<p class="text-xl font-bold">Your maintenance request has been submitted successfully!</p>
+						<p>Request ID: #<span id="requestID"></span></p>
+						<button type="button" class="btn btn-primary mt-3" data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Loading Spinner (hidden until request is sent) -->
+		<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+			<div class="spinner-border text-primary" role="status">
+			</div>
+            <span class="">Loading...</span>
+		</div>
+
+
+		<!--Modal for Submitting Feedback or Suggestions-->
+		<div class="modal fade" id="feedbackModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title flex items-center" id="feedbackModalLabel">
+							<i class="bi bi-chat-left-dots me-2" style="font-size: 1.5rem;"></i>
+							Submit Your Feedback or Suggestion
+						</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<!-- Clarification Text -->
+						<p class="text-muted mb-4">
+							We value your feedback! Use this form to provide your thoughts, suggestions, or to report any issues you've encountered while using the Beta Bayview Homes Housing Management System. Your input helps us improve the system for all homeowners.
+						</p>
+
+						<form action="{% url 'submit_feedback' %}" method="post" id="feedbackForm">
+							{% csrf_token %}
+							<!-- Feedback Type -->
+							<div class="mb-3">
+								<label for="feedbackType" class="form-label">Type of Feedback</label>
+								<select class="form-select" name="feedbackType" id="feedbackType" required>
+									<option value="" disabled selected>Select a feedback type</option>
+									<option value="Feature Request">Feature Request</option>
+									<option value="Bug Report">Bug Report</option>
+									<option value="General Feedback">General Feedback</option>
+								</select>
+							</div>
+							<!-- Subject -->
+							<div class="mb-3">
+								<label for="feedbackSubject" class="form-label">Subject</label>
+								<input type="text" class="form-control" name="feedbackSubject" id="feedbackSubject" placeholder="Brief subject of your feedback" required>
+							</div>
+							<!-- Description -->
+							<div class="mb-3">
+								<label for="feedbackDescription" class="form-label">Description</label>
+								<textarea class="form-control" name="feedbackDescription" id="feedbackDescription" rows="4" placeholder="Describe your feedback or suggestion in detail" required></textarea>
+							</div>
+							<!-- Optional Contact Info -->
+							<div class="mb-3">
+								<label for="feedbackContact" class="form-label">Your Contact Info (optional)</label>
+								<input type="email" class="form-control" name="feedbackContact" id="feedbackContact" placeholder="Email or phone number">
+							</div>
+							<!-- Submit Button -->
+							<button type="submit" class="btn btn-primary w-100">Submit Feedback</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--End Modal-->
+
+		{% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+		</div>
+
+
+		<div class="w-full md:flex md:justify-center gap-3 mt-3">
+			<!--Recent activities table-->
+			<div class="w-full py-2 bg-white px-3 shadow-md rounded-lg mb-2 relative pt-5 overflow-hidden transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300">
+				<h1 class="text-sm text-white absolute flex items-center top-0 left-0 w-full bg-[#193948] py-2 px-3 font-semibold"><i class="material-icons me-2">history</i> Recent activities:</h1>
+				{% if activities.count == 0 %}
+					<p class="w-full text-center text-[4rem] text-gray-400"><i class="bi bi-pencil-square"></i></p>
+					<p class="w-full text-center text-[1rem] text-gray-500">No recent activities</p>
+				{% else %}
+				<div class="overflow-x-auto max-h-[250px] overflow-y-auto hide-scrollbar">
+					<table class="min-w-full divide-y divide-gray-20 h-full">
+						<thead class="sticky top-0 bg-white">
+							<tr>
+								<th
+									class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Activity</th>
+								<th
+									class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Date</th>
+							</tr>
+						</thead>
+						<tbody class="bg-white divide-y divide-gray-200">
+							{% for act in activities %}
+							<tr>
+								<td class="px-4 py-3 whitespace-nowrap text-sm">{{ act.name_of_activity }}</td>
+								<td class="px-4 py-3 whitespace-nowrap text-sm">{{ act.date }}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% endif %}
+				<!--recent activities table end-->
+				</div>
+
+				<!--Events-->
+				<div class="w-full py-2 bg-white shadow-md px-3 rounded-lg overflow-hidden relative pt-5 transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300">
+					<h1 class="text-sm text-white w-full flex items-center py-2 px-2 font-semibold absolute left-0 top-0 bg-[#193948]"><i class="material-icons me-2">event</i> Community Events</h1>
+					<div class="swiper-container h-[360px] overflow-hidden">
+						<div class="swiper-wrapper">
+							{% if events.count == 0 %}
+							<div class="swiper-slide w-full py-4 text-center">
+								<i class="bi bi-calendar-x text-[5rem] text-gray-500"></i>
+								<p class="text-sm text-gray-500 font-medium mb-3">No events yet.</p>
+							</div>
+							{% else %}
+							{% for event in events %}
+							<div class="swiper-slide relative bg-blue-500 bg-opacity-50 backdrop-blur-lg rounded-lg">
+								<a href="{% url 'owner_event_detail' event.pk %}">
+									<img class="w-full h-full mb-3 bg-gray-100 object-cover rounded-lg" src="{{ event.image.url }}" alt="image event">
+									<span class="absolute py-4 rounded-lg text-white px-4 max-w-[85%] truncate
+										transition-all duration-300 hover:scale-105 hover:bg-opacity-95 hover:bg-gray-900 shadow-lg"
+										style="transform: translate(-50%, -50%); left: 50%; top: 50%; background: rgba(0, 0, 0, .75);">
+										<p class="text-lg font-semibold mb-1">
+											<i class="bi bi-calendar mr-1"></i> {{ event.event_name|title }}
+										</p>
+										<p class="text-md mb-1">
+											<i class="bi bi-clock mr-1"></i> {{ event.event_date|date:"M j, Y" }}
+										</p>
+										<p class="text-md">
+											<i class="bi bi-geo-alt mr-1"></i> {{ event.location }}
+										</p>
+									</span>
+								</a>
+							</div>
+							{% endfor %}
+							{% endif %}
+						</div>
+				
+						<!-- Add Pagination -->
+						<div class="swiper-pagination"></div>
+				
+						<!-- Add Navigation -->
+						<div class="swiper-button-next p-2"></div>
+						<div class="swiper-button-prev"></div>
+					</div>
+				</div>
+			</div>
+			<!--End events-->
+		</div>
+
+	</div>
+	<!--End container--> 
+
+	{% endblock content %}
+	{% block extra_js %}
+	<script src="{% static 'js/owner_loading_submit.js' %}"></script>
+	<!-- <script src="{% static 'js/owner_preload.js' %}"></script> -->
+	<script src="{% static 'js/owner_dropdown_menu.js' %}"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+		crossorigin="anonymous"></script>
+	<script>
+		// Store the IDs of notifications that have already been displayed
+		let displayedNotificationIds = new Set();
+
+		//fetch unread notification
+		function fetchUnreadCount() {
+            fetch("{% url 'owner_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 900);
+        fetchUnreadCount();  // Initial call to set the count immediately
+
+		//carousel for events
+        var swiper = new Swiper('.swiper-container', {
+			slidesPerView: 1,
+			spaceBetween: 10,
+			navigation: {
+				nextEl: '.swiper-button-next',
+				prevEl: '.swiper-button-prev',
+			},
+			pagination: {
+				el: '.swiper-pagination',
+				clickable: true,
+			},
+			loop: true, // Enable looping if desired
+			autoplay: {
+				delay: 3000, // Auto slide every 3 seconds
+				disableOnInteraction: false,
+			},
+			effect: 'slide', // You can change to 'fade' for a different effect
+		});
+
+		//fetch new messages
+		$(document).ready(function() {
+    function fetchMessages() {
+        $.ajax({
+            url: '{% url "get_new_messages" %}',
+            method: 'GET',
+			success: function(data) {
+                if (data.length > 0) {
+                    $('#message-indicator').text(data.length); // Show the red dot indicator with the count
+                } else {
+                    $('#message-indicator').hide(); // Hide the red dot indicator
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error fetching messages:', textStatus, errorThrown);
+            }
+        });
+    }
+
+    // Polling every 5 seconds
+    setInterval(fetchMessages, 5000);
+
+    // Mark messages as read and navigate to messages page
+    $('#message-button').click(function() {
+        $.ajax({
+            url: '{% url "mark_messages_as_read" %}',
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function(data) {
+                if (data.status === 'ok') {
+                    $('#message-indicator').hide(); // Hide the red dot indicator
+                    window.location.href = '{% url "owner_messages" %}'; // Redirect to messages page
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error marking messages as read:', textStatus, errorThrown);
+            }
+        });
+    });
+});
+	</script>
+
+<!-- <script>
+    // Embed Chatbot Config
+    window.embeddedChatbotConfig = {
+        chatbotId: "3mB7KsfJ--tsoHhcb4BC3",
+        domain: "www.chatbase.co"
+    };
+
+    // Example of how you might get the current user's name dynamically
+    const currentUser = "{{ user }}"; // Replace this with actual logic to fetch the user's authenticated username
+
+    // Function to intercept and personalize chatbot responses
+    function interceptChatbotResponse(chatbox) {
+        const observer = new MutationObserver(function(mutationsList) {
+            for (const mutation of mutationsList) {
+                if (mutation.addedNodes.length > 0) {
+                    // Find the last added message (from the chatbot)
+                    const lastMessage = mutation.addedNodes[mutation.addedNodes.length - 1];
+
+                    // Replace the placeholder with the actual username
+                    if (lastMessage && lastMessage.innerText.includes("{{username}}")) {
+                        lastMessage.innerText = lastMessage.innerText.replace("{{username}}", currentUser);
+                    }
+                }
+            }
+        });
+
+        // Start observing the chatbox for changes
+        observer.observe(chatbox, { childList: true, subtree: true });
+    }
+
+    // Initialize the Chatbase chatbot
+    document.addEventListener("DOMContentLoaded", function() {
+        // Assume the chatbox is rendered inside this element
+        const chatbox = document.querySelector(".chatbase-chat-box");
+
+        if (chatbox) {
+            // Call the function to intercept and personalize chatbot responses
+            interceptChatbotResponse(chatbox);
+        }
+    });
+</script> -->
+
+<!-- Embed Script from Chatbase
+<script
+    src="https://www.chatbase.co/embed.min.js"
+    chatbotId="3mB7KsfJ--tsoHhcb4BC3"
+    domain="www.chatbase.co"
+    defer>
+</script> -->
+
+	{% endblock %}
+</body>
+
+</html>

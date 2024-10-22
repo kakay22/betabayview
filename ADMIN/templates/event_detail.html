@@ -1,0 +1,119 @@
+{% extends 'admin_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ user }} / {% block title %} Event detail - {{ event.event_name }} {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+</head>
+<body class="bg-gray-100">
+	{% block content %}
+    <!--pre loader-->
+    <div id="pre-loader" class="w-full bg-white h-full flex justify-center items-center absolute top-0 left-0 z-[99999999]">
+        <img src="{% static 'Pulse@1x-0.7s-200px-200px.gif' %}" class="h-[4rem] w-[4rem]" alt="" srcset="">
+    </div>
+
+	<!--Content container-->
+	<div class="w-full md:w-[85%] max-[770px]:h-full h-[90%] bg-white absolute right-0 top-[4rem] md:top-[3.8rem] shadow-md rounded-md py-4 px-0 md:px-3 overflow-y-auto overflow-x-hidden">
+
+        <div class="flex mb-4 items-center md:px-0 px-3">
+			<a onclick="history.back()"
+				class="bi bi-arrow-left mr-2 text-[1.2rem] px-[.8rem] flex items-center py-[.7rem] rounded-full hover:bg-gray-200 cursor-pointer">
+			</a>
+			<h1 class="text-xl font-medium">Maintenance personnels</h1>
+		</div>
+
+		<!-- Event card -->    
+        <div class="bg-white overflow-hidden mb-8">
+            <img src="{{ event.image.url }}" alt="Event Image" class="w-full h-64 object-cover">
+            <div class="p-6">
+                <h1 class="text-3xl font-bold mb-4">{{ event.event_name }}</h1>
+                <div class="mb-4 text-gray-600">
+                    <p><strong>Created on:</strong> {{ event.date_created }}</p>
+                    <p><strong>When:</strong> {{ event.event_date }}</p>
+                    <p><strong>Time:</strong> {{ event.event_time }}</p>
+                </div>
+                <p class="text-gray-700 mb-4">
+                    {{ event.event_description }}
+                </p>
+                <p class="text-gray-700 mb-4">
+                    Additional details about the event can be provided here. This section can be used to elaborate on the event schedule, speakers, activities, or any other pertinent information.
+                </p>
+                <a href="{% url 'events' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200"><i class="bi bi-box-arrow-left"></i> Back</a>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="bg-white overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold mb-4">Comments</h2>
+
+                <!-- Existing Comments -->
+                <div class="space-y-4 mb-6 max-h-[430px] overflow-y-auto">
+                    {% if comments.count == 0 %}
+                        <p class="text-md text-gray-500">Be the first to comment.</p>
+                    {% else %}
+                        {% for comment in comments %}
+                        <!-- Comment -->
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <div class="flex gap-2 items-center mb-3">
+                                <p class="font-bold flex items-center gap-2">  <img src="{{ comment.image.url }}" class="h-8 w-8 rounded-full" alt=""> {{ comment.owner_commentor }}</p> <p class="text-gray-500 text-[.8em]">{{ comment.date_commented|timesince }} ago</p>
+                            </div>
+                            <p class="text-gray-700 break-words px-2">{{ comment.comment }}</p>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+	
+
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+			var user = document.getElementById("user").innerText.trim();
+			if (user === 'AnonymousUser') {
+				location.href = "{% url 'adminLogin' %}";
+			}
+		});
+
+        //hide preloader
+		window.addEventListener('load', (e) => {
+			var preloader = document.getElementById('pre-loader')
+			preloader.style.display = 'none'
+		})
+
+        //fetch unread notification
+		function fetchUnreadCount() {
+        fetch("{% url 'admin_unread_notifications_count' %}")
+            .then(response => response.json())
+            .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+</script>
+<script src="{% static 'js/admin_dropdown_menu.js' %}"></script>
+{% endblock content %}
+
+</html>
+

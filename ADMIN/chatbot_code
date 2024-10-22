@@ -1,0 +1,278 @@
+@csrf_exempt
+def process_message(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_message = data.get('message')
+
+        # Check if the user is authenticated
+        if request.user.is_authenticated:  # Ensure the user is logged in
+            user_id = request.user.id  # Retrieve the user ID
+            
+            # Fetch the response from the database, including user_id
+            bot_reply = get_bot_response(user_message, user_id, request.session)  # Pass user_id here
+            
+            return JsonResponse({'reply': bot_reply})
+        else:
+            return JsonResponse({'error': 'User not authenticated.'}, status=403)  # Handle unauthenticated access
+
+def get_current_time_response():
+    current_time = datetime.now().strftime("%I:%M %p")
+    return f"The current time is {current_time}."
+
+def get_current_date_response():
+    current_date = datetime.now().strftime("%B %d, %Y")
+    return f"Today's date is {current_date}."
+
+def get_current_weather_response():
+    current_weather = "sunny with a high of 75°F"
+    return f"The current weather is {current_weather}."
+
+def get_available_properties():
+    properties = Property.objects.filter(availability='available')
+    if not properties:
+        return "There are currently no available properties."
+    
+    property_list = [
+        f"Name: {prop.property_name}, Type: {prop.property_description}"
+        for prop in properties
+    ]
+    
+    return "Here are the available properties:\n" + "\n".join(property_list)
+
+def get_latest_announcement():
+    try:
+        # Fetch the latest announcement
+        latest_announcement = Announcement.objects.latest('created_at')
+        return latest_announcement
+    except ObjectDoesNotExist:
+        return None
+
+def get_my_property(user_id):
+    try:
+        # Fetch the homeowner by user ID
+        user = User.objects.get(pk=user_id)
+        owner = HomeOwner.objects.get(user=user)
+        my_property = Property.objects.get(household_head=owner)
+        
+        # Check if the owner has an associated property
+        if my_property:
+            # Construct a dictionary or string with property details
+            property_details = {
+                "name": my_property.property_name,
+                "availability": my_property.availability,
+                "bedroom": my_property.bedroom,
+                "bathroom": my_property.bathroom,
+                "description": my_property.property_description,
+                "lot_size": my_property.lot_size,
+                # Add other fields as needed
+            }
+            return property_details
+        else:
+            return None  # No associated property
+        
+    except ObjectDoesNotExist:
+        return None  # Owner with this user_id does not exist
+    except Exception as e:
+        # Optionally log the exception or handle other unexpected errors
+        print(f"An error occurred: {e}")
+        return None
+
+def get_support_team_contact_info():
+    try:
+        # Assuming there's only one secretary and one admin
+        secretary = Secretary.objects.first()  # Get the first secretary
+        admin = User.objects.get(is_superuser=True)  # Get the admin user
+
+        contact_info = {
+            "phone": secretary.phone if secretary else "No secretary available",  # Replace with actual phone number if needed
+            "email_secretary": secretary.email if secretary else "No secretary available",
+            "email_admin": admin.email if admin else "No admin available",
+            "hours": "Monday to Friday, 9 AM - 5 PM",
+        }
+        return contact_info
+    except ObjectDoesNotExist:
+        return {
+            "phone": "+1234567890",  # Default phone number
+            "email_secretary": "No secretary available",
+            "email_admin": "No admin available",
+            "hours": "Monday to Friday, 9 AM - 5 PM",
+        }
+
+
+from django.core import serializers
+
+def get_latest_event():
+    try:
+        # Fetch the latest event
+        latest_event = Event.objects.latest('date_created')
+
+        # Create a dictionary with the event data you want to return
+        event_data = {
+            "id": latest_event.id,
+            "title": latest_event.event_name,
+            "date_created": latest_event.date_created.strftime('%Y-%m-%d %H:%M:%S'),
+            # Add other fields as needed
+        }
+
+        # Return the data as a JsonResponse
+        return JsonResponse(event_data)
+
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "No events found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+def get_user_name(user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        # Ensure both first and last names are included, and handle empty names
+        first_name = user.first_name if user.first_name else "User"
+        last_name = user.last_name if user.last_name else ""
+        full_name = f"{first_name} {last_name}".strip()
+        return full_name or "User"  # Fallback if full_name is empty
+    except User.DoesNotExist:
+        return "User"  # Fallback for non-existent user
+
+def get_user_maintenance_requests(user_id):
+    # Fetch maintenance requests for the user with pending or in progress status
+    requests = Maintenance_request.objects.filter(name_of_owner=user_id, status__in=['Pending', 'In progress'])
+    
+    if not requests:
+        return "You have no maintenance requests currently pending or in progress."
+    
+    # Format the response for each request
+    request_list = [
+        f"• Request ID: {req.id}\n   Property: {req.property.property_name}\n   Status: {req.status}\n   Requested on: {req.date_requested.strftime('%B %d, %Y')}\n"
+        for req in requests
+    ]
+
+    return "Here are your maintenance requests:\n" + "\n".join(request_list)
+
+
+def get_bot_response(user_message, user_id, session):
+    if 'context' not in session:
+        session['context'] = {
+            'last_topic': None,
+            'user_name': None,
+            'preferences': {}
+        }
+
+    context = session['context']
+
+    # Normalize the user message: lower case and remove specific punctuation
+    normalized_message = user_message.lower().replace('?', '').strip()
+    
+    # Check for user introduction
+    if normalized_message in ['my name is ', 'no, my name is ', 'i am ', 'im']:
+        context['user_name'] = user_message.split("my name is")[-1].strip()
+        session['context'] = context
+        return f"Nice to meet you, {context['user_name']}!"
+
+    # Handle specific queries
+    if normalized_message in ['tell me the time', 'what time is it?', 'time', 'time now', 'current time', 'what is the time', 'time?']:
+        return get_current_time_response()
+    
+    if normalized_message in ['what is the date today', 'date', 'date today', 'date now', 'whats the date today']:
+        return get_current_date_response()
+
+    if normalized_message in ['what is the weather now', 'weather']:
+        return get_current_weather_response()
+
+    if normalized_message in ['available properties', 'properties']:
+        return get_available_properties()
+
+    # Handle user name queries
+    if normalized_message in ['what is my name', 'can you tell me my name', 'my name', 'who am i', 'please tell me my name', 'what is my name']:
+        user_name = get_user_name(user_id)  # Call the function to get the user's name
+        return f"Your name is {user_name}." if user_name else "I'm sorry, I couldn't find your name."
+
+    # Check for property maintenance status
+    if normalized_message in ["is my property under maintenance", "is my house under maintenance", "is my unit under maintenance", "how is my property maintenance", "is my unit being repaired", "is my house under repair", "requests i submit", "maintenances i submit", "list of maintenances i request"]:
+        return get_user_maintenance_requests(user_id)
+
+
+    # Check if the normalized message matches any maintenance inquiry
+    if normalized_message in ['about my property', 'my property', 'my house', 'about my unit']:
+        property_details = get_my_property(user_id)
+        if property_details:
+            response_message = (
+                f"Here is the information about your property:\n"
+                f"Property Name: {property_details['name']}\n"
+                f"Bedroom: {property_details['bedroom']}\n"
+                f"Bathroom: {property_details['bathroom']}\n"
+                f"Availability: {property_details['availability']}\n"
+                f"Description: {property_details['description']}\n"
+                f"Lot Size: {property_details['lot_size']}\n"
+            )
+            return response_message
+        else:
+            return "You don't have a property in your account yet."
+
+    
+    elif normalized_message in ['contact info', 'support team contact info', 'contact support', 'team contact information', 'contacts', 'contact', 'contact for help']:
+        contact_info = get_support_team_contact_info()
+        response_message = (
+            f"Support Team Contact Information:\n"
+            f"Phone: {contact_info['phone']}\n"
+            f"Secretary Email: {contact_info['email_secretary']}\n"
+            f"Admin Email: {contact_info['email_admin']}\n"
+            f"Hours: {contact_info['hours']}\n"
+        )
+        return response_message
+    
+
+    announcement_prompts = ['latest announcement', 'announcements', 'show announcements', 'announcement', 'any announcements?', 'tell me announcements']
+
+    if any(prompt in user_message.lower() for prompt in announcement_prompts):
+        latest_announcement = get_latest_announcement()
+        response_message = (
+            f"Latest Announcement:\n"
+            f"Title: {latest_announcement.title} \n"
+            f"Content: {latest_announcement.content[:100]} \n \n"
+            f"to view announcements you can check the announcement section in the sidebar"
+        )
+        if latest_announcement:
+            return response_message
+        else:
+            return "There are no announcements at the moment."
+
+    if user_message.lower() in ["latest events", "event", "events", 'community events', 'events in', 'upcoming events']:
+        return 'I cannot fetch the events yet. But you can try to check the event section on your dashboard or on the sidebar panel.'
+        # latest_events = get_latest_event()
+        # if latest_events:
+        #     return get_latest_event()
+        # else:
+        #     return "No events yet."
+
+    # Maintain conversational context
+    if context['last_topic'] == 'jokes':
+        return get_joke_response()  # Call a function to get a joke response
+
+    # General conversational fallback
+    responses = [
+        "That's interesting! Can you tell me more?",
+        "I see! What else would you like to talk about?",
+        "That's great! Do you have any other questions?",
+        "I'm here to chat! What would you like to discuss next?",
+    ]
+
+    # Try exact matching
+    all_queries = ChatbotResponse.objects.values_list('user_query', flat=True)
+    if user_message in all_queries:
+        responses = ChatbotResponse.objects.filter(user_query=user_message).values_list('bot_response', flat=True)
+        if responses:
+            return random.choice(responses)
+
+    # Fuzzy matching for broader responses
+    closest_match, score = process.extractOne(user_message, all_queries)
+    if score >= 70:
+        responses = ChatbotResponse.objects.filter(user_query=closest_match).values_list('bot_response', flat=True)
+        if responses:
+            return random.choice(responses)
+
+    # If no match, use the fallback
+    return random.choice(responses)  # Return a general conversational prompt
+
+def get_joke_response():
+    return random.choice(jokes)  # Return a random joke from the predefined list

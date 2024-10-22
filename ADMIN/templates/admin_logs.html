@@ -1,0 +1,300 @@
+{% extends 'admin_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ user }} / {% block title %} Logs {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+</head>
+<body class="bg-gray-100">
+	{% block content %}
+    <!--pre loader-->
+    <div id="pre-loader" class="w-full bg-white h-full flex justify-center items-center absolute top-0 left-0">
+        <img src="{% static 'Pulse@1x-0.7s-200px-200px.gif' %}" class="h-[4rem] w-[4rem]" alt="" srcset="">
+    </div>
+
+	<!--Content container-->
+	<div class="w-full md:w-[85%] max-[770px]:h-full h-[90%] bg-white absolute right-0 top-[4rem] md:top-[3.8rem] mt-[.8rem] shadow-md rounded-md p-2 md:px-3 px-0 overflow-y-auto overflow-x-hidden">
+
+	<!-- Filter container -->
+	<div class="container my-3">
+		<div class="flex justify-around gap-2">
+			<!-- Search input -->
+			<div class="col-md-4 max-w-[600px]:w-full">
+				<input id="searchInput" type="text" class="form-control" placeholder="Search logs...">
+			</div>
+
+			<!-- Log type filter -->
+			<div class="col-md-4 max-w-[600px]:w-full">
+				<select id="logTypeFilter" class="form-select">
+					<option value="all" selected>All Types</option>
+					<option value="info">Info</option>
+					<option value="warning">Warning</option>
+					<option value="error">Error</option>
+					<option value="success">Success</option>
+				</select>
+			</div>
+
+			<!-- Month filter -->
+			<div class="col-md-4 max-w-[600px]:w-full">
+				<select id="monthFilter" class="form-select">
+					<option value="all" selected>All Months</option>
+					<option value="01">January</option>
+					<option value="02">February</option>
+					<option value="03">March</option>
+					<option value="04">April</option>
+					<option value="05">May</option>
+					<option value="06">June</option>
+					<option value="07">July</option>
+					<option value="08">August</option>
+					<option value="09">September</option>
+					<option value="10">October</option>
+					<option value="11">November</option>
+					<option value="12">December</option>
+				</select>
+			</div>
+		</div>
+	</div>
+
+
+				<!-- Logs table -->
+				<div class="container">
+					<div class="table-responsive text-sm" style="max-height: 660px; overflow-y: auto;">
+						<table id="myTable" class="table table-striped">
+							<thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+								<tr>
+									<th scope="col">#</th>
+									<th scope="col">Timestamp</th>
+									<th scope="col">Log Type</th>
+									<th scope="col">Description</th>
+									<th scope="col">User</th>
+									<th scope="col">Action</th>
+								</tr>
+							</thead>
+							<tbody id="logsBody">
+								{% for log in logs %}
+								<tr data-log-type="{{ log.log_type }}" data-log-date="{{ log.timestamp|date:'Y-m-d' }}">
+									<td>{{ log.pk }}</td>
+									<td>{{ log.timestamp }}</td>
+									<td>
+										{% if log.log_type == 'success' %}
+											<i class="bi bi-check-circle text-green-500"></i> Success
+										{% elif log.log_type == 'info' %}
+											<i class="bi bi-info-circle text-blue-500"></i> Info
+										{% elif log.log_type == 'error' %}
+											<i class="bi bi-x-circle text-red-500"></i> Error
+										{% else %}
+											<i class="bi bi-exclamation-circle text-orange-500"></i> Warning
+										{% endif %}
+									</td>
+									<td>{{ log.description }}</td>
+									<td>{{ log.user }}</td>
+									<td><button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#viewLogModal{{ log.pk }}">View</button></td>
+								</tr>
+
+								<!-- Modal for viewing log details -->
+								<!-- Modal for viewing log details -->
+								<div class="modal fade" id="viewLogModal{{ log.pk }}" tabindex="-1" aria-labelledby="viewLogModalLabel" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-centered">
+										<div class="modal-content">
+											<!-- Modal Header -->
+											<div class="modal-header bg-primary text-white">
+												<h5 class="modal-title" id="viewLogModalLabel">
+													<i class="bi bi-info-circle-fill me-2"></i> Log Details
+												</h5>
+												<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+											</div>
+											<!-- Modal Body -->
+											<div class="modal-body">
+												<div class="container">
+													<!-- Flexbox layout for log details -->
+													<div class="d-flex flex-column gap-3">
+														<!-- ID -->
+														<div class="d-flex justify-content-between align-items-center">
+															<div class="d-flex align-items-center">
+																<i class="bi bi-hash me-2"></i>
+																<strong>ID:</strong>
+															</div>
+															<span class="text-muted">{{ log.pk }}</span>
+														</div>
+														<!-- Timestamp -->
+														<div class="d-flex justify-content-between align-items-center">
+															<div class="d-flex align-items-center">
+																<i class="bi bi-calendar3 me-2"></i>
+																<strong>Timestamp:</strong>
+															</div>
+															<span class="text-muted">{{ log.timestamp }}</span>
+														</div>
+														<!-- Type -->
+														<div class="d-flex justify-content-between align-items-center">
+															<div class="d-flex align-items-center">
+																<i class="bi bi-tag me-2"></i>
+																<strong>Type:</strong>
+															</div>
+															<span class="d-flex align-items-center">
+																{% if log.log_type == 'success' %}
+																	<i class="bi bi-check-circle-fill text-success me-2"></i> Success
+																{% elif log.log_type == 'info' %}
+																	<i class="bi bi-info-circle-fill text-info me-2"></i> Info
+																{% elif log.log_type == 'error' %}
+																	<i class="bi bi-x-circle-fill text-danger me-2"></i> Error
+																{% else %}
+																	<i class="bi bi-exclamation-circle-fill text-warning me-2"></i> Warning
+																{% endif %}
+															</span>
+														</div>
+														<!-- Description -->
+														<div class="d-flex justify-content-between align-items-center">
+															<div class="d-flex align-items-center">
+																<i class="bi bi-pencil-square me-2"></i>
+																<strong>Description:</strong>
+															</div>
+															<span class="text-muted">{{ log.description }}</span>
+														</div>
+														<!-- User -->
+														<div class="d-flex justify-content-between align-items-center">
+															<div class="d-flex align-items-center">
+																<i class="bi bi-person me-2"></i>
+																<strong>User:</strong>
+															</div>
+															<span class="text-muted">{{ log.user }}</span>
+														</div>
+													</div>
+												</div>
+											</div>
+											<!-- Modal Footer -->
+											<div class="modal-footer">
+												<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+													<i class="bi bi-x-lg me-1"></i> Close
+												</button>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+				{% if logs.count == 0 %}
+					<p class="w-full text-center text-gray-500 m-3"><i class="bi bi-calendar2"></i> No logs</p>
+				{% endif %}
+	</div>
+
+	<!-- pagenation
+	<nav aria-label="Page navigation" class="my-3">
+		<ul class="pagination justify-content-center">
+			<li class="page-item">
+				<a class="page-link" href="#" aria-label="Previous">
+					<span aria-hidden="true">&laquo;</span>
+				</a>
+			</li>
+			<li class="page-item"><a class="page-link" href="#">1</a></li>
+			<li class="page-item"><a class="page-link" href="#">2</a></li>
+			<li class="page-item"><a class="page-link" href="#">3</a></li>
+			<li class="page-item">
+				<a class="page-link" href="#" aria-label="Next">
+					<span aria-hidden="true">&raquo;</span>
+				</a>
+			</li>
+		</ul>
+	</nav> -->
+	
+
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<script src="{% static 'js/inputFilter.js' %}"></script>
+</body>
+<script>
+        //hide preloader
+		window.addEventListener('load', (e) => {
+			var preloader = document.getElementById('pre-loader')
+			preloader.style.display = 'none'
+		})
+
+        //fetch unread notification
+		function fetchUnreadCount() {
+        fetch("{% url 'admin_unread_notifications_count' %}")
+            .then(response => response.json())
+            .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+
+		const search = document.querySelector("#searchInput")
+		search.addEventListener('input', (e) => {
+			document.getElementById('logTypeFilter').value = 'all';
+
+		})
+
+		// Filter logic for search input, log type, and month filter
+		document.addEventListener('DOMContentLoaded', function () {
+			const searchInput = document.getElementById('searchInput');
+			const logTypeFilter = document.getElementById('logTypeFilter');
+			const monthFilter = document.getElementById('monthFilter');
+			const logRows = document.querySelectorAll('#logsBody tr');
+
+			// Function to filter logs based on search input, log type, and month
+			function filterLogs() {
+				const searchValue = searchInput.value.toLowerCase();
+				const logTypeValue = logTypeFilter.value;
+				const monthValue = monthFilter.value;
+
+				let visibleCount = 0;  // Keep track of visible rows
+
+				logRows.forEach(row => {
+					const logType = row.getAttribute('data-log-type');
+					const logDate = row.getAttribute('data-log-date'); // Get the log date
+
+					// Ensure logDate is not null and split it to extract the month
+					const logMonth = logDate ? logDate.split('-')[1] : null; 
+
+					const matchesSearch = row.textContent.toLowerCase().includes(searchValue);
+					const matchesType = logTypeValue === 'all' || logType === logTypeValue;
+					const matchesMonth = monthValue === 'all' || logMonth === monthValue;
+
+					if (matchesSearch && matchesType && matchesMonth) {
+						row.style.display = '';
+						visibleCount++;
+					} else {
+						row.style.display = 'none';
+					}
+				});
+			}
+
+			// Add event listeners
+			searchInput.addEventListener('input', filterLogs);
+			logTypeFilter.addEventListener('change', filterLogs);
+			monthFilter.addEventListener('change', filterLogs);
+		});
+
+
+
+</script>
+<script src="{% static 'js/admin_dropdown_menu.js' %}"></script>
+{% endblock content %}
+
+</html>
+

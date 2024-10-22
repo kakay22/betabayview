@@ -1,0 +1,229 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account</title>
+  <link rel="icon" href="{% static 'users/logo.png' %}" type="image/x-icon">
+  <link href="{% static 'css/output_users.css' %}" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <!-- <script src="{% static 'js/preload.js' %}"></script> -->
+  <script src="{% static 'js/closemess.js' %}"></script>
+  <style>
+    input {
+      display: flex;
+      height: 2.5rem; /* h-10 */
+      width: 100%; /* w-full */
+      border-radius: 0.375rem; /* rounded-md */
+      border: 1px solid #b3b3b4; /* border-input */
+      background-color: #f9fafb; /* bg-background */
+      padding: 0.5rem 0.75rem; /* px-3 py-2 */
+      font-size: 0.875rem; /* text-sm */
+      box-shadow: 0 0 0 2px rgba(239, 246, 255, 0.5); /* ring-offset-background */
+      outline: none;
+      border-color: #a6a7a8; /* Adjusted to match the Tailwind color */
+      transition: box-shadow 0.2s ease-in-out;
+  }
+
+  input:focus-visible {
+      border-color: #3b82f6; /* focus-visible:ring-ring */
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* focus-visible:ring */
+  }
+
+  input::placeholder {
+      color: #9ca3af; /* placeholder:text-muted-foreground */
+  }
+
+  input:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+  }
+
+  </style>
+</head>
+
+<body class="relative h-[100dvh] w-[100dvw] overflow-y-scroll overflow-x-hidden">
+  <!-- Loading Spinner (hidden until request is sent) -->
+  <div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+    <div class="spinner-border text-primary" role="status">
+    </div>
+          <span class="">Loading...</span>
+  </div>
+
+  <img class="absolute h-full w-full top-0 left-0" src="{% static 'users/pope-francis-village.png' %}" alt="">
+  
+  <div class="shadow-md bg-gray-100 z-[99] flex justify-center items-center absolute h-[100%] w-full"
+    style="background-color: rgba(255, 255, 255, 0.8);">
+
+
+    <div class="w-full max-[550px]:h-full max-w-[30rem] bg-white absolute py-2 px-2 border-gray-200 rounded-lg shadow-md p-6">
+      <a class="text-[1.5rem] ml-5 hover:bg-gray-500 p-2 px-[.80rem] flex justify-center items-center mt-3 rounded-full absolute"
+        href="{% url 'main' %}">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+
+      <div class="w-full text-[1.3rem] text-center mt-4 text-gray-500 font-semibold">
+        <h1 class="w-full text-[1.3rem]">Create Account</h1>
+        <span class="text-sm text-gray-500 font-normal">Homeowner</span>
+      </div>
+
+      <form method="POST" class="w-full px-3 mt-3">
+        {% csrf_token %}
+
+        {% for message in messages %}
+        <div id="mess" class="alert alert-info flex justify-between text-[.8rem] items-center py-1 mt-2" role="alert">
+          {{message}}
+          <i onclick="closeMess()" class="bi bi-x-circle-fill text-[1.5rem] cursor-pointer"></i>
+        </div>
+        {% endfor %}
+
+        <div class="w-full h-full overflow-auto relative thin-scrollbar">
+
+          <!-- Page 1: Personal Information -->
+          <div class="pageForm1 w-full">
+            <fieldset class="md:px-4 px-2 mb-2">
+
+              <div class="w-[99%] md:flex md:justify-between md:gap-1">
+
+                <div class="mb-2">
+                  <label for="firstname" class="form-label text-sm text-gray-500 mb-1">Firstname</label>
+                  {{ form.first_name }}
+                  {% for error in form.first_name.errors %}
+                  <div class="text-red-500 text-sm">{{ error }}</div>
+                  {% endfor %}
+                </div>
+  
+                <div class="mb-2">
+                  <label for="lastname" class="form-label text-sm text-gray-500 mb-1">Lastname</label>
+                  {{ form.last_name }}
+                  {% for error in form.last_name.errors %}
+                  <div class="text-red-500 text-sm">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="mb-2">
+                <label for="email" class="form-label text-sm text-gray-500 mb-1"> Email address</label>
+                {{ form.email }}
+                {% for error in form.email.errors %}
+                <div class="text-red-500 text-sm">{{ error }}</div>
+                {% endfor %}
+              </div>
+
+              <div class="mb-2">
+                <label for="username" class="form-label text-sm text-gray-500 mb-1">Username</label>
+                {{ form.username }}
+                {% for error in form.username.errors %}
+                <div class="text-red-500 text-sm">{{ error }}</div>
+                {% endfor %}
+              </div>
+
+              <div class="mb-2">
+                <label for="password" class="form-label text-sm text-gray-500 mb-1">Password</label>
+                {{ form.password1 }}
+                {% for error in form.password1.errors %}
+                <div class="text-red-500 text-sm">{{ error }}</div>
+                {% endfor %}
+              </div>
+
+              <div class="mb-2">
+                <label for="password" class="form-label text-sm text-gray-500 mb-1">Confirm password</label>
+                {{ form.password2 }}
+                {% for error in form.password2.errors %}
+                <div class="text-red-500 text-sm">{{ error }}</div>
+                {% endfor %}
+              </div>
+
+              <p class="text-sm text-gray-600">Already have an account? <a href="{% url 'ownerLogin' %}">Login</a></p>
+
+              <button id="submitBtn" type="submit"
+              class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm mt-2 py-2.5 text-center">Submit</button>
+            </fieldset>
+          </div>
+        </div>
+    </div>
+    </form>
+  </div>
+  </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+  <script>
+    // document.addEventListener('DOMContentLoaded', function () {
+    //   let formPages = document.querySelectorAll('.pageForm1, .pageForm2, .pageForm3, .pageForm4');
+    //   let nextBtns = document.querySelectorAll('#nextBtn, #nextBtnPage2, #nextBtnPage3');
+    //   let backBtns = document.querySelectorAll('#backBtnPage2, #backBtnPage3, #backBtnPage4');
+
+    //   let currentPage = 0;
+
+    //   nextBtns.forEach((btn, index) => {
+    //     btn.addEventListener('click', () => {
+    //       if (index === currentPage && formIsValid(index)) {
+    //         formPages[currentPage].classList.add('hidden');
+    //         currentPage++;
+    //         formPages[currentPage].classList.remove('hidden');
+    //         updateButtonStates();
+    //       }
+    //     });
+    //   });
+
+    //   backBtns.forEach((btn, index) => {
+    //     btn.addEventListener('click', () => {
+    //       formPages[currentPage].classList.add('hidden');
+    //       currentPage--;
+    //       formPages[currentPage].classList.remove('hidden');
+    //       updateButtonStates();
+    //     });
+    //   });
+
+    //   function formIsValid(page) {
+    //     let valid = true;
+    //     let inputs = formPages[page].querySelectorAll('input, select, textarea');
+
+    //     inputs.forEach(input => {
+    //       if (!input.checkValidity()) {
+    //         valid = false;
+    //         input.classList.add('border-red-500');
+    //       } else {
+    //         input.classList.remove('border-red-500');
+    //       }
+    //     });
+
+    //     return valid;
+    //   }
+
+    //   function updateButtonStates() {
+    //     nextBtns.forEach((btn, index) => {
+    //       if (index === currentPage) {
+    //         btn.classList.add('opacity-1');
+    //         btn.classList.remove('opacity-[.3]');
+    //         btn.classList.remove('pointer-events-none');
+    //       } else {
+    //         btn.classList.add('opacity-[.3]');
+    //         btn.classList.add('pointer-events-none');
+    //         btn.classList.remove('opacity-1');
+    //       }
+    //     });
+
+    //     if (currentPage === formPages.length - 1) {
+    //       document.getElementById('submitBtn').classList.remove('opacity-[.3]', 'pointer-events-none');
+    //     } else {
+    //       document.getElementById('submitBtn').classList.add('opacity-[.3]', 'pointer-events-none');
+    //     }
+    //   }
+
+    //   updateButtonStates();
+
+    // });
+  </script>
+</body>
+
+</html>

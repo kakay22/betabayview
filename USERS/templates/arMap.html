@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaflet Map with AR</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/jeromeetienne/AR.js/aframe/build/aframe-ar.js"></script>
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { height: 50%; }
+    #ar-container { height: 50%; position: relative; }
+    a-scene { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #debug { position: absolute; top: 0; left: 0; color: white; background: black; padding: 5px; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="ar-container">
+  <a-scene embedded arjs='sourceType: webcam;'>
+    <!-- Define a marker with a 3D model -->
+    <a-marker preset="hiro">
+      <a-box position="0 0.5 0" material="color: red;"></a-box>
+    </a-marker>
+    <a-entity camera></a-entity>
+    <!-- Debug Information -->
+    <a-text id="debug" value="AR Scene Loaded" align="center" position="0 2 -3"></a-text>
+  </a-scene>
+</div>
+
+<script>
+  // Initialize Leaflet map
+  var map = L.map('map').setView([51.505, -0.09], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Convert LatLng to Three.js position (assuming a simple scale for demo)
+  function latLngToPosition(lat, lng) {
+    var scale = 10000;
+    var center = map.getCenter();
+    var position = {
+      x: (lng - center.lng) * scale,
+      y: 0,
+      z: (lat - center.lat) * scale
+    };
+    return position;
+  }
+
+  // Example position: Buckingham Palace
+  var latLng = [51.5014, -0.1419];
+  var position = latLngToPosition(latLng[0], latLng[1]);
+
+  // Update the AR model position based on the map
+  document.addEventListener('DOMContentLoaded', function() {
+    var box = document.querySelector('a-box');
+    box.setAttribute('position', `${position.x} ${position.y + 0.5} ${position.z}`);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,557 @@
+{% extends 'secretary_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ user }} / {% block title %} Residents {% endblock title %}</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+	<style>
+		.highlight {
+    		background-color: yellow;
+		}
+	</style>
+</head>
+
+<body class="bg-gray-100">
+	{% block content %}
+	<link rel="stylesheet" href="{% static 'css/sec-pop-up-mess.css' %}">
+
+	<!-- Loading Spinner (hidden until request is sent) -->
+	<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+		<div class="spinner-border text-primary" role="status">
+		</div>
+		<span class="">Loading...</span>
+	</div>
+
+	<!--pre loader-->
+	<!-- <div id="pre-loader" class="w-full bg-white h-full flex justify-center items-center absolute top-0 left-0 z-[99999999]">
+		<img src="{% static 'Pulse@1x-0.7s-200px-200px.gif' %}" class="h-[4rem] w-[4rem]" alt="" srcset="">
+	</div> -->
+
+	<!-- Header -->
+    <div class="w-full flex justify-end items-center py-[.7rem] gap-2 px-3 shadow-md bg-white relative">
+        <i id="menuBtn" class="bi bi-list text-[1.3rem] absolute left-3 font-semibold py-0 ml-2 md:hidden"></i>
+        <h1 class="text-left w-full left-[18%] max-[990px]:left-[20%] absolute font-semibold">Residents</h1>
+
+		<!--chat | notif | profile-->
+        <div class="flex justify-center gap-2 items-center">
+			<!--messages-->
+			<a href="{% url 'sec_messages' %}" id="message-button" class="bi bi-chat-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="messages">
+				<span id="message-indicator" class="bg-red-600 text-white hidden rounded-full px-1 text-[.7rem]"></span>
+			</a>
+
+			<!--notifications-->
+			<a href="{% url 'sec_notifications' %}" class="bi bi-bell-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="notifications">
+				<span class="notification-badge absolute top-0 right-0 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs hidden">
+                    0 
+                </span>
+			</a>
+			<!--end notifications-->
+
+			<!-- PROFILE -->
+			<div class="dropdown relative rounded-full w-[2.6rem] h-[2.6rem]">
+				<button id="user" class="btn btn-secondary bg-transparent
+				 border-0 text-black" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+					<div class="w-full h-full absolute top-0 left-0 rounded-[50%] shadow-md bg-white border-black border-1 overflow-hidden"><img
+							class="w-full h-full hover:bg-gray-100" src="{{ profile }}" alt="user profile"></div>
+				</button>
+				<ul id="dropdown-menu" class="dropdown-menu hidden flex flex-col mt-4 absolute right-0" aria-labelledby="dropdown-btn">
+					<li>
+						<form class="dropdown-item" action="{% url 'secretaryLogout' %}" method="post">
+							{% csrf_token %}
+							<button class="w-full text-left" type="submit"><i
+									class="bi bi-box-arrow-right"></i> LOGOUT</button>
+						</form>
+					</li>
+				</ul>
+			</div>
+			<span>{{ user }}</span>
+		</div>
+    </div>
+
+	<!--Content container-->
+	<div
+		class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-2 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md py-4 overflow-y-auto overflow-x-hidden ">
+
+		<div class="flex mb-4 items-center justify-between md:px-0 px-3">
+			<div class="flex items-center">
+				<a onclick="history.back()"
+					class="bi bi-arrow-left mr-2 text-[1.5rem] px-[.8rem] flex items-center py-[.7rem] rounded-full hover:bg-gray-200 cursor-pointer">
+				</a>
+				<h1 class="text-xl font-medium">Residents</h1>
+			</div>
+
+			<div class="flex items-center gap-2">
+				<!-- Button trigger for add resident modal -->
+				<a data-bs-toggle="modal" data-bs-target="#addResidentModal" class="btn btn-primary shadow-gray-500 shadow-md max-[770px]:rounded-full">
+					<i class="bi bi-plus font-semibold"></i>
+					<span class="hidden min-[770px]:inline">Add Resident</span>
+				</a>
+			</div>
+		</div>
+
+		{% for message in messages %}
+            <p id="pop-up-mess"
+                class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+                {% if message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+                {% elif message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+                {% endif %}
+            </p>
+        {% endfor %}
+
+		<!-- Search input and sort dropdown -->
+		<div class="mb-2 flex items-center gap-2 px-3 flex-wrap">
+			<form action="{% url 'sec_residents' %}" method="GET" class="flex items-center gap-2 w-full">
+				<!-- Search input -->
+				<div class="form-control flex items-center w-full lg:w-1/3">
+					<i class="bi bi-search text-[1rem] px-2"></i>
+					<input type="text" id="searchInput" name="search" class="border-none py-1 pl-2 w-full outline-none" placeholder="Search for residents...">
+				</div>
+				
+				<!-- Household Representative dropdown -->
+				<select id="household_representative" name="household_representative" class="btn py-[.6rem] shadow-md bg-white border border-gray-300 rounded-md transition-all duration-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full lg:w-1/4" onchange="this.form.submit();">
+					<option value="">-- All --</option>
+					{% for username, first_name in household_representatives %}
+						<option value="{{ username }}" {% if username == household_representative %}selected{% endif %}>Select owner: {{ first_name }}</option>
+					{% endfor %}
+				</select>
+
+				<!-- Sort dropdown -->
+				<select name="sort" class="btn py-[.6rem] shadow-md bg-white border border-gray-300 rounded-md transition-all duration-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full lg:w-1/4" onchange="this.form.submit();">
+					<option value="first_name" {% if sort_by == 'first_name' %}selected{% endif %}>Sort by First Name</option>
+					<option value="last_name" {% if sort_by == 'last_name' %}selected{% endif %}>Sort by Last Name</option>
+				</select>
+			</form>
+		</div>
+
+		<!-- Modal for add resident -->
+		<div class="modal fade" id="addResidentModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+				<h5 class="modal-title" id="exampleModalLabel">Add Resident</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form id="addResidentForm" method="post">
+						{% csrf_token %}
+						<fieldset class="px-4 mb-2">
+							<div class="mb-2">
+								<label for="firstname" class="form-label">Firstname</label>
+								{{ form.first_name }}
+								{% for error in form.first_name.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+								{% endfor %}
+							</div>
+			
+							<div class="mb-2">
+								<label for="lastname" class="form-label">Lastname</label>
+								{{ form.last_name }}
+								{% for error in form.last_name.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+								{% endfor %}
+							</div>
+			
+							<div class="mb-2">
+								<label for="lastname" class="form-label">Date of birth</label>
+								{{ form.date_of_birth }}
+								{% for error in form.date_of_birth.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+								{% endfor %}
+							</div>
+			
+							<div class="mb-2">
+								<label for="lastname" class="form-label">Age</label>
+								{{ form.age }}
+								{% for error in form.age.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+								{% endfor %}
+							</div>
+			
+							<div class="mb-2">
+								<label for="email_address" class="form-label">Email address</label>
+								{{ form.email_address }}
+								{% for error in form.email_address.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+								{% endfor %}
+							</div>
+			
+							<div class="mb-2">
+								<label for="lastname" class="form-label">Contact number</label>
+								{{ form.contact_number }}
+								{% for error in form.contact_number.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+								{% endfor %}
+							</div>
+			
+							<div class="mb-2">
+								<label for="lastname" class="form-label">Gender</label>
+								{{ form.gender }}
+								{% for error in form.gender.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+								{% endfor %}
+							</div>
+			
+							<div class="mb-2">
+								<label for="lastname" class="form-label">Relation to household</label>
+								{{ form.relationship_to_household }}
+								{% for error in form.relationship_to_household.errors %}
+									<div class="text-red-500 text-sm">{{ error }}</div>
+								{% endfor %}
+							</div>
+			
+							<div class="mb-2">
+								<label for="user_name" class="form-label">Occupation</label>
+								{{ form.occupation }}
+								{% for error in form.occupation.errors %}
+								<div class="text-red-500 text-sm">{{ error }}</div>
+								{% endfor %}
+							</div>
+			
+							<div class="mb-2">
+								<label for="password" class="form-label">Household representative</label>
+								{{ form.household_representative }}
+								{% for error in form.household_representative.errors %}
+								<div class="text-red-500 text-sm">{{ error }}</div>
+								{% endfor %}
+							</div>
+						</fieldset>
+				</div>
+				<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+				<button type="submit" class="btn btn-primary">Submit</button>
+					</form>
+				</div>
+			</div>
+			</div>
+		</div>
+
+		<div class="overflow-x-auto max-h-[75vh] overflow-y-auto">
+			<table id="myTable" class="min-w-full divide-y divide-gray-200">
+				<thead class="bg-gray-100 sticky top-0 z-10">
+					<tr>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Firstname</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Lastname</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
+							of Birth</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age
+						</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Contact no
+						</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email
+							address
+						</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Gender</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Relation to Household</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Occupation</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Household representative</th>
+						<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							Action</th>
+					</tr>
+				</thead>
+				<tbody id="homeownersTable" class="bg-white divide-y divide-gray-200">
+					{% for resident in page_obj %}
+					<tr class="hover:bg-gray-100">
+						<td class="px-4 py-2 whitespace-nowrap">{{ resident.first_name }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ resident.last_name }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ resident.date_of_birth }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ resident.age }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ resident.contact_number }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ resident.email_address }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ resident.gender }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ resident.relationship_to_household }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ resident.occupation }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">{{ resident.household_representative.first_name }} {{ resident.household_representative.last_name }}</td>
+						<td class="px-4 py-2 whitespace-nowrap">
+							<!--ellipsis-->
+							<button class="w-full hover:bg-gray-200 rounded-full py-2" data-bs-toggle="dropdown"
+								aria-expanded="false"><i class="bi bi-three-dots"></i></button>
+							<ul class="dropdown-menu">
+
+								<!--view button for modal-->
+								<li>
+									<button type="button" class="dropdown-item text-blue-500" data-bs-toggle="modal" data-bs-target="#viewModal{{ resident.pk}}">
+										<i class="bi bi-eye-fill"></i> VIEW  
+									</button>
+								</li>
+
+								<!--edit button for modal-->
+								<li>
+									<button type="button" class="dropdown-item text-green-500" data-bs-toggle="modal" data-bs-target="#editModal{{ resident.pk }}">
+										<i class="bi bi-pen-fill"></i> UPDATE 
+									  </button>
+								</li>
+
+
+								<!--delete button for modal-->
+								<li>
+									<button type="button" class="dropdown-item text-red-500" data-bs-toggle="modal" data-bs-target="#deleteModal{{ resident.pk}}">
+										<i class="bi bi-trash-fill"></i> DELETE 
+									</button>
+								</li>
+							</ul>							
+
+							<!-- View Modal -->
+						<div class="modal fade" id="viewModal{{ resident.pk }}" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
+							<div class="modal-dialog modal-lg">
+								<div class="modal-content">
+									<div class="modal-header border-b-2">
+										<h5 class="modal-title w-full text-center font-semibold text-xl" id="viewModalLabel{{ resident.pk }}">View {{ resident.first_name }}</h5>
+										<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+									</div>
+									<div class="modal-body">
+
+										<!-- Full name and age -->
+										<div class="w-full text-center text-2xl font-semibold mb-4">
+											<p>{{ resident.first_name|title }} {{ resident.last_name|title }}, {{ resident.age }} yrs old</p>
+										</div>
+
+										<!-- Other info -->
+										<div class="w-full py-3 flex justify-center overflow-y-auto max-h-[400px]">
+											<table class="w-[90%] table-auto border-collapse">
+												<tbody>
+													<tr class="bg-gray-100 border-b">
+														<th class="py-2 text-left">Email address</th>
+														<td class="py-2 text-right">{{ resident.email_address }}</td>
+													</tr>
+													<tr class="bg-gray-50 border-b">
+														<th class="py-2 text-left">Contact no</th>
+														<td class="py-2 text-right">{{ resident.contact_number }}</td>
+													</tr>
+													<tr class="bg-gray-100 border-b">
+														<th class="py-2 text-left">Occupation</th>
+														<td class="py-2 text-right">{{ resident.occupation }}</td>
+													</tr>
+													<tr class="bg-gray-50 border-b">
+														<th class="py-2 text-left">Relation to household</th>
+														<td class="py-2 text-right">{{ resident.relationship_to_household }}</td>
+													</tr>
+													<tr class="bg-gray-100 border-b">
+														<th class="py-2 text-left">Household head</th>
+														<td class="py-2 text-right">{{ resident.household_representative.first_name }} {{ resident.household_representative.last_name }}</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+
+									</div>
+									<div class="modal-footer">
+										<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- End modal for view -->
+
+						<!-- Modal for Edit -->
+						<div class="modal fade" id="editModal{{ resident.pk }}" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+							<div class="modal-dialog modal-lg">
+								<div class="modal-content">
+									<div class="modal-header border-b-2">
+										<h5 class="modal-title text-xl font-semibold" id="editModalLabel{{ resident.pk }}">Edit {{ resident.first_name }}</h5>
+										<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+									</div>
+									<div class="modal-body">
+
+										<!-- Replace with actual edit form -->
+										<form method="post" action="{% url 'sec_edit_resident' resident.pk %}">
+											{% csrf_token %}
+
+											<div class="flex mb-3 items-center font-medium">
+												<h1 class="mr-2">Household Head:</h1>
+												<p class="text-gray-700">{{ resident.household_representative }}</p>
+											</div>
+
+											<div class="mb-3">
+												<label for="first_name" class="form-label">Firstname</label>
+												<div class="input-group">
+													<span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+													<input type="text" class="form-control" name="first_name" id="first_name" value="{{ resident.first_name }}" required>
+												</div>
+											</div>
+											<div class="mb-3">
+												<label for="last_name" class="form-label">Lastname</label>
+												<div class="input-group">
+													<span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+													<input type="text" class="form-control" name="last_name" id="last_name" value="{{ resident.last_name }}" required>
+												</div>
+											</div>
+											<div class="mb-3">
+												<label for="contact_number" class="form-label">Contact No</label>
+												<div class="input-group">
+													<span class="input-group-text"><i class="bi bi-telephone-fill"></i></span>
+													<input type="text" class="form-control" name="contact_number" id="contact_number" value="{{ resident.contact_number }}" required>
+												</div>
+											</div>
+											<div class="mb-3">
+												<label for="email_address" class="form-label">Email Address</label>
+												<div class="input-group">
+													<span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+													<input type="email" class="form-control" name="email_address" id="email_address" value="{{ resident.email_address }}" required>
+												</div>
+											</div>
+											<div class="mb-3">
+												<label for="occupation" class="form-label">Occupation</label>
+												<div class="input-group">
+													<span class="input-group-text"><i class="bi bi-briefcase-fill"></i></span>
+													<input type="text" class="form-control" name="occupation" id="occupation" value="{{ resident.occupation }}" required>
+												</div>
+											</div>
+
+											<div class="modal-footer">
+												<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+												<button type="submit" class="btn btn-primary">Save changes</button>
+											</div>
+										</form>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- End modal for Edit -->
+
+
+						<!-- Modal for delete-->
+						<div class="modal fade" id="deleteModal{{ resident.pk}}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+							<div class="modal-dialog">
+							  <div class="modal-content">
+								<div class="modal-header">
+								  <h5 class="modal-title w-full text-center font-semibold" id="deleteModalLabel{{ resident.pk}}">Delete {{ resident.first_name }} ?</h5>
+								  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+								</div>
+								<div class="modal-body">
+									<h1 class="w-full text-center">
+										<i class="bi bi-x-circle text-[5rem] text-red-500"></i>
+									</h1>
+								  	<h1 class="w-full text-center">Are you sure you want to delete homeowner "{{ resident.first_name }}"?</h1>
+								</div>
+								<div class="modal-footer">
+								  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+								  <form action="{% url 'sec_delete_resident' resident.pk %}" method="post">
+									{% csrf_token %}
+									<button type="submit" class="btn btn-danger">Delete</button>
+								  </form>
+								</div>
+							  </div>
+							</div>
+						  </div>
+						<!--END modal for delete-->
+
+
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+			{% if not page_obj %}
+				<div class="w-full text-center py-5 text-gray-600 flex flex-col items-center">
+					<i class="bi bi-exclamation-circle text-3xl mb-2"></i>
+					<p>No residents found.</p>
+				</div>
+			{% endif %}
+
+		</div>
+		<!--pagination-->
+        <div class="px-3">
+            <nav class="block">
+                <p class="text-sm text-gray-500">Showing {{ page_obj.end_index }} out of {{ paginator.count }} results</p>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>                    
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %} <li class="page-item"><a
+                            class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item opacity-[.5] pointer-events-none">
+                            <a class="page-link" href="" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item opacity-[.5] pointer-events-none">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                </ul>
+            </nav>
+        </div>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="{% static 'js/inputFilter.js' %}"></script>
+	<script>
+	//fetch unread notification
+    function fetchUnreadCount() {
+            fetch("{% url 'unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 500);
+        fetchUnreadCount();  // Initial call to set the count immediately
+
+	</script>
+	{% endblock content %}
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+		integrity="sha384-oBqDVmMz4fnFO9gybBogGzG1Oj2vhH58+FWp1iJoV1RjFxo6GFaU5PaParIh6Fu9"
+		crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+		integrity="sha384-qm0nK+7D0f0Q0z3Ufh6iFa09X1I8TB65Dgwlm9fq+7HGu39TVE7aURy5GkPbbDi4"
+		crossorigin="anonymous"></script>
+</body>
+
+</html>
