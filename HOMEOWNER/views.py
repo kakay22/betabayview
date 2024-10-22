@@ -842,7 +842,7 @@ def detect_intent(request):
     return JsonResponse({'response': response.query_result.fulfillment_text})
 
 import openai
-from openai import error
+# from openai import error
 import logging
 import time
 from django.http import JsonResponse
