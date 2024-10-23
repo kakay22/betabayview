@@ -264,92 +264,93 @@
         });
 
         function initMap() {
+            if (document.getElementById('map').children.length > 0) return;
 
-        if (document.getElementById('map').children.length > 0) return;
+            // Beta Bayview Homes location
+            const initialLat = 11.218445209146429;
+            const initialLng = 125.0241042673588;
+            const map = L.map('map').setView([initialLat, initialLng], 13);
 
-        // Beta Bayview Homes location
-        const initialLat = 11.218445209146429;
-        const initialLng = 125.0241042673588;
-        const map = L.map('map').setView([initialLat, initialLng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+            }).addTo(map);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-        }).addTo(map);
+            const geocoder = L.Control.Geocoder.nominatim();
+            const control = L.Control.geocoder({
+                query: '',
+                placeholder: 'Search for a place...',
+                defaultMarkGeocode: false,
+                geocoder
+            }).on('markgeocode', function (e) {
+                const bbox = e.geocode.bbox;
+                const poly = L.polygon([
+                    bbox.getSouthEast(),
+                    bbox.getNorthEast(),
+                    bbox.getNorthWest(),
+                    bbox.getSouthWest()
+                ]).addTo(map);
+                map.fitBounds(poly.getBounds());
+            }).addTo(map);
 
-        const geocoder = L.Control.Geocoder.nominatim();
-        const control = L.Control.geocoder({
-            query: '',
-            placeholder: 'Search for a place...',
-            defaultMarkGeocode: false,
-            geocoder
-        }).on('markgeocode', function (e) {
-            const bbox = e.geocode.bbox;
-            const poly = L.polygon([
-                bbox.getSouthEast(),
-                bbox.getNorthEast(),
-                bbox.getNorthWest(),
-                bbox.getSouthWest()
-            ]).addTo(map);
-            map.fitBounds(poly.getBounds());
-        }).addTo(map);
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const currentLocation = L.marker([lat, lng]).addTo(map).bindPopup('Your current location').openPopup();
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const currentLocation = L.marker([lat, lng]).addTo(map).bindPopup('Your current location').openPopup();
+                    // Create the popup content with the link to Street View
+                    const betaBayviewPopup = `
+                        <div>
+                            <strong>Beta Bayview Homes</strong><br>
+                            <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=11.218445209146429,125.0241042673588" target="_blank">View in Street View</a>
+                        </div>
+                    `;
+                    const betaBayviewHomes = L.marker([initialLat, initialLng]).addTo(map).bindPopup(betaBayviewPopup).openPopup();
 
-                // Create the popup content with the link
-                const betaBayviewPopup = `
-                    Beta Bayview Homes<br>
-                    <a href="https://maps.app.goo.gl/QcVqo6fqwzddg4aB9" target="_blank">View more</a>
-                `;
-                const betaBayviewHomes = L.marker([initialLat, initialLng]).addTo(map).bindPopup(betaBayviewPopup).openPopup();
+                    map.setView([lat, lng], 13);
 
-                map.setView([lat, lng], 13);
-
-                L.Routing.control({
-                    waypoints: [
-                        L.latLng(lat, lng),
-                        L.latLng(initialLat, initialLng)
-                    ],
-                    createMarker: function (i, wp) {
-                        return L.marker(wp.latLng)
-                            .bindPopup(i === 0 ? 'Your location' : betaBayviewPopup)
-                            .openPopup();
-                    },
-                    routeWhileDragging: true
-                }).addTo(map);
-
-                control.on('markgeocode', function (e) {
-                    const latlng = e.geocode.center;
                     L.Routing.control({
                         waypoints: [
                             L.latLng(lat, lng),
-                            L.latLng(latlng.lat, latlng.lng)
+                            L.latLng(initialLat, initialLng)
                         ],
                         createMarker: function (i, wp) {
-                            return L.marker(wp.latLng).bindPopup(i === 0 ? 'Start' : 'End').openPopup();
-                        }
+                            return L.marker(wp.latLng)
+                                .bindPopup(i === 0 ? 'Your location' : betaBayviewPopup)
+                                .openPopup();
+                        },
+                        routeWhileDragging: true
                     }).addTo(map);
+
+                    control.on('markgeocode', function (e) {
+                        const latlng = e.geocode.center;
+                        L.Routing.control({
+                            waypoints: [
+                                L.latLng(lat, lng),
+                                L.latLng(latlng.lat, latlng.lng)
+                            ],
+                            createMarker: function (i, wp) {
+                                return L.marker(wp.latLng).bindPopup(i === 0 ? 'Start' : 'End').openPopup();
+                            }
+                        }).addTo(map);
+                    });
+                }, () => {
+                    const betaBayviewHomes = L.marker([initialLat, initialLng])
+                        .addTo(map)
+                        .bindPopup(`
+                            <div>
+                                <strong>Beta Bayview Homes</strong><br>
+                                <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=11.218445209146429,125.0241042673588" target="_blank">View in Street View</a>
+                            </div>
+                        `)
+                        .openPopup();
+
+                    map.setView([initialLat, initialLng], 13);
                 });
-            }, () => {
-                const betaBayviewPopup = `
-                    Beta Bayview Homes<br>
-                    <a href="https://maps.app.goo.gl/QcVqo6fqwzddg4aB9" target="_blank">View on Google Maps</a>
-                `;
-                L.marker([initialLat, initialLng]).addTo(map)
-                    .bindPopup(betaBayviewPopup)
-                    .openPopup();
-
-                map.setView([initialLat, initialLng], 13);
-            });
-        } else {
-            alert('Geolocation is not supported by this browser.');
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
         }
-
-        }
-
 
         closeMapBtn.addEventListener('click', () => {
             mapContainer.classList.add('hidden');
