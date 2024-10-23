@@ -1,0 +1,10 @@
+.activeLink {
+	width: 100% !important;
+	color: white !important;
+	font-weight: 700 !important;
+	background-color: #214f64;
+	border: none !important;
+	border-left: 4px solid white !important;
+	padding-left: 20px !important; /* Add padding to create space for the border */
+	box-sizing: border-box !important; /* Ensures the border doesn't affect the width */
+}

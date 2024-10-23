@@ -16,7 +16,7 @@ from django.dispatch import receiver
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 import uuid
-from google.api_core import exceptions as google_exceptions 
+from google.api_core import exceptions as google_exceptions
 from SECRETARY.signals import create_maintenance_request_notification, create_not_verified_notification, create_verified_notification
 from HOMEOWNER.signals import notify_max_request
 from ADMIN.signals import admin_create_not_verified_notification, admin_create_verified_notification, admin_create_maintenance_request_notification
@@ -81,7 +81,7 @@ def add_member(request):
             # Log the adition of member //check//
             Log.objects.create(
                 log_type='info',
-                description=f"Homeowner '{request.user}' added a household member '{resident.first_name}'.",  
+                description=f"Homeowner '{request.user}' added a household member '{resident.first_name}'.",
                 user=request.user
             )
 
@@ -211,7 +211,7 @@ def edit_member(request, pk):
             messages.info(request, 'Update saved')
             return redirect('household_members')
         else:
-            return redirect('household_members')  
+            return redirect('household_members')
 
 def delete_member(request, pk):
     if request.method == 'POST':
@@ -245,7 +245,7 @@ def update_picture(request, pk):
                     name_of_owner = name_of_owner,
                     name_of_activity = 'Updated profile picture.'
                 )
-            new_act.save() 
+            new_act.save()
 
             # Log updating of profile //check//
             Log.objects.create(
@@ -330,7 +330,7 @@ def maintenance_request(request):
     # For non-POST method, redirect to owner dashboard
     return redirect('owner_dashboard')
 
-    
+
 def request_verification(request):
     if request.method == 'POST':
         request_pk = request.POST.get('request_pk')
@@ -370,13 +370,13 @@ def request_verification(request):
 def request_maintenance_list(request):
     # Get the current logged-in user
     user = get_object_or_404(User, username=request.user)
-    
+
     # Get the Homeowner instance associated with the user
     homeowner = HomeOwner.objects.get(user=user)
 
     # Fetch notifications related to the user (homeowner)
     notifications = Notification.objects.filter(homeowner=user).order_by('-created_at')
-    
+
     # Fetch the profile picture if it exists, otherwise set it to None
     profile = homeowner.profile_picture.url if homeowner.profile_picture else None
 
@@ -453,7 +453,7 @@ def edit_request(request, pk):
 
             messages.info(request, 'Update saved!')
             return redirect('request_maintenance_list')
-        
+
 def delete_request(request, pk):
     if request.method == 'POST':
         request_to_delete = Maintenance_request.objects.get(pk=pk)
@@ -521,13 +521,13 @@ def owner_announcement_comment(request, pk):
 def add_owner_comment(request, pk):
     if request.method == 'POST':
         event = Event.objects.get(pk=pk)
-        
+
         owner_commentor_id = request.POST.get('owner_commentor')
         comment = request.POST.get('comment')
-        
+
         get_user = User.objects.get(pk=owner_commentor_id)
         homeowner = HomeOwner.objects.get(user=get_user)
-        
+
         user_image = homeowner.profile_picture
 
         if owner_commentor_id and comment:
@@ -549,7 +549,7 @@ def add_owner_comment(request, pk):
             messages.success(request, 'Comment submitted')
             # Redirect to the event detail page after saving the comment
             return redirect(reverse('owner_event_detail', args=[pk]))
-    
+
     # If the request is not POST, redirect back to the event details page
     return redirect(reverse('owner_event_detail', args=[pk]))
 
@@ -575,7 +575,7 @@ def confirm_selection(request, pk):
         selected_property.availability = 'occupied'
         selected_property.save()
 
-        
+
         owner = HomeOwner.objects.get(user=user)
         owner.property = selected_property
         owner.save()
@@ -597,7 +597,7 @@ def property_detail(request):
     notifications = Notification.objects.filter(homeowner=user).order_by('-created_at')
     profile = homeowner.profile_picture.url
     id = user.pk
-    
+
     if Property.objects.filter(household_head=homeowner).exists():
         my_property = Property.objects.get(household_head=homeowner)
     else:
@@ -616,7 +616,7 @@ def property_detail(request):
 def get_property_images(request, property_id):
     property_instance = get_object_or_404(Property, id=property_id)
     images = property_instance.images.all().values('id', 'image')
-    
+
     # Build the image URL for the response
     image_list = [{'id': img['id'], 'url': img['image'].url} for img in images]
     return JsonResponse(image_list, safe=False)
@@ -721,12 +721,12 @@ def owner_profile(request):
     if request.method == 'POST':
         userForm = EditUserForm(request.POST, instance=user)
         ownerForm = HomeOwnerForm(request.POST, request.FILES, instance=homeowner)
-        
+
         # Debugging: Print form errors
         if userForm.is_valid() and ownerForm.is_valid():
             # Save the user form (this will update the email and username)
             user = userForm.save(commit=False)
-            
+
             # If you're changing username or email, it's important to commit these changes before session update
             user.save()
 
@@ -789,7 +789,7 @@ def owner_delete_all_notif(request, pk):
         del_notif = Notification.objects.filter(homeowner=owner)
         del_notif.delete()
         return redirect('owner_notifications')
-        
+
 
 def chatbot(request):
     return render(request, 'chatbot.html')
@@ -813,7 +813,7 @@ def detect_intent(request):
     except Exception as e:
         print(f"Failed to create a Dialogflow session client: {e}")
         return JsonResponse({'response': 'Failed to connect to Dialogflow service.'})
-    
+
     # Create session path
     session = session_client.session_path('dynamic-cooler-434604-i2', session_id)
 
@@ -842,63 +842,63 @@ def detect_intent(request):
     return JsonResponse({'response': response.query_result.fulfillment_text})
 
 import openai
-from openai import error
+# from openai import error
 import logging
 import time
 from django.http import JsonResponse
 from django.shortcuts import render
 
 # Set up OpenAI API Key
-openai.api_key = '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'  # Replace with your OpenAI API key
+# openai.api_key = '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'  # Replace with your OpenAI API key
 
 
-def chatbot2(request):
-    if request.method == 'POST':
-        user_input = request.POST.get('message')
-        max_retries = 5  # Set the maximum number of retries
-        wait_time = 1  # Start with a 1-second wait
+# def chatbot2(request):
+#     if request.method == 'POST':
+#         user_input = request.POST.get('message')
+#         max_retries = 5  # Set the maximum number of retries
+#         wait_time = 1  # Start with a 1-second wait
 
-        for attempt in range(max_retries):
-            try:
-                # Use the new ChatCompletion API
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": user_input}
-                    ]
-                )
-                chatbot_response = response['choices'][0]['message']['content'].strip()
-                return JsonResponse({'response': chatbot_response})
+#         for attempt in range(max_retries):
+#             try:
+#                 # Use the new ChatCompletion API
+#                 response = openai.ChatCompletion.create(
+#                     model="gpt-3.5-turbo",
+#                     messages=[
+#                         {"role": "system", "content": "You are a helpful assistant."},
+#                         {"role": "user", "content": user_input}
+#                     ]
+#                 )
+#                 chatbot_response = response['choices'][0]['message']['content'].strip()
+#                 return JsonResponse({'response': chatbot_response})
 
-            except error.AuthenticationError:
-                logging.error("Invalid API key.")
-                return JsonResponse({'response': "Invalid API key. Please check your configuration."})
+#             except error.AuthenticationError:
+#                 logging.error("Invalid API key.")
+#                 return JsonResponse({'response': "Invalid API key. Please check your configuration."})
 
-            except error.RateLimitError:
-                logging.warning(f"Rate limit exceeded. Attempt {attempt + 1} of {max_retries}.")
-                if attempt < max_retries - 1:  # If not the last attempt
-                    wait_time_message = f"Rate limit exceeded. Please wait {wait_time} seconds before trying again."
-                    print(wait_time)
-                    time.sleep(wait_time)  # Wait before retrying
-                    wait_time *= 2  # Exponentially increase the wait time
-                    return JsonResponse({'response': wait_time_message})
-                else:
-                    return JsonResponse({'response': "Rate limit exceeded. Please try again later."})
+#             except error.RateLimitError:
+#                 logging.warning(f"Rate limit exceeded. Attempt {attempt + 1} of {max_retries}.")
+#                 if attempt < max_retries - 1:  # If not the last attempt
+#                     wait_time_message = f"Rate limit exceeded. Please wait {wait_time} seconds before trying again."
+#                     print(wait_time)
+#                     time.sleep(wait_time)  # Wait before retrying
+#                     wait_time *= 2  # Exponentially increase the wait time
+#                     return JsonResponse({'response': wait_time_message})
+#                 else:
+#                     return JsonResponse({'response': "Rate limit exceeded. Please try again later."})
 
-            except error.APIConnectionError:
-                logging.error("Failed to connect to OpenAI API.")
-                return JsonResponse({'response': "Failed to connect to OpenAI API. Please check your internet connection."})
+#             except error.APIConnectionError:
+#                 logging.error("Failed to connect to OpenAI API.")
+#                 return JsonResponse({'response': "Failed to connect to OpenAI API. Please check your internet connection."})
 
-            except error.OpenAIError as e:
-                logging.error(f"OpenAI error: {e}")
-                return JsonResponse({'response': f"An error occurred: {str(e)}"})
+#             except error.OpenAIError as e:
+#                 logging.error(f"OpenAI error: {e}")
+#                 return JsonResponse({'response': f"An error occurred: {str(e)}"})
 
-            except Exception as e:
-                logging.error(f"Unexpected error: {e}")
-                return JsonResponse({'response': f"An error occurred: {str(e)}"})
+#             except Exception as e:
+#                 logging.error(f"Unexpected error: {e}")
+#                 return JsonResponse({'response': f"An error occurred: {str(e)}"})
 
-    return render(request, 'chatbot2.html')
+#     return render(request, 'chatbot2.html')
 
 
 def payment_reminder(request, pk):

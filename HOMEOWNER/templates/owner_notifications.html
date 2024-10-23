@@ -23,7 +23,7 @@
 
 	<!--content container-->
 	<div id="container"
-		class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-2 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md p-4 px-0 overflow-y-auto overflow-x-hidden px-4">
+		class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-2 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md p-4 px-0 overflow-y-auto overflow-x-hidden">
 
 	<!-- Loading Spinner (hidden until request is sent) -->
 	<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
@@ -54,13 +54,13 @@
 
 	<div class="flex items-center justify-between p-3">
         <h2 class="text-lg font-bold"><i onclick="window.history.back()" class="bi bi-arrow-left p-[.5rem] text-[1.5rem] rounded-full hover:bg-gray-200 cursor-pointer"></i> Notifications</h2>
-        
+
 		<div class="flex justify-center gap-2">
 			<button id="read_notifications_btn" class="bg-gray-200 transition-all duration-[.4s] inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-accent hover:bg-gray-400 hover:text-accent-foreground h-9 rounded-md px-0 hover:pr-2">
 				<i class="bi bi-check-circle-fill  px-3 md:px-0 md:bg-transparent text-[1rem] p-2 bg-gray-200 rounded-md"></i> <span class="hidden md:inline pr-3">Mark all as read</span>
 			</button>
 			<!-- Delete Button to Trigger Modal -->
-			<button 
+			<button
 				class="bg-gray-200 transition-all duration-[.4s] inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:bg-gray-400 hover:text-accent-foreground h-9 rounded-md px-0 hover:pr-2"
 				data-bs-toggle="modal" data-bs-target="#deleteModal">
 				<i class="bi bi-trash-fill px-3 md:px-0 md:bg-transparent text-[1rem] p-2 bg-gray-200 rounded-md"></i>
@@ -87,13 +87,13 @@
 			</div>
 			<!-- Modal Footer -->
 			<div class="modal-footer justify-end">
-			<button 
-				type="button" 
-				class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" 
+			<button
+				type="button"
+				class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
 				data-bs-dismiss="modal">Cancel</button>
 			<form method="POST" action="{% url 'owner_delete_all_notif' user.pk %}">
 				{% csrf_token %}
-				<button 
+				<button
 				type="submit"
 				class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600">
 				Delete All
@@ -204,7 +204,7 @@
 						{% if notif.icon == 'bi-check-circle' %}
 							<div type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card"
 							data-id="{{ notif.pk }}"
-							data-bs-toggle="modal" 
+							data-bs-toggle="modal"
 							data-bs-target="#viewModal{{ notif.pk}}"
 							onclick="redirectToUrl(this)">
 							{% if notif.icon == 'bi-x-circle' %}
@@ -253,7 +253,7 @@
 						{% else %}
 							{% if notif.notif_url %}
 							<div onclick="location.href='{{ notif.notif_url }}'" class="notification-item cursor-pointer border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card" data-id="{{ notif.pk }}">
-								
+
 								{% if notif.icon == 'bi-x-circle' %}
 									<i class="bi {{ notif.icon }} text-red-500 text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
 								{% elif notif.icon == 'bi-check-circle' %}
@@ -296,12 +296,12 @@
 				<div class="modal fade z-[9999999999]" id="viewModal{{ notif.pk }}" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
 					<div class="modal-dialog">
 						<div class="modal-content">
-						
+
 						<div class="w-full p-4 flex justify-end items-center">
 							<h1 class="text-[.8rem] w-full text-center font-semibold">Maintenance request verification {{ notif.maintenance_request.pk }}.</h1>
 							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 						</div>
-							
+
 						<div class="modal-body">
 						<div>
 							<h2 class="text-sm font-semibold mb-3">Request details</h2>
@@ -331,7 +331,7 @@
 									<td>{{ notif.maintenance_request.repairman }}</td>
 								</tr>
 							</table>
-							
+
 							<form action="{% url 'request_verification' %}" method="post">
 								<input type="hidden" name="request_pk" value="{{ notif.maintenance_request.pk }}">
 								{% csrf_token %}
@@ -339,35 +339,35 @@
 								<div class="flex justify-start space-x-2 gap-2 items-center mb-4">
 									<div class="flex justify-center space-x-4 items-center">
 										<!-- Verified Button -->
-										<label class="text-sm p-2 border border-gray-400 rounded-lg cursor-pointer transition-colors duration-200 ease-in-out flex items-center 
+										<label class="text-sm p-2 border border-gray-400 rounded-lg cursor-pointer transition-colors duration-200 ease-in-out flex items-center
 										{% if notif.maintenance_request.status == 'verified' %}bg-green-600 text-white{% endif %}">
-											<input type="radio" 
-												   class="hidden peer" 
-												   value="verified" 
-												   name="verification" 
-												   {% if notif.maintenance_request.status == "verified" %} checked {% endif %} 
+											<input type="radio"
+												   class="hidden peer"
+												   value="verified"
+												   name="verification"
+												   {% if notif.maintenance_request.status == "verified" %} checked {% endif %}
 												   required>
 											<span class="flex items-center">
 												<i class="bi bi-check text-[1.5rem]"></i>
 												<span class="ml-2">Verified</span>
 											</span>
 										</label>
-									
+
 										<!-- Not Verified Button -->
-										<label class="text-sm p-2 border border-gray-400 rounded-lg cursor-pointer transition-colors duration-200 ease-in-out flex items-center 
+										<label class="text-sm p-2 border border-gray-400 rounded-lg cursor-pointer transition-colors duration-200 ease-in-out flex items-center
 										{% if notif.maintenance_request.status == 'notverified' %}bg-red-600 text-white{% endif %}">
-											<input type="radio" 
-												   class="hidden peer" 
-												   value="notverified" 
-												   name="verification" 
-												   {% if notif.maintenance_request.status == "notverified" %} checked {% endif %} 
+											<input type="radio"
+												   class="hidden peer"
+												   value="notverified"
+												   name="verification"
+												   {% if notif.maintenance_request.status == "notverified" %} checked {% endif %}
 												   required>
 											<span class="flex items-center">
 												<i class="bi bi-x text-[1.5rem]"></i>
 												<span class="ml-2">Not Verified</span>
 											</span>
 										</label>
-									</div>															
+									</div>
 								</div>
 
 								<h2 class="text-sm font-semibold mb-1">Feedback</h2>
@@ -395,8 +395,8 @@
 </div>
 
 	</div>
-	<!--End container--> 
-	
+	<!--End container-->
+
 
 	{% endblock content %}
 	{% block extra_js %}
@@ -439,7 +439,7 @@
 		// Mark as read and toggle visibility of notifications list
 		$('#read_notifications_btn').click(function() {
 			const notificationsList = $('#notifications-list');
-			
+
 			if (notificationsList.is(':visible')) {
 				notificationsList.hide();
 			} else {

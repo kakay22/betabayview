@@ -1,0 +1,322 @@
+*::-webkit-scrollbar {
+	width: 8px; /* Width of the scrollbar */
+	height: 8px; /* Height of the horizontal scrollbar */
+}
+
+*::-webkit-scrollbar-thumb {
+	background-color: #868686; /* Scrollbar thumb color */
+	border-radius: 10px; /* Fully rounded corners for thumb */
+}
+
+*::-webkit-scrollbar-thumb:hover {
+	background-color: #4a4a4a; /* Darker color on hover */
+}
+
+*::-webkit-scrollbar-track {
+	background-color: transparent; /* Transparent track */
+	border-radius: 10px; /* Fully rounded corners for track */
+}
+
+/* For Firefox */
+* {
+	scrollbar-width: thin; /* Use thin scrollbar */
+	scrollbar-color: #868686 transparent; /* Thumb and track colors */
+}
+
+*::-moz-scrollbar-thumb {
+	border-radius: 10px; /* Rounded corners for Firefox */
+}
+
+*::-moz-scrollbar-thumb:hover {
+	background-color: #4a4a4a; /* Darker color on hover */
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+	#sideBar, #container, #header {
+		background-color: #1e1e1e;
+		color: white;
+	}
+}
+/* Floating chat bubble */
+#chatBubble {
+	z-index: 999999;
+	position: fixed;
+	bottom: 20px;
+	right: 20px;
+	background-color: #172038;
+	color: white;
+	border-radius: 50%;
+	width: 60px;
+	height: 60px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#chatBubble:hover {
+	transform: scale(1.1);
+	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+#chatContainer {
+	z-index: 999999999;
+	display: none;
+	position: fixed;
+	bottom: 90px;
+	right: 20px;
+	width: 450px;
+	height: 85vh;
+	max-width: 100%;
+	background-color: white;
+	border-radius: 15px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+#chatHeader {
+	background-color: #272e41;
+	color: white;
+	padding: 10px;
+	font-weight: bold;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-top-left-radius: 15px;
+	border-top-right-radius: 15px;
+}
+
+#chatbox {
+	flex-grow: 1;
+	padding: 10px;
+	overflow-y: auto;
+	border-bottom: 1px solid #f0f0f0;
+	display: flex;
+	flex-direction: column; /* Keeping the column direction */
+}
+
+.user-message {
+	background-color: #373d55;
+	color: white;
+	padding: 10px 15px;
+	border-radius: 20px;
+	margin-bottom: 10px;
+	display: inline-block;
+	max-width: 75%;
+	align-self: flex-end; /* Align to the right */
+	word-wrap: break-word;
+}
+
+.bot-message {
+	background-color: #e5e7eb;
+	color: #333;
+	padding: 10px 15px;
+	border-radius: 20px;
+	margin-bottom: 10px;
+	display: inline-block;
+	max-width: 90%;
+	align-self: flex-start; /* Align to the left */
+	word-wrap: break-word;
+	white-space: pre-wrap;
+}
+#inputContainer {
+	display: flex;
+	padding: 10px;
+	border-top: 1px solid #f0f0f0;
+}
+
+#userMessage {
+	width: 85%;
+	padding: 10px;
+	border-radius: 20px;
+	outline: none;
+	transition: border 0.3s;
+}
+
+/* #sendButton {
+	margin-top: 10px;
+	background-color: #1D4ED8;
+	color: white;
+	border-radius: 20px;
+	cursor: pointer;
+	text-align: center;
+} */
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+	#chatContainer {
+		width: 100%;
+		height: 100%;
+		bottom: 0;
+		right: 0;
+		border-radius: 0;
+	}
+	#chatHeader{
+		border-radius: 0;
+	}
+
+	#chatbox {
+		height: calc(100% - 40px);
+	}
+}
+/* Styling for the suggestion buttons
+#suggestionsContainer {
+	display: absolute;
+	bottom: 0;
+	gap: 10px;
+	overflow-x: auto; 
+	overflow-y: hidden;
+	white-space: nowrap;
+	height: 40px;
+	top: 0;
+} */
+
+.suggestion-btn {
+	background-color: #f0f0f0;
+	border: none;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 15px;
+	border-radius: 20px;
+	cursor: pointer;
+	font-size: 14px;
+	white-space: nowrap; /* Keeps the text from wrapping */
+	margin-top: 0;
+	margin-bottom: 1rem;
+}
+
+.suggestion-btn:hover {
+	background-color: #e0e0e0;
+}
+
+/* Typing Indicator Container */
+.typing-indicator {
+padding: 2rem 5rem;
+display: inline-block;
+position: relative;
+width: 40px;
+height: 20px;
+}
+
+.dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	background-color: #666;
+	border-radius: 50%;
+	position: absolute;
+	animation: typingDot 1.2s infinite ease-in-out;
+}
+
+/* Position dots */
+.dot:nth-child(1) {
+left: 24px;
+animation-delay: 0s;
+}
+.dot:nth-child(2) {
+left: 36px;
+animation-delay: 0.2s;
+}
+.dot:nth-child(3) {
+left: 48px;
+animation-delay: 0.4s;
+}
+
+/* Keyframes for the bounce animation */
+@keyframes typingDot {
+	0%, 80%, 100% {
+		transform: scale(0);
+	}
+	40% {
+		transform: scale(1);
+	}
+}
+#scrollDownBtn {
+	position: absolute;
+	bottom: 30% !important;
+	right: 45%;
+	background-color: #333;
+	color: white;
+	border-radius: 50%;
+	padding: 8px 14px;
+	cursor: pointer;
+	z-index: 1000;
+	box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+#scrollDownBtn i {
+	font-size: 20px;
+}
+
+#scrollDownBtn.hidden {
+	display: none;
+}
+/* Message container hover effect */
+.message-container:hover .feedback-container {
+	display: flex; /* Show feedback buttons on hover */
+}
+
+/* Feedback container */
+.feedback-container {
+	gap: 7px;
+	position: absolute;
+	right: 0% !important;
+	bottom: -15px; /* Slightly overflowing at the bottom */
+	display: none; /* Hidden by default */
+	background-color: white; /* Optional: You can add background to make them stand out */
+	padding: 2px 5px;
+	border-radius: 20px;
+	box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.feedback-container button {
+	padding: 5px;
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+
+.feedback-container button:hover i {
+	color: #2563eb; /* Blue color on hover */
+}
+
+/* Optional: Feedback button icons */
+.feedback-btn i {
+	font-size: 1rem;
+	transition: color 0.2s ease-in-out;
+}
+
+.feedback-btn i {
+	transition: color 0.3s ease;
+}
+
+.feedback-btn .bi-hand-thumbs-up-fill {
+	color: #1d4ed8; /* Blue color for like */
+}
+
+.feedback-btn .bi-hand-thumbs-down-fill {
+	color: #e11d48; /* Red color for dislike */
+}
+
+/* Disable button after click */
+.feedback-btn:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+.feedback-container {
+    display: none; /* Hide the feedback buttons by default */
+    position: absolute;
+    right: 0;
+    bottom: -20px;
+	z-index: 999999999;
+}
+
+.bot-response-container:hover .feedback-container {
+    display: block !important; /* Ensure it's visible */
+}
