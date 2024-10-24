@@ -74,19 +74,19 @@
 					<button id="askBtn"
 						class="btn btn-primary text-sm w-full shadow-md shadow-gray-400 md:w-[180px] bg-[#178a2b8] border-0 hover:opacity-[.9] transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 items-center gap-1"
 						data-bs-toggle="modal" data-bs-target="#feedbackModal">
-						<i class="bi bi-chat-left-text-fill w-[30%]"></i> 
+						<i class="bi bi-chat-left-text-fill w-[30%]"></i>
 						<span class="w-[60%] text-left overflow-hidden ellipsis text-sm">Submit Feedback</span>
 					</button>
 			</div>
 		</div>
 
 		</div>
-		
-		  
+
+
 		<hr class="mb-2">
 
 		<div class="grid grid-cols-3 gap-4 max-[770px]:grid-cols-1">
-			
+
 			<a href="{% url 'property_detail' %}" class="w-full py-2 px-5 bg-white shadow-lg rounded-lg transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 relative group border-l-4 border-[#193948]">
 				<div class="flex justify-between items-center mb-2">
 					<h1 class="text-lg font-bold text-[#193948] group-hover:text-teal-600 transition-colors duration-300">Property Overview</h1>
@@ -97,7 +97,7 @@
 				</div>
 				<hr class="border-gray-300 mb-2">
 				<p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">See more <i class="bi bi-arrow-right"></i></p>
-			</a>			
+			</a>
 
 			<!--Check if owner owns a property-->
 			{% if my_property is not None %}
@@ -112,7 +112,7 @@
 					</div>
 					<hr class="border-gray-300 mb-2">
 					<p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">See more <i class="bi bi-arrow-right"></i></p>
-				</a>			
+				</a>
 			{% else %}
 				<a href="{% url 'property_detail' %}" class="w-full py-2 px-5 bg-white shadow-lg rounded-lg transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 relative group border-l-4 border-[#193948]">
 					<div class="flex justify-between items-center mb-2">
@@ -125,7 +125,7 @@
 					</div>
 					<hr class="border-gray-300 mb-2">
 					<p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">See more <i class="bi bi-arrow-right"></i></p>
-				</a>	
+				</a>
 			{% endif %}
 			<a href="{% url 'household_members' %}" class="w-full py-2 px-5 bg-white shadow-lg rounded-lg transform transition-all hover:scale-[1.03] hover:shadow-xl duration-300 relative group border-l-4 border-[#193948]">
 				<div class="flex justify-between items-center mb-2">
@@ -139,7 +139,7 @@
 				<hr class="border-gray-300 mb-2">
 				<p class="text-sm text-gray-600 group-hover:text-teal-500 transition-colors duration-300">See more <i class="bi bi-arrow-right"></i></p>
 			</a>
-			
+
 
 		<!-- Modal for Request Maintenance -->
 		<div class="modal fade m-0" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
@@ -150,10 +150,10 @@
 						<h5 class="modal-title font-bold" id="staticBackdropLabel">Send a Maintenance Request</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
-					
+
 					<!-- Modal Body -->
 					<div class="modal-body p-4">
-						
+
 						<!-- Request Image -->
 						<div class="w-full flex justify-center">
 							<img src="{% static 'users/req_maintenance.jpg' %}" class="rounded-lg w-[80%] max-h-[200px] object-cover" alt="request maintenance image">
@@ -251,58 +251,71 @@
 		</div>
 
 
-		<!--Modal for Submitting Feedback or Suggestions-->
-		<div class="modal fade" id="feedbackModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title flex items-center" id="feedbackModalLabel">
-							<i class="bi bi-chat-left-dots me-2" style="font-size: 1.5rem;"></i>
-							Submit Your Feedback or Suggestion
-						</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<!-- Clarification Text -->
-						<p class="text-muted mb-4">
-							We value your feedback! Use this form to provide your thoughts, suggestions, or to report any issues you've encountered while using the Beta Bayview Homes Housing Management System. Your input helps us improve the system for all homeowners.
-						</p>
+		<!-- Modal for Submitting Feedback or Suggestions -->
+        <div class="modal fade" id="feedbackModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+              <!-- Modal Header -->
+              <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title d-flex align-items-center" id="feedbackModalLabel">
+                  <i class="bi bi-chat-left-dots me-2" style="font-size: 1.5rem;"></i>
+                  Submit Your Feedback or Suggestion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
 
-						<form action="{% url 'submit_feedback' %}" method="post" id="feedbackForm">
-							{% csrf_token %}
-							<!-- Feedback Type -->
-							<div class="mb-3">
-								<label for="feedbackType" class="form-label">Type of Feedback</label>
-								<select class="form-select" name="feedbackType" id="feedbackType" required>
-									<option value="" disabled selected>Select a feedback type</option>
-									<option value="Feature Request">Feature Request</option>
-									<option value="Bug Report">Bug Report</option>
-									<option value="General Feedback">General Feedback</option>
-								</select>
-							</div>
-							<!-- Subject -->
-							<div class="mb-3">
-								<label for="feedbackSubject" class="form-label">Subject</label>
-								<input type="text" class="form-control" name="feedbackSubject" id="feedbackSubject" placeholder="Brief subject of your feedback" required>
-							</div>
-							<!-- Description -->
-							<div class="mb-3">
-								<label for="feedbackDescription" class="form-label">Description</label>
-								<textarea class="form-control" name="feedbackDescription" id="feedbackDescription" rows="4" placeholder="Describe your feedback or suggestion in detail" required></textarea>
-							</div>
-							<!-- Optional Contact Info -->
-							<div class="mb-3">
-								<label for="feedbackContact" class="form-label">Your Contact Info (optional)</label>
-								<input type="email" class="form-control" name="feedbackContact" id="feedbackContact" placeholder="Email or phone number">
-							</div>
-							<!-- Submit Button -->
-							<button type="submit" class="btn btn-primary w-100">Submit Feedback</button>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
-		<!--End Modal-->
+              <!-- Modal Body -->
+              <div class="modal-body p-4">
+                <!-- Intro Text -->
+                <p class="text-muted mb-4 text-center">
+                  We value your feedback! Please share your thoughts, suggestions, or any issues you've encountered. Your input helps us improve the system.
+                </p>
+
+                <!-- Feedback Form -->
+                <form action="{% url 'submit_feedback' %}" method="post" id="feedbackForm">
+                  {% csrf_token %}
+
+                  <!-- Feedback Type -->
+                  <div class="mb-4">
+                    <label for="feedbackType" class="form-label fw-bold">Type of Feedback</label>
+                    <select class="form-select" name="feedbackType" id="feedbackType" required>
+                      <option value="" disabled selected>Select a feedback type</option>
+                      <option value="Feature Request">Feature Request</option>
+                      <option value="Bug Report">Bug Report</option>
+                      <option value="General Feedback">General Feedback</option>
+                      <option value="General Feedback">Others</option>
+                    </select>
+                  </div>
+
+                  <!-- Subject -->
+                  <div class="mb-4">
+                    <label for="feedbackSubject" class="form-label fw-bold">Subject</label>
+                    <input type="text" class="form-control" name="feedbackSubject" id="feedbackSubject" placeholder="Brief subject of your feedback" required>
+                  </div>
+
+                  <!-- Description -->
+                  <div class="mb-4">
+                    <label for="feedbackDescription" class="form-label fw-bold">Description</label>
+                    <textarea class="form-control" name="feedbackDescription" id="feedbackDescription" rows="4" placeholder="Describe your feedback or suggestion in detail" required></textarea>
+                  </div>
+
+                  <!-- Optional Contact Info -->
+                  <div class="mb-4">
+                    <label for="feedbackContact" class="form-label fw-bold">Your Contact Info (Optional)</label>
+                    <input type="email" class="form-control" name="feedbackContact" id="feedbackContact" placeholder="Email or phone number">
+                  </div>
+
+                  <!-- Submit Button -->
+                  <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">Submit Feedback</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Modal -->
+
 
 		{% for message in messages %}
             <p id="pop-up-mess"
@@ -386,10 +399,10 @@
 							{% endfor %}
 							{% endif %}
 						</div>
-				
+
 						<!-- Add Pagination -->
 						<div class="swiper-pagination"></div>
-				
+
 						<!-- Add Navigation -->
 						<div class="swiper-button-next p-2"></div>
 						<div class="swiper-button-prev"></div>
@@ -400,7 +413,7 @@
 		</div>
 
 	</div>
-	<!--End container--> 
+	<!--End container-->
 
 	{% endblock content %}
 	{% block extra_js %}

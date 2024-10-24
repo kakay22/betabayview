@@ -50,7 +50,7 @@
 			<i class="bi bi-trash cursor-pointer hover:bg-gray-200 text-[1.5rem] px-2 bg-gray-100 shadow-md"
 			data-bs-toggle="modal" data-bs-target="#deleteAllRepairman"></i>
 		</div>
-		
+
 		<!-- Modal for deleting all repairmen -->
 		<div class="modal fade" id="deleteAllRepairman" tabindex="-1" aria-labelledby="deleteAllRepairmanLabel" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-centered">
@@ -75,7 +75,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<!-- Modal for adding new repairman -->
 		<div class="modal fade" id="addRepairmanModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
@@ -98,7 +98,7 @@
 									{% endif %}
 								</div>
 							</div>
-							
+
 							<div class="mb-3">
 								<label for="id_role" class="form-label">{{ form.role.label }}</label>
 								{{ form.role }}
@@ -134,7 +134,7 @@
 									{% endif %}
 								</div>
 							</div>
-							
+
 							<div class="mb-3">
 								<label for="id_location" class="form-label">{{ form.location.label }}</label>
 								{{ form.location }}
@@ -146,7 +146,7 @@
 									{% endif %}
 								</div>
 							</div>
-							
+
 							<div class="mb-3">
 								<label for="id_image" class="form-label">{{ form.image.label }}</label>
 								{{ form.image }}
@@ -158,7 +158,7 @@
 									{% endif %}
 								</div>
 							</div>
-							
+
 							<button type="submit" class="btn btn-primary">Save changes</button>
 						</form>
 					</div>
@@ -217,7 +217,7 @@
 							</div>
 						</div>
 					</div>
-			  
+
 					<div class="space-y-2">
 						<div class="flex items-center text-gray-700">
 							<i class="bi bi-telephone-fill mr-2 text-blue-600"></i>
@@ -257,7 +257,7 @@
 											</option>
 											{% for req in requests %}
 												{% if req.status == 'Pending' and person.status == 'available' %}
-												{% elif person.role|lower == 'electrician' and req.type_of_issue|lower == 'electrical' %}
+												{% if person.role|lower == 'electrician' and req.type_of_issue|lower == 'electrical' %}
 												<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
 													{% elif person.role|lower == 'carpenter' and req.type_of_issue|lower == 'carpentry' %}
 														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
@@ -269,14 +269,14 @@
 														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
 													{% elif person.role|lower == 'hvac technician' and req.type_of_issue|lower == 'hvac' %}
 														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
-													{% endif %}											
+													{% endif %}
 												{% endif %}
 											{% endfor %}
 										</select>
 									</div>
 								</div>
 							</div>
-							
+
 							<div class="modal-footer">
 								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 								<form id="assignForm" method="post" action="{% url 'sec_assign_request' %}">
@@ -305,7 +305,7 @@
 		document.querySelectorAll('.form-select').forEach(function(selectElement) {
 			const personId = selectElement.id.split('-')[1];  // Extract person.pk from the ID
 			const assignButton = document.getElementById(`assignButton-${personId}`);
-			
+
 			selectElement.addEventListener('change', function() {
 				if (selectElement.value) {
 					// Enable the assign button when a request is selected
@@ -352,12 +352,12 @@
 				data: $(this).serialize(),
 				success: function(response) {
 					$('#exampleModal').modal('hide');
-					
+
 					$('#exampleModal').on('hidden.bs.modal', function(){
 						$('.modal-backdrop').remove();
 						$('#staticBackdrop').modal('show');
 					})
-					
+
 				},
 				error: function(xhr, status, error){
 					alert('there was an error submitting the form')

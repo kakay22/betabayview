@@ -115,7 +115,7 @@ def homeowners(request):
 
         if first_name == '':
             form.add_error('first_name', 'This field is required.')
-        if last_name == '':   
+        if last_name == '':
             form.add_error('last_name', 'This field is required.')
         if email == '':
             form.add_error('email', 'This field is required.')
@@ -126,7 +126,7 @@ def homeowners(request):
                     user=user,
                     pending=False,
                 )
-                
+
                 homeowner.save()
                 messages.success(request, 'Homeowner created successfully')
                 return redirect('sec_homeowners')
@@ -174,12 +174,12 @@ def admin_owner_profile(request, pk):
 def delete_all_homeowners(request):
     if request.method == 'POST':
         homeowners = HomeOwner.objects.all()  # Get all homeowner
-        
+
         # Loop through each homeowner and delete the associated user
         for owner in homeowners:
             if owner.user:  # Check if the homeowner is linked to a user
                 owner.user.delete()  # Delete the associated user
-        
+
         # Now delete all secretaries
         homeowners.delete()
 
@@ -257,7 +257,7 @@ def secretaries(request):
                     user=request.user,
                 )
                 log.save()
-                
+
                 return redirect('secretaries')
     else:
         form = SecretaryForm()
@@ -268,7 +268,7 @@ def secretaries(request):
 def residents(request):
     message = request.GET.get('message', None)
     search_query = request.GET.get('search', '')
-    household_representative_query = request.GET.get('household_representative', '')  
+    household_representative_query = request.GET.get('household_representative', '')
     sort_by = request.GET.get('sort', 'first_name')  # Default sort by first name
 
     residents = Resident.objects.all()
@@ -276,7 +276,7 @@ def residents(request):
     # Filtering by search query
     if search_query:
         residents = residents.filter(
-            Q(first_name__icontains=search_query) | 
+            Q(first_name__icontains=search_query) |
             Q(last_name__icontains=search_query)
         )
 
@@ -490,12 +490,12 @@ def new_secretary(request):
 def delete_all_secretaries(request):
     if request.method == 'POST':
         secretaries = Secretary.objects.all()  # Get all secretaries
-        
+
         # Loop through each secretary and delete the associated user
         for secretary in secretaries:
             if secretary.user:  # Check if the secretary is linked to a user
                 secretary.user.delete()  # Delete the associated user
-        
+
         # Now delete all secretaries
         secretaries.delete()
         messages.info(request, 'All secretaries deleted successfully!')
@@ -520,7 +520,7 @@ def new_homeowner(request):
                 user=request.user
             )
             log.save()
-            
+
             # Check if the request is AJAX
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': 'Homeowner created successfully!'})
@@ -535,14 +535,14 @@ def new_homeowner(request):
                 return render(request, 'add_homeowner.html', {'form': form, 'errors': errors})
     else:
         form = UserForm()
-    
+
     return render(request, 'add_homeowner.html', {'form': form})
 
 def delete_owner(request, pk):
     if request.method == 'POST':
         # Retrieve the HomeOwner object
         homeowner = get_object_or_404(HomeOwner, pk=pk)
-        
+
         # Retrieve the associated User object
         user = homeowner.user
 
@@ -553,14 +553,14 @@ def delete_owner(request, pk):
             user=request.user,
         )
         log.save()
-        
+
         # Delete the HomeOwner object
         homeowner.delete()
-        
+
         # Delete the associated User object
         if user:
             user.delete()
-        
+
         # Redirect with a success message
         messages.info(request, 'Deleted successfully')
         return redirect('homeowners')
@@ -615,7 +615,7 @@ def edit_owner(request, pk):
 def delete_secretary(request, pk):
     # Retrieve the secretary using the primary key
     secretary = get_object_or_404(Secretary, pk=pk)
-    
+
     # Get the associated user before deleting the secretary
     user = secretary.user  # Assuming Secretary has a OneToOneField or ForeignKey to User
 
@@ -626,14 +626,14 @@ def delete_secretary(request, pk):
         user=request.user,
     )
     log.save()
-    
+
     # Delete the secretary first
     secretary.delete()
-    
+
     # Now delete the associated user
     if user:
         user.delete()
-    
+
     # Redirect to the secretaries page with a success message
     messages.info(request, 'Deleted successfully')
     return redirect('secretaries')
@@ -688,7 +688,7 @@ def edit_secretary(request, pk):
 #             user=request.user,
 #         )
 #         log.save()
-        
+
 #         return redirect('maintenance_request_list')
 
 def change_to_done(request, pk):
@@ -742,7 +742,7 @@ def admin_maintenance_personnel_list(request):
 
     if request.method == 'POST':
         return admin_add_repairman(request)  # Handle form submission
-    
+
 
     form = RepairmanForm()
     return render(request, 'admin_maintenance_personnel.html', {'personnel':personnel, 'requests':requests, 'form':form})
@@ -770,7 +770,7 @@ def admin_add_repairman(request):
             # Extract the name and role from the form
             repairman_name = form.cleaned_data['name']  # Adjust field name as necessary
             repairman_role = form.cleaned_data['role']  # Adjust field name as necessary
-            
+
             # Check for existing names
             existing_repairmen = MaintenancePersonnel.objects.filter(name=repairman_name)
             if existing_repairmen.exists():
@@ -807,7 +807,7 @@ def admin_add_repairman(request):
                 'success': True,
                 'message': 'Repairman successfully added!'  # Success message
             })
-        else:   
+        else:
             print(form.errors)  # Debugging - Log form errors
             return JsonResponse({
                 'success': False,
@@ -823,11 +823,11 @@ def assign_request(request):
         request_id = request.POST.get('request_id')
         person_id = request.POST.get('person_id')
         personel_name = request.POST.get('personel_name')
-        
+
         # Get the request and personnel objects
         maintenance_request = get_object_or_404(Maintenance_request, pk=request_id)
         repair_personnel = get_object_or_404(MaintenancePersonnel, pk=person_id)
-        
+
         # Update request and personnel statuses
         maintenance_request.status = 'In progress'
         maintenance_request.repairman = personel_name
@@ -848,15 +848,15 @@ def assign_request(request):
             user=request.user,
         )
         log.save()
-        
+
         repair_personnel.status = 'Ongoing maintenance'
         repair_personnel.save()
-        
+
         messages.success(request, 'Repairman assigned')
-        return redirect('admin_maintenance_personnel_list') 
+        return redirect('admin_maintenance_personnel_list')
     else:
         messages.error(request, 'Invalid request.')
-        return redirect('admin_maintenance_personnel_list') 
+        return redirect('admin_maintenance_personnel_list')
 
 @login_required
 def events(request):
@@ -894,13 +894,13 @@ def admin_announcements(request):
         if form.is_valid():
             announcement = form.save(commit=False)  # Create the Announcement instance but don’t save it yet
             announcement.created_by = request.user  # Set the user who created the announcement
-            
+
             # Check if the user has a profile picture; otherwise, set the default
             if hasattr(request.user, 'profile_picture'):
                 announcement.profile_picture = request.user.userprofile.profile_picture
             else:
                 announcement.profile_picture = 'admin.png'  # Fallback default image
-            
+
             announcement.save()  # Save the announcement to the database
             messages.success(request, 'Announcement created successfully.')  # Success message
             return redirect('admin_announcements')  # Redirect to the announcements page
@@ -1024,7 +1024,7 @@ def delete_event(request, pk):
 #     if request.method == 'POST':
 #         # Get the event object using the primary key (pk)
 #         event = Event.objects.get(pk=pk)
-#         owner_commentor = request.POST.get('owner_commentor') 
+#         owner_commentor = request.POST.get('owner_commentor')
 #         comment = request.POST.get('comment')
 
 #         if owner_commentor and comment:
@@ -1062,16 +1062,16 @@ def properties(request):
         if form.is_valid():
             new_property = form.save()
             messages.success(request, 'Property added successfully!')
-            
+
             Log.objects.create(
                 log_type='info',
-                description=f"Admin '{request.user}' added a new property: '{new_property.property_name}'.",  
+                description=f"Admin '{request.user}' added a new property: '{new_property.property_name}'.",
                 user=request.user
             )
-            
+
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': 'Property added successfully!'})
-            
+
             return redirect('/properties/?message=Property added successfully!')
         else:
             errors = form.errors.as_json()
@@ -1137,7 +1137,7 @@ def upload_property_images(request, pk):
             })
 
         return JsonResponse({'success': True, 'images': uploaded_images})
-    
+
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
 
 
@@ -1158,7 +1158,7 @@ def delete_all_properties(request):
         # Log the deletion of all properties //check//
         Log.objects.create(
             log_type='info',
-            description=f"Admin '{request.user}' deleted all properties'.",  
+            description=f"Admin '{request.user}' deleted all properties'.",
             user=request.user
         )
 
@@ -1177,7 +1177,7 @@ def edit_property(request, pk):
         bedroom = request.POST.get('bedroom')
         bathroom = request.POST.get('bathroom')
         property_description = request.POST.get('property_description')
-        
+
         if block_number and house_number:
             prop = Property.objects.get(pk=pk)
             prop.property_name = property_name
@@ -1191,7 +1191,7 @@ def edit_property(request, pk):
             # Log the update property //check//
             Log.objects.create(
                 log_type='info',
-                description=f"Admin '{request.user}' updated the property '{prop.property_name}'.",  
+                description=f"Admin '{request.user}' updated the property '{prop.property_name}'.",
                 user=request.user
             )
 
@@ -1378,7 +1378,7 @@ def chatbot_dashboard(request):
         # Handle form submission to add/update chatbot responses
         question = request.POST['question']
         response = request.POST['response']
-        
+
         # Example of a POST request to Chatbase API to update the bot's content
         url = "https://api.chatbase.com/v1/<endpoint>"
         headers = {'Authorization': 'Bearer <API_KEY>'}
@@ -1386,9 +1386,9 @@ def chatbot_dashboard(request):
             "question": question,
             "response": response
         }
-        
+
         response = requests.post(url, headers=headers, json=data)
-        
+
         if response.status_code == 200:
             # Success message
             return redirect('chatbot_dashboard')
@@ -1445,7 +1445,7 @@ def process_message(request):
                 # Generate an empathetic response if emotional keywords are detected
                 bot_reply = provide_emotional_support(user_message, context, sia)  # Should be a string
                 context['last_topic'] = emotion  # Keep track of the emotion context
-                
+
                 # Provide advice if the conversation is about work or relevant topics
                 advice = provide_advice(emotion, user_message)
                 if advice:
@@ -1502,7 +1502,7 @@ def get_chat_history(request):
         limit = int(request.GET.get('limit', 7))  # Number of messages to fetch
         offset = int(request.GET.get('offset', 0))  # Start point for fetching
         chat_history = ChatConversation.objects.filter(user=request.user).order_by('-timestamp')[offset:offset + limit]
-        
+
         formatted_history = [
             {
                 'id': chat.id,
@@ -1552,7 +1552,7 @@ def handle_name_input(user_message, session):
             name = match.group(1)  # Extract the name
             session['user_name'] = name  # Store the name in the session context
             return f"Got it! I'll remember that your name is {name}."
-    
+
     return None  # If no name is found, return None
 
 
@@ -1572,12 +1572,12 @@ def get_available_properties():
     properties = Property.objects.filter(availability='available')
     if not properties:
         return "There are currently no available properties."
-    
+
     property_list = [
         f"Name: {prop.property_name}, Type: {prop.property_description}"
         for prop in properties
     ]
-    
+
     return "Here are the available properties:\n" + "\n".join(property_list)
 
 def get_latest_announcement():
@@ -1594,7 +1594,7 @@ def get_my_property(user_id):
         user = User.objects.get(pk=user_id)
         owner = HomeOwner.objects.get(user=user)
         my_property = Property.objects.get(household_head=owner)
-        
+
         # Check if the owner has an associated property
         if my_property:
             # Construct a dictionary or string with property details
@@ -1607,13 +1607,13 @@ def get_my_property(user_id):
                 "property_house_no": my_property.property_house_no,
                 "description": my_property.property_description,
                 "lot_size": my_property.lot_size,
-                "date_registered": my_property.date_registered.strftime("%b %d %Y"), 
+                "date_registered": my_property.date_registered.strftime("%b %d %Y"),
                 # Add other fields as needed
             }
             return property_details
         else:
             return None  # No associated property
-        
+
     except ObjectDoesNotExist:
         return None  # Owner with this user_id does not exist
     except Exception as e:
@@ -1623,24 +1623,38 @@ def get_my_property(user_id):
 
 def get_support_team_contact_info():
     try:
-        # Assuming there's only one secretary and one admin
-        secretary = Secretary.objects.first()  # Get the first secretary
-        admin = User.objects.get(is_superuser=True)  # Get the admin user
+        # Get the first secretary (if available)
+        secretary = Secretary.objects.first()
 
+        # Get all superusers (admins)
+        admins = User.objects.filter(is_superuser=True)
+
+        if admins.exists():
+            # Create a list of admin contact info
+            admin_contacts = [f"{admin.first_name} {admin.last_name}: {admin.email}" for admin in admins]
+            admin_contact_info = "Admin contacts: " + ", ".join(admin_contacts)
+        else:
+            admin_contact_info = "No admin found."
+
+        # Prepare the contact info
         contact_info = {
-            "phone": secretary.contact_number if secretary else "No secretary available",  # Replace with actual phone number if needed
+            "phone": secretary.contact_number if secretary else "No secretary available",
             "email_secretary": secretary.email_address if secretary else "No secretary available",
-            "email_admin": admin.email if admin else "No admin available",
+            "admin_contacts": admin_contact_info,
             "hours": "Monday to Friday, 9 AM - 5 PM",
         }
+
         return contact_info
+
     except ObjectDoesNotExist:
+        # Default contact info in case something goes wrong
         return {
-            "phone": "+1234567890",  # Default phone number
+            "phone": "+1234567890",
             "email_secretary": "No secretary available",
-            "email_admin": "No admin available",
+            "admin_contacts": "No admin available",
             "hours": "Monday to Friday, 9 AM - 5 PM",
         }
+
 
 
 from django.core import serializers
@@ -1737,14 +1751,15 @@ def check_maintenance_count(user_id):
     • {verified_count} Verified.
     • {notverified_count} Not Verified.
 
-    You can view your full list of maintenance requests by visiting the request page: 
+    You can view your full list of maintenance requests by visiting the request page:
     <a class='underline text-sm text-teal-500' href="{maintenance_url}">View Maintenance Requests</a>
 """
     return response
-    
+
 from ADMIN.request_a_maintenance import handle_maintenance_request
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from ADMIN.emotional_support import provide_emotional_support, check_for_keywords
+from fuzzywuzzy import process
 
 # Initialize the sentiment analyzer
 sia = SentimentIntensityAnalyzer()
@@ -1762,7 +1777,7 @@ def get_bot_response(user_message, user_id, session):
             emotion_response = provide_emotional_support(user_message, context, sia)
             if emotion_response:
                 return emotion_response
-        
+
         # Trigger responses based on specific issues like work, health, relationships, etc.
         if keyword_trigger == 'work':
             session['last_topic'] = 'work'
@@ -1805,7 +1820,7 @@ def get_bot_response(user_message, user_id, session):
             return f"Your name is {name}."
         else:
             return "I don't know your name yet. Please tell me!"
-    
+
     # Ensure the session context has been initialized
     if 'context' not in session:
         session['context'] = {
@@ -1823,7 +1838,7 @@ def get_bot_response(user_message, user_id, session):
 
     # Normalize the user message: lower case and remove specific punctuation
     normalized_message = user_message.lower().replace('?', '').strip()
-    
+
     # Add the user's message to the conversation history
     context['conversation_history'].append({'user_message': user_message})  # Append user's message to history
 
@@ -1836,7 +1851,7 @@ def get_bot_response(user_message, user_id, session):
     # Handle specific queries
     if normalized_message in ['tell me the time', 'what time is it?', 'time', 'time now', 'current time', 'what is the time', 'time?']:
         return get_current_time_response()
-    
+
     if normalized_message in ['what is the date today', 'date', 'date today', 'date now', 'whats the date today']:
         return get_current_date_response()
 
@@ -1877,15 +1892,28 @@ def get_bot_response(user_message, user_id, session):
 
     elif normalized_message in ['contact info', 'support team contact info', 'contact support', 'team contact information', 'contacts', 'contact', 'contact for help']:
         contact_info = get_support_team_contact_info()
+
+        # Make sure admin contacts are in a list format
+        admin_contacts_list = contact_info['admin_contacts'] if isinstance(contact_info['admin_contacts'], list) else [contact_info['admin_contacts']]
+
         response_message = (
-            f"Support Team Contact Information:\n"
-            f"Phone: {contact_info['phone']}\n"
-            f"Secretary Email: {contact_info['email_secretary']}\n"
-            f"Admin Email: {contact_info['email_admin']}\n"
-            f"Hours: {contact_info['hours']}\n"
+            "Support Team Contact Information: \n\n"
+            "Here are the details of the support team:\n"
+            "- Phone: {phone}\n"
+            "- Secretary Email: {email_secretary}\n\n"
+            "{admin_contacts}\n"
+            "- Office Hours: {hours}\n\n"
+            "Feel free to reach out during office hours for assistance."
+        ).format(
+            phone=contact_info['phone'],
+            email_secretary=contact_info['email_secretary'],
+            admin_contacts="\n  - ".join(admin_contacts_list),  # Ensure we join the list of contacts
+            hours=contact_info['hours']
         )
+
         return response_message
-    
+
+
     announcement_prompts = ['latest announcement', 'announcements', 'show announcements', 'announcement', 'any announcements?', 'tell me announcements']
 
     if any(prompt in user_message.lower() for prompt in announcement_prompts):
@@ -1920,11 +1948,13 @@ def get_bot_response(user_message, user_id, session):
             return random.choice(responses)
 
     # Fuzzy matching for broader responses
-    closest_match, score = process.extractOne(user_message, all_queries)
-    if score >= 70:
-        responses = ChatbotResponse.objects.filter(user_query=closest_match).values_list('bot_response', flat=True)
-        if responses:
-            return random.choice(responses)
+    closest_match = process.extractOne(user_message, all_queries)
+    if closest_match:  # Check if closest_match is valid
+        match_query, score = closest_match  # Unpack only if not None
+        if score >= 70:  # Ensure score is high enough
+            responses = ChatbotResponse.objects.filter(user_query=match_query).values_list('bot_response', flat=True)
+            if responses:
+                return random.choice(responses)
 
     # If no match, use the fallback
     return random.choice(responses)  # Return a general conversational prompt
@@ -1942,7 +1972,7 @@ def submit_chatFeedback(request):
     if request.method == 'POST':
         bot_response = request.POST.get('bot_response')
         feedback_type = request.POST.get('feedback')
-        
+
         # Find the latest chat conversation with the same bot response
         chat_convo = ChatConversation.objects.filter(bot_response=bot_response).last()
 
@@ -1952,7 +1982,7 @@ def submit_chatFeedback(request):
                 conversation=chat_convo,
                 feedback_type=feedback_type
             )
-        
+
         return JsonResponse({'status': 'success', 'message': 'Feedback submitted successfully.'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request.'}, status=400)
 
