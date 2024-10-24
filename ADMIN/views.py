@@ -802,10 +802,10 @@ def admin_add_repairman(request):
                 user=request.user  # Assuming you have a user field in your Log model
             )
 
-            messages.success(request, 'Repairman successfully added')
+            messages.success(request, 'Repairman added successfully')
             return JsonResponse({
                 'success': True,
-                'message': 'Repairman successfully added!'  # Success message
+                'message': 'Repairman added successfully'  # Success message
             })
         else:
             print(form.errors)  # Debugging - Log form errors
