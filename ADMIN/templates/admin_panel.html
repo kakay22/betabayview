@@ -6,7 +6,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{{ user|title }}'s  {% block title %} {% endblock title %}</title>
-	<link rel="icon" href="{% static 'users/logo.png' %}" type="image/x-icon">
+	
 	<script src="https://cdn.tailwindcss.com"></script>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
 		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -109,8 +109,23 @@
 		<!--search | notif | profile-->
         <div class="flex justify-center gap-2 items-center">
 			<!--search-->
-			<button id="search-button" class="pointer-events-none bi bi-search text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="seach">
-			</button>
+			<div id="search-container" class="relative flex justify-end items-center">
+				<button id="search-button" class="bi bi-search text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer pointer-events-none" title="search">
+					<span id="message-indicator" class="bg-red-600 text-white hidden rounded-full px-1 text-[.7rem]"></span>
+				</button>
+				<input id="search-input" type="text" placeholder="Search..." class="absolute right-0 py-2 shadow-md shadow-gray-300 text-gray-700 bg-gray-300 rounded-full search-input-transition w-[180px] md:w-[300px]" />
+
+				<!-- Suggestions dropdown -->
+				<div id="suggestions-dropdown" style="position: absolute; top: 150%; background: white; border: 1px solid gray; display: none;"></div>
+
+				<!-- Search history with delete all history button -->
+				<div id="search-history" class="search-history-container relative mt-2 p-2 border rounded shadow-md bg-white">
+					<!-- Delete All History button -->
+					<button id="clear-history" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 transition duration-200" title="Clear all history">
+						<i class="bi bi-trash text-xl"></i> <!-- Trash icon -->
+					</button>
+				</div>
+			</div>
 			
 			<!--notifications-->
 			<p id="notifBtn" onclick="gotoNotif()" class="bi bi-bell-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="notifications">

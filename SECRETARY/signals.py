@@ -1,4 +1,3 @@
-# signals.py
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -10,7 +9,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 def create_homeowner_notification(homeowner):
-     # Use filter to get all staff users (secretaries)
+    # Use filter to get all staff users (secretaries)
     secretaries = User.objects.filter(is_staff=True).distinct()
 
     # Create the URL for the pending accounts page
@@ -23,14 +22,16 @@ def create_homeowner_notification(homeowner):
             </a>
         """
 
-    # Iterate over each secretary and create a notification
+    # Iterate over each secretary and create a notification using get_or_create
     for secretary in secretaries:
-        SecNotification.objects.create(
+        SecNotification.objects.get_or_create(
             secretary=secretary,
             icon="bi-person-badge",
             message=message,
-            created_at=timezone.now(),
-            is_read=False,
+            defaults={
+                'created_at': timezone.now(),
+                'is_read': False
+            }
         )
 
 
@@ -40,7 +41,7 @@ def create_maintenance_request_notification(maintenance_request):
 
     # Check if secretaries exist
     if secretaries.exists():
-        # Loop through each secretary and create a notification
+        # Loop through each secretary and create a notification using get_or_create
         for secretary in secretaries:
             # Create the URL for the maintenance request list page
             maintenance_request_url = reverse('sec_maintenance_request_list')
@@ -53,13 +54,15 @@ def create_maintenance_request_notification(maintenance_request):
                 </a>
             """
 
-            # Create the notification for each secretary
-            SecNotification.objects.create(
+            # Create the notification for each secretary using get_or_create
+            SecNotification.objects.get_or_create(
                 secretary=secretary,
                 icon="bi-wrench",
                 message=message,
-                created_at=timezone.now(),
-                is_read=False,
+                defaults={
+                    'created_at': timezone.now(),
+                    'is_read': False
+                }
             )
     else:
         # Handle the case where no secretaries are found, if needed
@@ -72,7 +75,7 @@ def create_verified_notification(maintenance_req):
 
     # Check if secretaries exist
     if secretaries.exists():
-        # Loop through each secretary and create a notification
+        # Loop through each secretary and create a notification using get_or_create
         for secretary in secretaries:
             # Create the URL for the maintenance request list page
             maintenance_request_url = reverse('sec_maintenance_request_list')
@@ -86,17 +89,20 @@ def create_verified_notification(maintenance_req):
                 </a>
             """
 
-            # Create the notification for each secretary
-            SecNotification.objects.create(
+            # Create the notification for each secretary using get_or_create
+            SecNotification.objects.get_or_create(
                 secretary=secretary,
                 icon="bi-check-circle",
                 message=message,
-                created_at=timezone.now(),
-                is_read=False,
+                defaults={
+                    'created_at': timezone.now(),
+                    'is_read': False
+                }
             )
     else:
         # Handle the case where no secretaries are found, if needed
         print("No secretaries found.")
+
 
 def create_not_verified_notification(maintenance_req):
     # Get all secretaries (staff users)
@@ -104,7 +110,7 @@ def create_not_verified_notification(maintenance_req):
 
     # Check if secretaries exist
     if secretaries.exists():
-        # Loop through each secretary and create a notification
+        # Loop through each secretary and create a notification using get_or_create
         for secretary in secretaries:
             # Create the URL for the maintenance request list page
             maintenance_request_url = reverse('sec_maintenance_request_list')
@@ -118,13 +124,15 @@ def create_not_verified_notification(maintenance_req):
                 </a>
             """
 
-            # Create the notification for each secretary
-            SecNotification.objects.create(
+            # Create the notification for each secretary using get_or_create
+            SecNotification.objects.get_or_create(
                 secretary=secretary,
                 icon="bi-x-circle",
                 message=message,
-                created_at=timezone.now(),
-                is_read=False,
+                defaults={
+                    'created_at': timezone.now(),
+                    'is_read': False
+                }
             )
     else:
         # Handle the case where no secretaries are found, if needed
@@ -134,21 +142,23 @@ def create_not_verified_notification(maintenance_req):
 @receiver(post_save, sender=AnnouncementComment)
 def send_comment_notification(sender, instance, created, **kwargs):
     if created:
-        # Get all users with admin privileges
+        # Get all staff users (secretaries)
         sec_users = User.objects.filter(is_staff=True)
         pending_accounts_url = reverse('sec_announcements')
 
-        # Create a notification for each admin
+        # Create a notification for each secretary using get_or_create
         for sec in sec_users:
-             message = f"""
-                    <a href="{pending_accounts_url}">
-                        {instance.user.username} commented on the announcement <span class='font-bold'>'{instance.announcement.title}'<span>
-                    </a>
-                """
-        SecNotification.objects.create(
+            message = f"""
+                <a href="{pending_accounts_url}">
+                    {instance.user.username} commented on the announcement <span class='font-bold'>'{instance.announcement.title}'<span>
+                </a>
+            """
+            SecNotification.objects.get_or_create(
                 secretary=sec,
                 icon="bi-chat-left-text",  # An icon representing a comment, adjust as needed
                 message=message,
-                created_at=timezone.now(),
-                is_read=False,
+                defaults={
+                    'created_at': timezone.now(),
+                    'is_read': False
+                }
             )

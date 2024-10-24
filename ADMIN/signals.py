@@ -1,4 +1,3 @@
-# signals.py
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -23,14 +22,16 @@ def admin_create_homeowner_notification(homeowner):
             </a>
         """
 
-    # Create notifications for all admins
+    # Create notifications for all admins using get_or_create
     for admin in admins:
-        AdminNotification.objects.create(
+        AdminNotification.objects.get_or_create(
             admin=admin,  # Assuming 'admin' field is a ForeignKey to the User model
             icon="bi-person-badge",  # Bootstrap icon class
             message=message,  # Notification message with a link
-            created_at=timezone.now(),  # Current timestamp
-            is_read=False  # Mark as unread by default
+            defaults={
+                'created_at': timezone.now(),  # Current timestamp
+                'is_read': False  # Mark as unread by default
+            }
         )
 
 def admin_create_maintenance_request_notification(maintenance_request):
@@ -57,19 +58,16 @@ def admin_create_maintenance_request_notification(maintenance_request):
                 </a>
             """
 
-            # Create the notification for each admin
-            AdminNotification.objects.create(
+            # Create the notification for each admin using get_or_create
+            AdminNotification.objects.get_or_create(
                 admin=admin,
                 icon="bi-wrench",
                 message=message,
-                created_at=timezone.now(),
-                is_read=False,
+                defaults={
+                    'created_at': timezone.now(),
+                    'is_read': False
+                }
             )
-    else:
-        # Handle the case where no admins are found, if needed
-        print("No superuser (admin) found.")
-
-
 
 def admin_create_verified_notification(maintenance_req):
     # Get all superusers (admins)
@@ -91,17 +89,16 @@ def admin_create_verified_notification(maintenance_req):
                 </a>
             """
 
-            # Create the notification for each admin
-            AdminNotification.objects.create(
+            # Create the notification for each admin using get_or_create
+            AdminNotification.objects.get_or_create(
                 admin=admin,
                 icon="bi-check-circle",
                 message=message,
-                created_at=timezone.now(),
-                is_read=False,
+                defaults={
+                    'created_at': timezone.now(),
+                    'is_read': False
+                }
             )
-    else:
-        # Handle the case where no admins are found, if needed
-        print("No superuser (admin) found.")
 
 def admin_create_not_verified_notification(maintenance_req):
     # Get all superusers (admins)
@@ -123,18 +120,16 @@ def admin_create_not_verified_notification(maintenance_req):
                 </a>
             """
 
-            # Create the notification for each admin
-            AdminNotification.objects.create(
+            # Create the notification for each admin using get_or_create
+            AdminNotification.objects.get_or_create(
                 admin=admin,
                 icon="bi-x-circle",
                 message=message,
-                created_at=timezone.now(),
-                is_read=False,
+                defaults={
+                    'created_at': timezone.now(),
+                    'is_read': False
+                }
             )
-    else:
-        # Handle the case where no admins are found, if needed
-        print("No superuser (admin) found.")
-
 
 @receiver(post_save, sender=AnnouncementComment)
 def send_comment_notification(sender, instance, created, **kwargs):
@@ -144,44 +139,47 @@ def send_comment_notification(sender, instance, created, **kwargs):
 
         pending_accounts_url = reverse('admin_announcements')
 
-        # Create a notification for each admin
-        for admin in admin_users:
+        # Create a notification for each admin using get_or_create
+        for admin in admins:
             message = f"""
                     <a href="{pending_accounts_url}">
                         {instance.user.username} commented on the announcement <span class='font-bold'>'{instance.announcement.title}'<span>
                     </a>
                 """
 
-            AdminNotification.objects.create(
+            AdminNotification.objects.get_or_create(
                 admin=admin,
                 icon="bi-chat-left-text",  # An icon representing a comment, adjust as needed
                 message=message,
-                created_at=timezone.now(),
-                is_read=False,
+                defaults={
+                    'created_at': timezone.now(),
+                    'is_read': False
+                }
             )
 
-# Signal for creating a notification when a new announcement is created
 @receiver(post_save, sender=Comment)
 def send_event_comment_notification(sender, instance, created, **kwargs):
     if created:
-        # Fetch all homeowners with the role 'owner'
+        # Fetch all superusers
         admins = User.objects.filter(is_superuser=True).distinct()
 
         events_url = reverse('admin_announcements')
 
-        # Create a notification for each admin
-        for admin in admin_users:
+        # Create a notification for each admin using get_or_create
+        for admin in admins:
             message = f"""
                     <a href="{events_url}">
                         {instance.owner_commentor.first_name} commented on the event <span class='font-bold'>'{instance.event.event_name}' \n
                         <span>'{instance.comment}'</span>
                     </a>
                 """
-            # Create a notification for each homeowner
-            AdminNotification.objects.create(
+
+            AdminNotification.objects.get_or_create(
                 admin=admin,
                 icon="bi-chat-left-text",  # An icon representing a comment, adjust as needed
                 message=message,
-                created_at=timezone.now(),
-                is_read=False,
+                defaults={
+                    'created_at': timezone.now(),
+                    'is_read': False
+                }
             )
