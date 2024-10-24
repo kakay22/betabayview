@@ -3,6 +3,7 @@ const searchHistoryKey = 'searchHistory';
 
 // Event listener for the search button
 const searchButton = document.getElementById('search-button');
+const searchContainer = document.getElementById('search-container');
 
 searchButton.addEventListener('click', function (event) {
     event.preventDefault(); // Prevent any default action
@@ -16,6 +17,11 @@ searchButton.addEventListener('click', function (event) {
 
     // Show the suggestions dropdown when the input is focused
     searchInput.focus();
+
+    // Toggle fullscreen on mobile
+    if (window.innerWidth <= 767) { // Check for mobile size
+        searchContainer.classList.toggle('fullscreen'); // Toggle fullscreen class
+    }
 
     // Load and display search history
     loadSearchHistory();
@@ -35,6 +41,11 @@ document.getElementById('search-input').addEventListener('blur', function () {
             searchInput.classList.remove('expanded');
             searchButton.classList.remove('z-[1099]');
             suggestionsDropdown.style.display = 'none';
+
+            // Collapse fullscreen on blur if in fullscreen mode
+            if (searchContainer.classList.contains('fullscreen')) {
+                searchContainer.classList.remove('fullscreen');
+            }
         }
     }, 200); // Delay to allow interaction with history items
 });
@@ -52,6 +63,11 @@ document.addEventListener('click', function (event) {
         searchInput.classList.remove('expanded');
         searchButton.classList.remove('z-[1099]');
         suggestionsDropdown.style.display = 'none'; // Hide suggestions dropdown
+
+        // Collapse fullscreen if it's active
+        if (searchContainer.classList.contains('fullscreen')) {
+            searchContainer.classList.remove('fullscreen');
+        }
     }
 });
 
@@ -201,25 +217,13 @@ function loadSearchHistory() {
         searchHistoryContainer.appendChild(noHistoryElement);
     }
 
-    // Append search history container to suggestionsDropdown
-    suggestionsDropdown.appendChild(searchHistoryContainer);
-
-    // Show dropdown for search history
-    suggestionsDropdown.style.display = 'block';
+    suggestionsDropdown.appendChild(searchHistoryContainer); // Append history container to suggestions dropdown
 }
 
 // Delete search history item
 function deleteSearchHistory(searchTerm) {
     let history = JSON.parse(localStorage.getItem(searchHistoryKey)) || [];
-    // Remove the search term from the history array
-    history = history.filter(item => item !== searchTerm);
-    localStorage.setItem(searchHistoryKey, JSON.stringify(history));
-    loadSearchHistory(); // Reload the history
+    history = history.filter(term => term !== searchTerm); // Remove the specified term
+    localStorage.setItem(searchHistoryKey, JSON.stringify(history)); // Update local storage
+    loadSearchHistory(); // Refresh the history display
 }
-
-// Function to clear all search history
-document.getElementById('clear-history').addEventListener('click', function() {
-    localStorage.removeItem(searchHistoryKey); // Remove the history from localStorage
-    loadSearchHistory(); // Reload to reflect the cleared state
-    alert('Search history cleared.');
-});

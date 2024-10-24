@@ -134,9 +134,11 @@
 #suggestions-dropdown {
     max-height: 300px;
     overflow-y: auto;
+    z-index: 99999;
 }
 
 #search-history {
+    z-index: 99999;
     max-height: 300px;
     overflow-y: auto;
     display: none; /* Initially hidden */
@@ -165,3 +167,41 @@
 #search-history.hidden {
     display: none;
 }
+
+/* Styles for fullscreen search on mobile */
+@media (max-width: 767px) {
+    #search-container.fullscreen {
+        position: fixed; /* Position the container fixed for fullscreen effect */
+        top: 0;
+        left: 0;
+        width: 100vw; /* Full width */
+        height: 100vh; /* Full height */
+        background-color: rgba(255, 255, 255, 0.95); /* Light background */
+        z-index: 9999; /* Make sure it covers everything */
+        display: flex; /* Use flexbox for layout */
+        flex-direction: column; /* Stack items vertically */
+        justify-content: flex-start; /* Align items to the top */
+        padding: 20px; /* Padding for content */
+    }
+
+    #search-input {
+        width: 100%; /* Make input full width in fullscreen mode */
+    }
+
+    /* Optionally, hide other content on fullscreen */
+    body {
+        overflow: hidden; /* Prevent scrolling */
+    }
+}
+
+/* Reset for larger screens */
+@media (min-width: 768px) {
+    #search-container {
+        position: relative; /* Default positioning for larger screens */
+    }
+
+    body {
+        overflow: auto; /* Enable scrolling again */
+    }
+}
+

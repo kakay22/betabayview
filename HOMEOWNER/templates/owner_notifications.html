@@ -23,7 +23,7 @@
 
 	<!--content container-->
 	<div id="container"
-		class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-2 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md p-4 px-0 overflow-y-auto overflow-x-hidden">
+		class="w-full md:w-[73%] md:px-3 lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-2 top-[4.3rem] md:top-[4.3rem] shadow-md rounded-md overflow-y-auto overflow-x-hidden px-0">
 
 	<!-- Loading Spinner (hidden until request is sent) -->
 	<div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
@@ -69,9 +69,6 @@
 		</div>
     </div>
 
-
-
-
 	<!-- Bootstrap Modal -->
 	<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-dialog-centered">
@@ -105,8 +102,8 @@
 	</div>
 
 
-  <main class="flex-1 overflow-y-auto mt-2 px-0">
-    <div class="px-0">
+  <main class="flex-1 overflow-y-auto mt-2 px-2">
+    <div>
       <div class="px-0">
         	{% if notifications.count == 0 %}
 				<h1 class="w-full text-center py-4">
