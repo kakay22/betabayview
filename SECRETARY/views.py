@@ -327,6 +327,58 @@ def sec_add_repairman(request):
 
     return JsonResponse({'success': False, 'message': 'Invalid request'})
 
+def sec_edit_personnel(request, pk):
+    personnel = get_object_or_404(MaintenancePersonnel, pk=pk)
+    
+    if request.method == 'POST':
+        # Store old data for logging purposes (optional)
+        old_data = {
+            'name': personnel.name,
+            'role': personnel.role,
+            'status': personnel.status,
+            'phone': personnel.phone,
+            'email': personnel.email,
+            'location': personnel.location,
+        }
+
+        # Update personnel with new data
+        personnel.name = request.POST.get('name')
+        personnel.role = request.POST.get('role')
+        personnel.status = request.POST.get('status')
+        personnel.phone = request.POST.get('phone')
+        personnel.email = request.POST.get('email')
+        personnel.location = request.POST.get('location')
+        personnel.save()
+
+        # Create a log entry
+        Log.objects.create(
+            log_type='info',  # or 'success'
+            description=f"Secretary '{request.user}' updated personnel '{personnel.name}'.",
+            user=request.user,
+            action=f"Old data: {old_data} -> New data: {request.POST}"  # Optional: log old vs new data
+        )
+
+        messages.success(request, 'Personnel details updated successfully!')
+        return redirect('sec_maintenance_personnel_list')  # Replace with your actual redirect route
+
+def sec_delete_personnel(request, pk):
+    personnel = get_object_or_404(MaintenancePersonnel, pk=pk)
+    
+    if request.method == 'POST':
+        personnel_name = personnel.name  # Store name for logging before deletion
+        personnel.delete()
+
+        # Create a log entry
+        Log.objects.create(
+            log_type='warning',  # or 'info' depending on how you classify deletions
+            description=f"Secretary '{request.user}' deleted personnel '{personnel_name}'.",
+            user=request.user,
+            action=f"Deleted personnel '{personnel_name}'"
+        )
+
+        messages.success(request, 'Personnel deleted successfully!')
+        return redirect('sec_maintenance_personnel_list')  # Replace with your actual redirect route
+
 def sec_assign_request(request):
     if request.method == 'POST':
         request_id = request.POST.get('request_id')

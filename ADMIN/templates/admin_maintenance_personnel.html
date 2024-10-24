@@ -205,9 +205,8 @@
 					<select name="" id="request" class="hidden"></select>
 				{% endif %}
 
-			    <!-- repairman card Card -->
-			    {% for person in personnel %}
-				<div id="repairman" data-bs-target="#assignRequestModal{{ person.pk }}" data-bs-toggle="modal" class="bg-white border cursor-pointer border-gray-200 shadow-md rounded-lg p-6 transition-transform hover:scale-105 hover:shadow-2xl duration-200 ">
+				{% for person in personnel %}
+				<div class="bg-white border border-gray-200 shadow-md rounded-lg p-6 transition-transform hover:scale-105 hover:shadow-2xl duration-200">
 					<div class="flex items-center mb-4">
 						<div class="h-16 w-16 rounded-full bg-gray-300 mr-4 flex items-center justify-center shadow-inner">
 							<img class="h-full w-full rounded-full" src="{{ person.image.url }}" alt="{{ person.name }}">
@@ -224,8 +223,8 @@
 							</div>
 						</div>
 					</div>
-			  
-					<div class="space-y-2">
+				
+					<div class="space-y-2 mb-4">
 						<div class="flex items-center text-gray-700">
 							<i class="bi bi-telephone-fill mr-2 text-blue-600"></i>
 							<span>{{ person.phone }}</span>
@@ -238,68 +237,167 @@
 							<i class="bi bi-geo-alt-fill mr-2 text-blue-600"></i>
 							<span>{{ person.location }}</span>
 						</div>
-						</div>
 					</div>
-
-					<!-- Modal for assigning maintenance request -->
-					<div class="modal fade" id="assignRequestModal{{ person.pk }}" tabindex="-1" aria-labelledby="assignRequestModalLabel" aria-hidden="true">
-						<div class="modal-dialog modal-dialog-centered">
-						<div class="modal-content">
-							<div class="py-3 px-3 flex justify-between">
-								<h5 class="modal-title text-lg font-bold text-gray-800" id="assignRequestModalLabel">Assign Maintenance Request</h5>
-								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-							</div>
-							<div class="modal-body py-0">
-								<p class="mb-4 text-sm">Assign a maintenance request to <strong>{{ person.name }}</strong></p>
-								<div class="form-group row mb-4">
-									<label for="request-{{ person.pk }}" class="col-sm-3 col-form-label">Request</label>
-									<div class="col-sm-9">
-										<select class="form-select" id="request-{{ person.pk }}">
-											<option selected disabled>
-												{% if requests.count == 0 %}
-													No requests yet
-												{% else %}
-													Select a maintenance request
-												{% endif %}
-											</option>
-											{% for req in requests %}
-												{% if req.status == 'Pending' and person.status == 'available' %}
-												{% if person.role|lower == 'plumber' and req.type_of_issue|lower == 'plumbing' %}
-												<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
-													{% elif person.role|lower == 'electrician' and req.type_of_issue|lower == 'electrical' %}
-														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
-													{% elif person.role|lower == 'carpenter' and req.type_of_issue|lower == 'carpentry' %}
-														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
-													{% elif person.role|lower == 'appliance repair technician' and req.type_of_issue|lower == 'appliance' %}
-														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
-													{% elif person.role|lower == 'landscaper' and req.type_of_issue|lower == 'landscaping' %}
-														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
-													{% elif person.role|lower == 'pest control technician' and req.type_of_issue|lower == 'pest control' %}
-														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
-													{% elif person.role|lower == 'hvac technician' and req.type_of_issue|lower == 'hvac' %}
-														<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
-													{% endif %}											
-												{% endif %}
-											{% endfor %}
-										</select>
-									</div>
+				
+					<!-- Buttons for Assign, Edit, Delete -->
+					<div class="flex space-x-2 text-sm">
+						<!-- Assign Button -->
+						<button type="button" class="btn btn-primary w-full text-sm" data-bs-toggle="modal" data-bs-target="#assignRequestModal{{ person.pk }}">Assign Request</button>
+						
+						<!-- Edit Button -->
+						<button type="button" class="btn btn-secondary w-full text-sm" data-bs-toggle="modal" data-bs-target="#editPersonnelModal{{ person.pk }}">Edit</button>
+				
+						<!-- Delete Button -->
+						<button type="button" class="btn btn-danger w-full text-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal{{ person.pk }}">Delete</button>
+					</div>
+				</div>
+				
+				<!-- Modal for assigning maintenance request -->
+				<div class="modal fade" id="assignRequestModal{{ person.pk }}" tabindex="-1" aria-labelledby="assignRequestModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered">
+					<div class="modal-content">
+						<div class="py-3 px-3 flex justify-between">
+							<h5 class="modal-title text-lg font-bold text-gray-800" id="assignRequestModalLabel">Assign Maintenance Request</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body py-0">
+							<p class="mb-4 text-sm">Assign a maintenance request to <strong>{{ person.name }}</strong></p>
+							<div class="form-group row mb-4">
+								<label for="request-{{ person.pk }}" class="col-sm-3 col-form-label">Request</label>
+								<div class="col-sm-9">
+									<select class="form-select" id="request-{{ person.pk }}">
+										<option selected disabled>
+											{% if requests.count == 0 %}
+												No requests yet
+											{% else %}
+												Select a maintenance request
+											{% endif %}
+										</option>
+										{% for req in requests %}
+											{% if req.status == 'Pending' and person.status == 'available' %}
+											{% if person.role|lower == 'plumber' and req.type_of_issue|lower == 'plumbing' %}
+											<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+												{% elif person.role|lower == 'electrician' and req.type_of_issue|lower == 'electrical' %}
+													<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+												{% elif person.role|lower == 'carpenter' and req.type_of_issue|lower == 'carpentry' %}
+													<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+												{% elif person.role|lower == 'appliance repair technician' and req.type_of_issue|lower == 'appliance' %}
+													<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+												{% elif person.role|lower == 'landscaper' and req.type_of_issue|lower == 'landscaping' %}
+													<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+												{% elif person.role|lower == 'pest control technician' and req.type_of_issue|lower == 'pest control' %}
+													<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+												{% elif person.role|lower == 'hvac technician' and req.type_of_issue|lower == 'hvac' %}
+													<option value="{{ req.pk }}">{{ req.name_of_owner }}: {{ req.Description_of_issue }}</option>
+												{% endif %}											
+											{% endif %}
+										{% endfor %}
+									</select>
 								</div>
 							</div>
-							
-							<div class="modal-footer">
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-								<form id="assignForm" method="post" action="{% url 'assign_request' %}">
+						</div>
+						
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+							<form id="assignForm" method="post" action="{% url 'assign_request' %}">
+								{% csrf_token %}
+								<input type="hidden" name="person_id" value="{{ person.pk }}">
+								<input type="hidden" name="request_id" id="selectedRequestId-{{ person.pk }}">
+								<input type="hidden" name="personel_name" value="{{ person.name }}">
+								<button type="submit" class="btn btn-primary" disabled id="assignButton-{{ person.pk }}">Assign Request</button>
+							</form>
+						</div>
+					</div>
+					</div>
+				</div>
+				
+				<!-- Modal for Edit Personnel -->
+				<div class="modal fade" id="editPersonnelModal{{ person.pk }}" tabindex="-1" aria-labelledby="editPersonnelModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-lg modal-dialog-centered">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title text-lg font-bold text-gray-800" id="editPersonnelModalLabel">Edit Personnel: {{ person.name }}</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+								<form method="post" action="{% url 'admin_edit_personnel' person.pk %}">
 									{% csrf_token %}
-									<input type="hidden" name="person_id" value="{{ person.pk }}">
-									<input type="hidden" name="request_id" id="selectedRequestId-{{ person.pk }}">
-									<input type="hidden" name="personel_name" value="{{ person.name }}">
-									<button type="submit" class="btn btn-primary" disabled id="assignButton-{{ person.pk }}">Assign Request</button>
+									<!-- Name Input -->
+									<div class="mb-3">
+										<label for="name{{ person.pk }}" class="form-label">Name</label>
+										<input type="text" class="form-control" id="name{{ person.pk }}" name="name" value="{{ person.name }}" required>
+									</div>
+									<!-- Role Input -->
+									<div class="mb-3">
+										<label for="role{{ person.pk }}" class="form-label">Role</label>
+										<select class="form-select" id="role{{ person.pk }}" name="role" required>
+											<option value="Plumber" {% if person.role == 'Plumber' %}selected{% endif %}>Plumber</option>
+											<option value="Electrician" {% if person.role == 'Electrician' %}selected{% endif %}>Electrician</option>
+											<option value="Carpenter" {% if person.role == 'Carpenter' %}selected{% endif %}>Carpenter</option>
+											<option value="Appliance Repair Technician" {% if person.role == 'Appliance Repair Technician' %}selected{% endif %}>Appliance Repair Technician</option>
+											<option value="Landscaper" {% if person.role == 'Landscaper' %}selected{% endif %}>Landscaper</option>
+											<option value="Pest Control Technician" {% if person.role == 'Pest Control Technician' %}selected{% endif %}>Pest Control Technician</option>
+											<option value="HVAC Technician" {% if person.role == 'HVAC Technician' %}selected{% endif %}>HVAC Technician</option>
+										</select>
+									</div>
+									<!-- Status Input -->
+									<div class="mb-3">
+										<label for="status{{ person.pk }}" class="form-label">Status</label>
+										<select class="form-select" id="status{{ person.pk }}" name="status" required>
+											<option value="available" {% if person.status == 'available' %}selected{% endif %}>Available for Repair</option>
+											<option value="ongoing" {% if person.status == 'ongoing' %}selected{% endif %}>Ongoing Repair</option>
+										</select>
+									</div>
+									<!-- Phone Input -->
+									<div class="mb-3">
+										<label for="phone{{ person.pk }}" class="form-label">Phone</label>
+										<input type="text" class="form-control" id="phone{{ person.pk }}" name="phone" value="{{ person.phone }}" required>
+									</div>
+									<!-- Email Input -->
+									<div class="mb-3">
+										<label for="email{{ person.pk }}" class="form-label">Email</label>
+										<input type="email" class="form-control" id="email{{ person.pk }}" name="email" value="{{ person.email }}" required>
+									</div>
+									<!-- Location Input -->
+									<div class="mb-3">
+										<label for="location{{ person.pk }}" class="form-label">Location</label>
+										<input type="text" class="form-control" id="location{{ person.pk }}" name="location" value="{{ person.location }}" required>
+									</div>
+				
+									<!-- Save Changes Button -->
+									<div class="modal-footer">
+										<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+										<button type="submit" class="btn btn-primary">Save Changes</button>
+									</div>
 								</form>
 							</div>
 						</div>
 					</div>
 				</div>
-			  	{% endfor %}
+				
+				<!-- Modal for Delete Personnel -->
+				<div class="modal fade" id="deletePersonnelModal{{ person.pk }}" tabindex="-1" aria-labelledby="deletePersonnelModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title text-lg font-bold text-danger" id="deletePersonnelModalLabel">Delete Personnel</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+								<p>Are you sure you want to delete <strong>{{ person.name }}</strong>? This action cannot be undone.</p>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+								<form method="post" action="{% url 'admin_delete_personnel' person.pk %}">
+									{% csrf_token %}
+									<button type="submit" class="btn btn-danger">Delete</button>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				{% endfor %}				
 			</div>
 	</div>
 
