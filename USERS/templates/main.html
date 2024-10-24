@@ -85,7 +85,7 @@
             height: 16rem;
           }
         }
-      </style>
+      </style>      
 </head>
 
 <body class="relative h-[100dvh] w-[100dvw] overflow-y-scroll overflow-x-hidden">
@@ -106,15 +106,15 @@
                 <div class="w-full flex flex-col md:flex-row justify-center gap-4 absolute md:bottom-[15%] bottom-[8%] left-0 px-3 z-[9]">
                     <div class="w-[80%] m-auto flex justify-center md:transform md:translate-x-7 gap-2">
                         <a id="createBtn" href="{% url 'register' %}" class="w-full md:w-[40%] flex items-center gap-2 justify-center rounded-full font-bold py-1 md:py-2 text-center transition duration-300 border-1 border-gray-400 bg-transparent backdrop-filter-none">
-                            <i class="bi bi-person-plus-fill"></i>
+                            <i class="bi bi-person-plus-fill"></i> 
                             <span class="block  text-sm">Create account</span> <!-- Shorter text for mobile -->
                         </a>
                         <button class="w-full md:w-[40%] flex items-center justify-center gap-2 md:py-2 font-bold rounded-full transition duration-300 border-1 border-gray-400 bg-transparent backdrop-filter-none" id="mapBtn">
                             <i class="bi bi-map-fill"></i>
-                            <span class="text-sm">Map</span>
+                            <span class="text-sm">View Map</span>
                         </button>
                     </div>
-                </div>
+                </div>                                
 
                 <!--header--> <!--style="border-image: fill 0 linear-gradient(to top, rgba(146, 145, 145, 0.067), #5f5d5d);"-->
                 <div class="absolute top-[-30px] left-0 md:left-20 w-full text-white py-4">
@@ -127,7 +127,7 @@
 
             <div class="w-full md:w-[55%] md:h-full h-[70px] md:pt-[3rem] bg-transparent">
                 <h1 class="w-full text-teal-500 text-[1rem] text-center mb-0 md:mb-4 md:py-4 px-3 md:mt-[1rem]">Select usertype</h1>
-
+            
                 <!-- Slider with focused center card and blue side cards -->
                 <div class="splide md:w-[80%] m-auto" aria-label="Select usertype" id="userSlider">
                     <div class="splide__track">
@@ -135,36 +135,36 @@
                             <li class="splide__slide" data-user="Owner">
                                 <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md">
                                     <img class="mt-1 md:mt-3" src="{% static 'users/homeOwner.png' %}" alt="home owner image">
-
+                                    
                                     <i class="bi bi-check-circle-fill"></i>
                                 </div>
                             </li>
                             <li class="splide__slide" data-user="Secretary">
                                 <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md">
                                     <img class="mt-3" src="{% static 'users/secretary.png' %}" alt="secretary image">
-
+                                    
                                     <i class="bi bi-check-circle-fill"></i>
                                 </div>
                             </li>
                             <li class="splide__slide" data-user="Admin">
                                 <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md">
                                     <img class="mt-3" src="{% static 'users/admin.png' %}" alt="admin image">
-
+                                    
                                     <i class="bi bi-check-circle-fill"></i>
                                 </div>
                             </li>
                         </ul>
                     </div>
                 </div>
-
+            
                 <p class="w-full text-center md:py-3 py-2 md:mt-3">Login as <span class="text-teal-600" id="user">Owner</span></p>
-
+            
                 <div class="w-full text-center py-3 md:py-2">
                     <button id="conBtn" class="btn btn-primary shadow-md rounded-full hover:bg-teal-500 bg-teal-600 border border-teal-600 min-[900px]:w-[60%] md:py-2 py-[.73rem] w-[90%]">Continue</button>
                 </div>
             </div>
-
-
+                        
+            
          <!-- Map Container-->
          <div id="mapContainer"
             class="hidden fixed inset-0 z-[100] bg-white bg-opacity-90 flex justify-center items-center">
@@ -264,96 +264,6 @@
         });
 
         function initMap() {
-<<<<<<< HEAD
-                if (document.getElementById('map').children.length > 0) return;
-
-                // Beta Bayview Homes location
-                const initialLat = 11.218445209146429;
-                const initialLng = 125.0241042673588;
-                const map = L.map('map').setView([initialLat, initialLng], 13);
-
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                }).addTo(map);
-
-                const geocoder = L.Control.Geocoder.nominatim();
-                const control = L.Control.geocoder({
-                    query: '',
-                    placeholder: 'Search for a place...',
-                    defaultMarkGeocode: false,
-                    geocoder
-                }).on('markgeocode', function (e) {
-                    const bbox = e.geocode.bbox;
-                    const poly = L.polygon([
-                        bbox.getSouthEast(),
-                        bbox.getNorthEast(),
-                        bbox.getNorthWest(),
-                        bbox.getSouthWest()
-                    ]).addTo(map);
-                    map.fitBounds(poly.getBounds());
-                }).addTo(map);
-
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(position => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        const currentLocation = L.marker([lat, lng]).addTo(map).bindPopup('Your current location').openPopup();
-
-                        // Create the popup content with the link to Street View
-                        const betaBayviewPopup = `
-                            <div>
-                                <strong>Beta Bayview Homes</strong><br>
-                                <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=11.218445209146429,125.0241042673588" target="_blank">View in Street View</a>
-                            </div>
-                        `;
-                        const betaBayviewHomes = L.marker([initialLat, initialLng]).addTo(map).bindPopup(betaBayviewPopup).openPopup();
-
-                        map.setView([lat, lng], 13);
-
-                        L.Routing.control({
-                            waypoints: [
-                                L.latLng(lat, lng),
-                                L.latLng(initialLat, initialLng)
-                            ],
-                            createMarker: function (i, wp) {
-                                return L.marker(wp.latLng)
-                                    .bindPopup(i === 0 ? 'Your location' : betaBayviewPopup)
-                                    .openPopup();
-                            },
-                            routeWhileDragging: true
-                        }).addTo(map);
-
-                        control.on('markgeocode', function (e) {
-                            const latlng = e.geocode.center;
-                            L.Routing.control({
-                                waypoints: [
-                                    L.latLng(lat, lng),
-                                    L.latLng(latlng.lat, latlng.lng)
-                                ],
-                                createMarker: function (i, wp) {
-                                    return L.marker(wp.latLng).bindPopup(i === 0 ? 'Start' : 'End').openPopup();
-                                }
-                            }).addTo(map);
-                        });
-                    }, () => {
-                        const betaBayviewHomes = L.marker([initialLat, initialLng])
-                            .addTo(map)
-                            .bindPopup(`
-                                <div>
-                                    <strong>Beta Bayview Homes</strong><br>
-                                    <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=11.218445209146429,125.0241042673588" target="_blank">View in Street View</a>
-                                </div>
-                            `)
-                            .openPopup();
-
-                        map.setView([initialLat, initialLng], 13);
-                    });
-                } else {
-                    alert('Geolocation is not supported by this browser.');
-                }
-            }
-
-=======
             if (document.getElementById('map').children.length > 0) return;
 
             // Beta Bayview Homes location
@@ -441,7 +351,6 @@
                 alert('Geolocation is not supported by this browser.');
             }
         }
->>>>>>> 0ed8542e23af5b4d9157ac05645559f0ca1c55f5
 
         closeMapBtn.addEventListener('click', () => {
             mapContainer.classList.add('hidden');
