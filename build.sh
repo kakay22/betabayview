@@ -13,3 +13,6 @@ python manage.py collectstatic --noinput
 
 # Run migrations
 python manage.py migrate --noinput
+
+# automatically create admin
+python manage.py create_superuser
