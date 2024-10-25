@@ -34,7 +34,7 @@ SECRET_KEY = 'django-insecure-=x93jzj%n0x00h^d**2bv!2!r0&awbnk0kkorq=0(-9#8*m6eu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', "*", "betabayview.pythonanywhere.com"]
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', "*"]
 
 
 # Application definition
