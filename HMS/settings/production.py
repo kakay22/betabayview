@@ -14,7 +14,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-=x93jzj%n0x00h
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['https://betabayview.onrender.com']  # Replace with your actual Render app URL
+ALLOWED_HOSTS = ['betabayview.onrender.com']  # Replace with your actual Render app URL
 
 # Application definition
 INSTALLED_APPS = [
