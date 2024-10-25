@@ -15,10 +15,7 @@ import os
 import nltk
 
 # Check and download VADER lexicon if necessary
-try:
-    nltk.data.find('sentiment/vader_lexicon.zip')
-except LookupError:
-    nltk.download('vader_lexicon')
+nltk.download('vader_lexicon')
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "dynamic-cooler-434604-i2-8379a3424f71.json"
 
