@@ -9,7 +9,7 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-default-secret-key')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-=x93jzj%n0x00h^d**2bv!2!r0&awbnk0kkorq=0(-9#8*m6eu')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -66,12 +66,8 @@ WSGI_APPLICATION = 'HMS.wsgi.application'
 # Database configuration
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',  # Change to your production database backend
-        'NAME': os.environ.get('DB_NAME', 'your_database_name'),
-        'USER': os.environ.get('DB_USER', 'your_database_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'your_database_password'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),  # Or your database host
-        'PORT': os.environ.get('DB_PORT', '5432'),  # Default PostgreSQL port
+        'ENGINE': 'django.db.backends.sqlite3',  # Keep this for SQLite
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
