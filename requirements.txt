@@ -23,10 +23,10 @@ Django==5.1.1
 en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl#sha256=1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85
 frozenlist==1.4.1
 fuzzywuzzy==0.18.0
-google-auth==2.30.0  # Updated to resolve conflicts
-google-cloud-dialogflow==2.34.0  # Last compatible 2.x version
+google-auth==2.16.0  # Updated to avoid conflicts
+google-cloud-dialogflow==2.14.1
 googleapis-common-protos==1.65.0
-grpcio==1.43.0  # Known compatible with google-cloud-dialogflow
+grpcio==1.43.0
 grpcio-status==1.43.0
 h11==0.14.0
 httpcore==1.0.5
@@ -46,13 +46,13 @@ multidict==6.1.0
 murmurhash==1.0.10
 nltk==3.9.1
 notifications==0.3.2
-numpy>=2.0.0  # Updated for compatibility with blis
+numpy>=2.0.0
 openai==0.28.0
 packaging==24.1
 pillow==10.4.0
 preshed==3.0.9
-proto-plus==1.18.0  # Compatible with protobuf and google-cloud-dialogflow
-protobuf==3.20.3  # Compatible with google-cloud-dialogflow and google-auth
+proto-plus==1.15.0  # Compatible with google-cloud-dialogflow and protobuf
+protobuf==3.19.4  # Compatible with google-auth and proto-plus
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pydantic==2.9.2
