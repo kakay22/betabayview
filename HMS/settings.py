@@ -31,7 +31,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # URL path used to access media files
 MEDIA_URL = '/media/'
-
 MEDIA_ROOT = '/var/www/media'  # This is the path where your Render disk is mounted
 
 
@@ -115,12 +114,6 @@ WSGI_APPLICATION = 'HMS.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-from pathlib import Path
-
-# Define BASE_DIR as a Path object
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 DATABASES = {
     'default': {
