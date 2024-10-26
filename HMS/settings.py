@@ -24,6 +24,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Directory where uploaded media files are stored
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# URL path used to access media files
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = '/var/www/media'  # This is the path where your Render disk is mounted
+
+
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
