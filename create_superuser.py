@@ -12,9 +12,9 @@ admin_username = "admin"  # Change this to your desired username
 admin_email = "bbvhhousingmanagement@gmail.com"  # Change this to your desired email
 admin_password = "admin@2024"  # Change this to your desired password
 
-# Check if the admin user already exists, if not, create one
-if not User.objects.filter(username=admin_username).exists():
+# Check if any superuser with this username or email exists
+if not User.objects.filter(username=admin_username, email=admin_email).exists():
     User.objects.create_superuser(admin_username, admin_email, admin_password)
-    print("Superuser created successfully")
+    print("Superuser created successfully.")
 else:
-    print("Superuser already exists")
+    print("Superuser already exists.")
