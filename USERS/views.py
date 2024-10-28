@@ -25,6 +25,18 @@ from dateutil import parser
 from django.utils import timezone
 
 
+# views.py
+from django.http import JsonResponse
+
+def get_target_coordinates(request):
+    # Example coordinates for the target point (update with your values or database values)
+    target_coordinates = {
+        "x": 10,
+        "y": 5,
+        "z": -15
+    }
+    return JsonResponse(target_coordinates)
+
 def submit_visit_request(request):
     if request.method == 'POST':
         try:

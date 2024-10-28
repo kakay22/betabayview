@@ -1,0 +1,705 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBH Housing Management System</title>
+    <link rel="icon" href="{% static 'users/logo.png' %}" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <script src="{% static 'js/map.js' %}"></script>
+    <!-- <script src="{% static 'js/preload.js' %}"></script> -->
+    <script src="{% static 'js/before_unload.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@latest/dist/js/splide.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@latest/dist/css/splide.min.css" rel="stylesheet">
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe-ar/1.8.0/aframe-ar.min.js"></script>     
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body class="relative h-[100dvh] w-[100dvw] overflow-y-scroll overflow-x-hidden">
+    <img class="absolute h-full w-full top-0 left-0" src="{% static 'users/pope-francis-village.png' %}" alt="">
+
+    <div class="shadow-md bg-gray-100 z-[99] flex justify-center items-center absolute h-[100%] w-full"
+        style="background-color: rgba(255, 255, 255, .8);">
+
+        <!-- Content -->
+        <div class="bg-white md:flex h-full md:mb-10 md:h-[80%] w-full md:w-[80%] min-[1075px]:w-[95%]">
+
+            <!--Title-->
+            <div class="relative top-0 left-0 w-full h-[450px] md:w-[75%] md:h-full">
+                <div class="md:w-[110%] w-full h-[100%] relative">
+                    <img class="w-[100%] h-[110%] md:h-full object-fit" src="{% static 'users/beach-house-concept-illustration_114360-9433.jpg' %}" alt="">
+                </div>
+
+                <div class="w-full flex flex-col md:flex-row justify-center gap-4 absolute md:bottom-[15%] bottom-[8%] left-0 px-3 z-[9]">
+                    <div class="w-[80%] m-auto flex justify-center md:transform md:translate-x-7 gap-2">
+                        <a id="createBtn" href="{% url 'register' %}" class="w-full md:w-[40%] flex items-center gap-2 justify-center rounded-full font-bold py-1 md:py-2 text-center transition duration-300 border-1 border-gray-400 bg-transparent backdrop-filter-none">
+                            <i class="bi bi-person-plus-fill"></i> 
+                            <span class="block  text-sm">Create account</span> <!-- Shorter text for mobile -->
+                        </a>
+                        <button class="w-full md:w-[40%] flex items-center justify-center gap-2 md:py-2 font-bold rounded-full transition duration-300 border-1 border-gray-400 bg-transparent backdrop-filter-none" id="mapBtn">
+                            <i class="bi bi-map-fill"></i>
+                            <span class="text-sm">View Map</span>
+                        </button>
+                    </div>
+                </div>                                
+
+                <!--header--> <!--style="border-image: fill 0 linear-gradient(to top, rgba(146, 145, 145, 0.067), #5f5d5d);"-->
+                <div class="absolute top-[-30px] left-0 md:left-20 w-full text-white py-4">
+                    <div class="w-full h-full py-4 text-gray-100" >
+                        <h1 class="w-full text-center text-teal-800 text-[2rem] font-bold">BETA BAYVIEW HOMES</h1>
+                        <p class="w-full text-center text-teal-800 font-bold">Housing Management System</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full md:w-[55%] md:h-full h-[70px] md:pt-[3rem] bg-transparent">
+                <h1 class="w-full text-teal-500 text-[1rem] text-center mb-0 md:mb-4 md:py-4 px-3 md:mt-[1rem]">Select usertype</h1>
+            
+                <!-- Slider with focused center card and blue side cards -->
+                <div class="splide md:w-[80%] m-auto" aria-label="Select usertype" id="userSlider">
+                    <div class="splide__track">
+                        <ul class="splide__list">
+                            <li class="splide__slide" data-user="Owner">
+                                <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md">
+                                    <img class="mt-1 md:mt-3" src="{% static 'users/homeOwner.png' %}" alt="home owner image">
+                                    
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </div>
+                            </li>
+                            <li class="splide__slide" data-user="Secretary">
+                                <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md">
+                                    <img class="mt-3" src="{% static 'users/secretary.png' %}" alt="secretary image">
+                                    
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </div>
+                            </li>
+                            <li class="splide__slide" data-user="Admin">
+                                <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md">
+                                    <img class="mt-3" src="{% static 'users/admin.png' %}" alt="admin image">
+                                    
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <p class="w-full text-center md:py-3 py-2 md:mt-3">Login as <span class="text-teal-600" id="user">Owner</span></p>
+            
+                <div class="w-full text-center py-3 md:py-2">
+                    <button id="conBtn" class="btn btn-primary shadow-md rounded-full hover:bg-teal-500 bg-teal-600 border border-teal-600 min-[900px]:w-[60%] md:py-2 py-[.73rem] w-[90%]">Continue</button>
+                </div>
+            </div>
+                        
+            
+         <!-- Map Container-->
+         <div id="mapContainer"
+            class="hidden fixed inset-0 z-[100] bg-white bg-opacity-90 flex justify-end items-center">
+
+            <!-- Sidebar Map -->
+            <div id="sidebarMap" class="h-full w-[45%] md:w-[15%] fixed -left-[100%] top-0 md:left-0 shadow-md bg-white transition-all duration-300 ease-in-out z-[9999999]">
+                <!-- Filter Buttons -->
+                <div id="filterButtons" class="flex flex-col space-y-1">
+                    <div class="w-full flex font-bold justify-between py-3 px-2 items-center">
+                        <p>Beta Bayview Homes</p>
+                        <i id="closeSidebarBtn" class="bi bi-x md:hidden text-[1.5rem] cursor-pointer"></i>
+                    </div>
+                    <hr class="my-0">
+                    <button id="housesBtnFilter" class="filter-button py-3 px-4 text-left w-full hover:bg-gray-200 text-gray-700 active:bg-green-500 active:text-white">
+                        <i class="bi bi-houses"></i> Houses
+                    </button>
+                    <button id="eventsBtnFilter" class="filter-button py-3 px-4 text-left w-full hover:bg-gray-200 text-gray-700 active:bg-green-500 active:text-white">
+                        <i class="bi bi-calendar"></i> Events
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sidebar Map Menu Button -->
+            <i id="menuBtn" class="bi bi-list md:hidden absolute top-4 left-4 md:top-2 md:left-2 bg-white border border-gray-300 px-2.5 py-[.50rem] rounded cursor-pointer shadow-md hover:bg-gray-100 text-[1.5rem] z-[999]"></i>
+
+            <div class="relative w-full md:w-[85%] h-full">
+                <!--leflet map-->
+                <div id="map" class="w-full h-full z-[9] relative"></div>
+
+                <!-- Container for house buttons -->
+                <div id="house-buttons" class="text-sm">
+                    {% for house in properties %}
+                        <div class="house-button shadow-md rounded-[20px] px-4 flex gap-2 items-center" data-index="{{ forloop.counter0 }}">
+                            <img class="w-8 h-8 rounded-full" src="{{ house.photo.url }}" alt="" srcset=""> {{ house.property_name }}
+                        </div>
+                    {% endfor %}
+                </div>               
+
+                <script>
+                    // Grab the sidebar and menu button elements
+                    const sidebarMap = document.getElementById('sidebarMap');
+                    const menuBtn = document.getElementById('menuBtn');
+                    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+
+                    // Log to confirm button clicks
+                    console.log("JS loaded");
+
+                    // Open sidebar when menu button is clicked
+                    menuBtn.addEventListener('click', () => {
+                        console.log("Menu button clicked");
+                        sidebarMap.classList.toggle('-left-[100%]');
+                        sidebarMap.classList.toggle('left-0');
+                    });
+
+                    // Close sidebar when the close button is clicked
+                    closeSidebarBtn.addEventListener('click', () => {
+                        console.log("Close button clicked");
+                        sidebarMap.classList.add('-left-[100%]');
+                        sidebarMap.classList.remove('left-0');
+                    });
+                </script>
+                
+                <button id="closeMapBtn"
+                    class="absolute top-4 right-4 md:top-2 md:right-2 flex items-center z-[999] bg-white border border-gray-300 px-2.5 py-1 rounded cursor-pointer shadow-md hover:bg-gray-100">
+                    <i class="bi bi-x text-[1.5rem]"></i>
+                </button>
+            </div>
+            <!-- <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1956.7927002116132!2d125.0229854054969!3d11.218280197230083!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x330877110e4e78c3%3A0x8ce9d2201a7a1fc4!2sBeta%20Bayview%20Homes!5e0!3m2!1sen!2sph!4v1728972017836!5m2!1sen!2sph" width="800" height="600" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe> -->
+        </div>
+
+        <div id="properties-data" style="display: none;">
+            {% for property in properties %}
+            <div class="property" 
+                 data-property_name="{{ property.property_name|escapejs }}"
+                 data-household_head="{{ property.household_head|default:'None'|escapejs }}"
+                 data-household_profile="{{ property.household_head.profile_picture.url|default:'None'|escapejs }}"
+                 data-lat="{{ property.latitude }}"
+                 data-lng="{{ property.longitude }}"
+                 data-photo="{{ property.photo.url|escapejs }}"
+                 data-description="{{ property.property_description|escapejs }}"
+                 data-id="{{ property.id }}"
+                 data-block-no="{{ property.property_block_no }}"
+                 data-house-no="{{ property.property_house_no }}">
+            </div>
+            {% endfor %}
+        </div>     
+
+        <!-- Bootstrap Modal -->
+        <div class="modal fade" id="visitRequestModal" tabindex="-1" aria-labelledby="visitRequestModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="visitRequestModalLabel">Request a Visit</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="visitRequestForm">
+                            {% csrf_token %}
+                            <input type="hidden" id="householdHead" name="household_head">
+
+                            <div class="mb-3">
+                                <label for="visitorFullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="visitorFullName" placeholder="Enter your full name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="visitorRelation" class="form-label">Relation to Homeowner</label>
+                                <select class="form-control" id="visitorRelation" required>
+                                    <option value="" disabled selected>Select Relation</option>
+                                    <option value="Family">Family</option>
+                                    <option value="Friend">Friend</option>
+                                    <option value="Colleague">Colleague</option>
+                                    <option value="Neighbor">Neighbor</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="visitDateTime" class="form-label">Date and Time of Visit</label>
+                                <input type="datetime-local" class="form-control" id="visitDate" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="visitPurpose" class="form-label">Purpose of Visit</label>
+                                <textarea class="form-control" id="visitPurpose" rows="3" placeholder="Briefly state the purpose of the visit" required></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" form="visitRequestForm" id="submitRequestBtn" class="btn btn-primary">Submit Request</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function openVisitRequestModal(householdHead) {
+            console.log("Household Head:", householdHead);  // Debug: Check if householdHead is passed correctly
+
+            const modalTitle = document.getElementById('visitRequestModalLabel');
+            if (modalTitle) {
+                // Set the title with the household head's name or fallback to a default
+                modalTitle.textContent = `Request a Visit for ${householdHead || "Homeowner"}`;
+                console.log("Modal Title Updated:", modalTitle.textContent);  // Debug: Check the updated title
+            }
+
+            // Set the hidden input value
+            const householdHeadInput = document.getElementById('householdHead');
+            if (householdHeadInput) {
+                householdHeadInput.value = householdHead || "Homeowner";
+                console.log("Hidden Input Updated:", householdHeadInput.value);  // Debug: Check the updated input value
+            }
+
+            // Initialize and show the modal
+            const modal = new bootstrap.Modal(document.getElementById('visitRequestModal'), {
+                backdrop: false, // 'static' keeps the modal open even if you click on the backdrop, 'false' would remove the backdrop entirely
+            });
+            modal.show();
+
+            $(document).ready(function() {
+                // Get the CSRF token from the meta tag
+                const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+                $('#submitRequestBtn').click(function(event) {
+                    event.preventDefault();
+
+                    const requestUrl = "{% url 'submit_visit_request' %}";
+                    console.log("AJAX Request URL:", requestUrl);  // Debugging line
+
+                    // Collect form data
+                    const visitorFullName = $('#visitorFullName').val();
+                    const visitorRelation = $('#visitorRelation').val();
+                    const visitDate = $('#visitDate').val();
+                    const purpose = $('#visitPurpose').val();
+                    const householdHead = $('#householdHead').val();
+
+                    if (!visitorFullName || !visitorRelation || !visitDate || !purpose) {
+                        alert("Please fill in all required fields.");
+                        return;
+                    }
+
+                    const requestData = {
+                        visitor_full_name: visitorFullName,
+                        visitor_relation: visitorRelation,
+                        visit_date: visitDate,
+                        purpose: purpose,
+                        household_head: householdHead
+                    };
+
+                    $.ajax({
+                        url: requestUrl,
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(requestData),
+                        headers: { 'X-CSRFToken': csrfToken },  // Include the CSRF token in the headers
+                        success: function(response) {
+                            alert(response.message);
+                            $('#visitRequestModal').modal('hide');
+                            $('#visitRequestForm')[0].reset();
+                        },
+                        error: function(xhr, status, error) {
+                            alert("There was an error submitting your request. Please try again.");
+                            console.error("Error:", status, error);
+                        }
+                    });
+                });
+            });
+
+        }
+    </script>
+
+    <script>
+       document.addEventListener('DOMContentLoaded', function () {
+            const splide = new Splide('#userSlider', {
+                type       : 'loop', // Change to 'slide' or 'loop' based on your preference
+                perPage    : 1,
+                focus      : 'center', // Ensure the centered slide is the active one
+                pagination : true,
+                arrows     : true,
+                autoplay   : {
+                    delay: 2000, // Auto slide every 2 seconds
+                    disableOnInteraction: false,
+			    },
+			    effect: 'fade', // You can change to 'fade' for a different effect
+            }).mount();
+
+            const conBtn = document.getElementById('conBtn');
+            const userSpan = document.getElementById('user');
+
+            // Function to update user type display
+            function updateUserType() {
+                const activeSlideIndex = splide.index; // Get the currently active slide index
+                const activeSlide = splide.Components.Slides.getAt(activeSlideIndex); // Get the active slide
+
+                // Check if activeSlide exists before accessing its properties
+                if (activeSlide && activeSlide.slide) {
+                    const userType = activeSlide.slide.getAttribute('data-user'); // Get the data-user attribute
+
+                    if (userType) {
+                        userSpan.textContent = userType; // Update the span with the user type
+                    } else {
+                        console.error('User type not found in the active slide.');
+                    }
+                } else {
+                    console.error('No active slide found or activeSlide.slide is undefined.');
+                }
+            }
+
+            // Update user type when the slide changes
+            splide.on('move', updateUserType);
+
+            // Call updateUserType initially to set the correct user type on load
+            updateUserType();
+
+            conBtn.addEventListener('click', () => {
+                const userType = userSpan.textContent; // Get the updated user type from the span
+
+                switch (userType) {
+                    case 'Owner':
+                        location.href = "{% url 'ownerLogin' %}";
+                        break;
+                    case 'Secretary':
+                        location.href = "{% url 'secretaryLogin' %}";
+                        break;
+                    case 'Admin':
+                        location.href = "{% url 'adminLogin' %}";
+                        break;
+                    default:
+                        alert('Please select a user type.'); // Show alert if no user type is selected
+                }
+            });
+        });
+
+        const users = document.querySelectorAll('.user');
+        const user = document.getElementById('user');
+        const conBtn = document.getElementById('conBtn');
+        const mapBtn = document.getElementById('mapBtn');
+        const mapContainer = document.getElementById('mapContainer');
+        const closeMapBtn = document.getElementById('closeMapBtn');
+        const mapMessage = document.getElementById('mapMessage');
+
+        mapBtn.addEventListener('click', () => {
+            mapContainer.classList.remove('hidden');
+            initMap()
+        });
+
+        closeMapBtn.addEventListener('click', () => {
+            mapContainer.classList.add('hidden');
+        });
+
+        function initMap() {
+            if (document.getElementById('map').children.length > 0) return;
+
+            // Beta Bayview Homes location
+            const initialLat = 11.218445209146429;
+            const initialLng = 125.0241042673588;
+
+            // Set the map view to Beta Bayview location with maximum zoom level
+            const map = L.map('map').setView([initialLat, initialLng], 19);
+
+            map.zoomControl.remove();
+
+            // Load the map tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+            }).addTo(map);
+
+            // Coordinates for houses 1-20
+            const houses = [
+                { number: 1, lat: 11.218295, lng: 125.024020 },
+                { number: 2, lat: 11.218203, lng: 125.023971 },
+                { number: 3, lat: 11.218132, lng: 125.023937 },
+                { number: 4, lat: 11.218087, lng: 125.023896 },
+                { number: 5, lat: 11.218022, lng: 125.023848 },
+                { number: 6, lat: 11.217932, lng: 125.023797 },
+                { number: 7, lat: 11.217845, lng: 125.023770 },
+                { number: 8, lat: 11.218503, lng: 125.023910 },
+                { number: 9, lat: 11.218350, lng: 125.023813 },
+                { number: 10, lat: 11.218237, lng: 125.023754 },
+                { number: 11, lat: 11.218137, lng: 125.023727 },
+                { number: 12, lat: 11.218030, lng: 125.023687 },
+                { number: 13, lat: 11.217951, lng: 125.023625 },
+                { number: 14, lat: 11.218082, lng: 125.023599 },
+                { number: 15, lat: 11.218008, lng: 125.023524 },
+                { number: 16, lat: 11.218119, lng: 125.023532 },
+                { number: 17, lat: 11.218156, lng: 125.023371 },
+                { number: 18, lat: 11.218264, lng: 125.023320 },
+                { number: 19, lat: 11.218319, lng: 125.023237 },
+                { number: 20, lat: 11.218548, lng: 125.023038 }
+            ];
+
+            // Fetch properties data from the rendered HTML
+            const properties = Array.from(document.querySelectorAll('#properties-data .property')).map(property => {
+                return {
+                    property_name: property.getAttribute('data-property_name'),
+                    household_head: property.getAttribute('data-household_head'),
+                    photo: property.getAttribute('data-photo'),
+                    property_description: property.getAttribute('data-description'),
+                    household_profile: property.getAttribute('data-household_profile'),
+                    property_block_no: property.getAttribute('data-block-no'),
+                    property_house_no: property.getAttribute('data-house-no'),
+                    id: parseInt(property.getAttribute('data-id')),
+                };
+            });
+
+            // Initialize markers array to store each marker
+            const markers = [];
+
+            // Create a custom marker using a div
+            function createCustomMarkerImage(imageUrl) {
+                const markerDiv = document.createElement('div');
+                markerDiv.className = 'custom-marker';
+
+                // Set the background image
+                markerDiv.style.backgroundImage = `url(${imageUrl})`;
+                markerDiv.style.backgroundSize = 'cover'; // Cover the entire area
+                markerDiv.style.backgroundPosition = 'center'; // Center the image
+                markerDiv.style.borderRadius = '50%'; // Make it circular
+                markerDiv.style.width = '30px'; // Width of the marker
+                markerDiv.style.height = '30px'; // Height of the marker
+
+                return markerDiv;
+            }
+
+            // Create markers for each house using the fixed coordinates
+            houses.forEach((house, index) => {
+                // Check if there is a corresponding property for the house
+                if (index < properties.length) {
+                    const property = properties[index];
+
+                    let householdHeadImage = property.photo 
+                    
+                    // Placeholder URL for a generic user profile image
+                    const placeholderImageUrl = "https://via.placeholder.com/64?text=User"; // Replace this with any URL you prefer
+
+                    // Determine householdHeadContent based on owner presence
+                    let householdHeadContent;
+
+                    if (property.household_head && property.household_profile) {
+                        // If there is an owner and a profile image, display the image
+                        householdHeadContent = `<img class="h-8 w-8 rounded-full" src="${property.household_profile}" alt="Household Head">`;
+                    } else {
+                        // If no owner, display the placeholder image
+                        householdHeadContent = `<img class="h-8 w-8 rounded-full" src="${placeholderImageUrl.url}" alt="No Owner">`;
+                    }
+
+                    // Define the popup content
+                    const housePopup = `
+                        <div class="popup-container">
+                            <div class="popup-title">
+                                <strong>${property.property_name}</strong><br>
+                                <em class="popup-head flex items-center gap-2">${householdHeadContent} ${property.household_head ? property.household_head : 'Owner:'}</em>
+                            </div>
+                            <img src="${property.photo || "{% static 'users/pope-francis-village.png' %}"}" alt="${property.property_name}" class="popup-image">
+                            <p class="popup-description">Owner: ${property.household_head}</p>
+                            <p class="popup-description">House type: ${property.property_description}</p>
+                            <p class="popup-description">Block no: ${property.property_block_no}</p>
+                            <p class="popup-description">House no: ${property.property_house_no}</p>
+                            <a class="popup-button text-white cursor-pointer" onclick="openVisitRequestModal('${property.household_head || "Homeowner"}')">Request a visit</a>
+                        </div>
+                    `;
+                    
+                    // Create a custom marker using a div
+                    const customIcon = L.divIcon({
+                        className: 'custom-icon',
+                        html: createCustomMarkerImage(householdHeadImage).outerHTML, // Set the inner HTML to the circular image div
+                        iconSize: [30, 30], // Size of the icon
+                        iconAnchor: [15, 30], // Point of the icon which will correspond to marker's location
+                        popupAnchor: [0, -30] // Point from which the popup should open relative to the iconAnchor
+                    });
+
+                    // Create a marker and add it to the map
+                    const marker = L.marker([house.lat, house.lng], { icon: customIcon }) // Set the custom icon
+                        .addTo(map)
+                        .bindPopup(housePopup);
+
+                    // Store the marker in the markers array at the same index
+                    markers[index] = marker;
+                } else {
+                    console.warn(`Property at index ${index} is undefined.`);
+                }
+            });
+
+            function showHouseData(index) {
+                const house = houses[index];
+                // Adjust the latitude directly
+                const adjustedLat = house.lat + 0.001; // Change this value as needed
+
+                // Set the new view
+                map.setView([adjustedLat, house.lng], 19); // Center the map on the new position
+
+
+                // Check if the marker exists before opening its popup
+                if (markers[index]) {
+                    // Optionally, use a custom offset
+                    // const popupOffset = L.point(0, -window.innerHeight * 0.3); // Uncomment if you want to use a specific offset
+                    markers[index].openPopup(); // Open the popup for the marker
+                } else {
+                    console.error(`No marker found for house index: ${index}`);
+                }
+            }
+
+            // Attach click event listeners to buttons
+            document.querySelectorAll('.house-button').forEach((button, index) => {
+                button.addEventListener('click', function() {
+                    // Remove 'button-active' class from all buttons
+                    document.querySelectorAll('.house-button').forEach(btn => {
+                        btn.classList.remove('button-active');
+                    });
+                    
+                    // Add 'button-active' class to the clicked button
+                    button.classList.add('button-active');
+                    
+                    // Show house data for the clicked button
+                    showHouseData(index);
+                });
+            });
+
+
+            // Custom search function
+            const searchHouse = (query) => {
+                const lowerCaseQuery = query.toLowerCase();
+                const matchedHouses = houses.filter(house =>
+                    house.property_name.toLowerCase().includes(lowerCaseQuery) ||
+                    house.household_head.toLowerCase().includes(lowerCaseQuery)
+                );
+
+                if (matchedHouses.length > 0) {
+                    // If matches are found, center the map on the first match
+                    const firstMatch = matchedHouses[0];
+                    map.setView([firstMatch.lat, firstMatch.lng], 19); // Zoom in on the matched house
+
+                    // Optionally, you can add a marker or highlight the matched house here
+                    L.marker([firstMatch.lat, firstMatch.lng])
+                        .addTo(map)
+                        .bindPopup(`<strong>${firstMatch.property_name}</strong><br>Household Head: ${firstMatch.household_head}`)
+                        .openPopup();
+                } else {
+                    alert('No houses found matching that query.');
+                }
+            };
+        }
+
+        closeMapBtn.addEventListener('click', () => {
+            mapContainer.classList.add('hidden');
+        });
+
+    </script>
+</body>
+
+</html>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Arrow Indicator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div id="camera-feed" style="position: relative;">
+        <!-- Video camera feed -->
+        <video id="camera" autoplay style="position: absolute; top: 0; left: 0; z-index: 1;"></video>
+        <!-- Three.js overlay canvas -->
+        <canvas id="three-canvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
+    </div>    
+</body>
+</html>
+
+<script>
+    // Initialize Three.js
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-canvas'), alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // Set up lighting
+    const light = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(light);
+
+    let arrow;
+    let target; // Variable to hold target coordinates
+
+    // Load target coordinates from Django API
+    async function loadTargetCoordinates() {
+        const response = await fetch('/api/target-coordinates/');
+        const data = await response.json();
+        return new THREE.Vector3(data.x, data.y, data.z);
+    }
+
+    // Create and position a 3D arrow pointing to the target location
+    async function createArrowToTarget() {
+        target = await loadTargetCoordinates();
+
+        // Set up the arrow geometry with a blue color
+        const arrowColor = 0x0000ff; // Blue color
+        const arrowLength = 5;
+        const arrowHeadLength = 1;
+        const arrowHeadWidth = 0.5;
+
+        arrow = new THREE.ArrowHelper(new THREE.Vector3(), new THREE.Vector3(), arrowLength, arrowColor, arrowHeadLength, arrowHeadWidth);
+        scene.add(arrow);
+
+        // Position the camera at a distance from the arrow
+        camera.position.z = 10;
+
+        // Set up event listener for device orientation
+        window.addEventListener('deviceorientation', handleDeviceOrientation);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+    }
+
+    function handleDeviceOrientation(event) {
+        const alpha = event.alpha ? THREE.Math.degToRad(event.alpha) : 0; // Yaw
+        const beta = event.beta ? THREE.Math.degToRad(event.beta) : 0;   // Pitch
+        const gamma = event.gamma ? THREE.Math.degToRad(event.gamma) : 0; // Roll
+
+        // Calculate direction to target location
+        const currentPosition = new THREE.Vector3(0, 0, 0); // Set the current position as (0, 0, 0)
+        const directionToTarget = target.clone().sub(currentPosition).normalize();
+
+        // Apply device rotation adjustments
+        const euler = new THREE.Euler(beta, alpha, -gamma, 'YXZ'); // YXZ is used for device orientation
+        const rotatedDirection = directionToTarget.applyEuler(euler);
+
+        // Set the direction of the arrow
+        arrow.setDirection(rotatedDirection);
+
+        // Optional: Log the orientation values for debugging
+        console.log(`Alpha (Yaw): ${event.alpha}, Beta (Pitch): ${event.beta}, Gamma (Roll): ${event.gamma}`);
+        console.log('Arrow Direction:', rotatedDirection);
+    }
+
+    createArrowToTarget();
+
+    // Start the camera feed with back camera preference
+    navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: "environment" } }  // Requests the back camera
+    })
+    .then((stream) => {
+        const video = document.getElementById('camera');
+        video.srcObject = stream;
+        video.play();
+    })
+    .catch((error) => {
+        console.error('Error accessing the camera:', error);
+    });
+</script>

@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from USERS.models import HomeOwner, Resident
-from .models import Secretary, Event, Comment, Property, Message, MaintenancePersonnel, AdminNotification, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, ChatFeedback, ChatHistoryMessage
+from .models import Secretary, Event, Comment, Property, Message, MaintenancePersonnel, AdminNotification, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, ChatFeedback, ChatHistoryMessage, VisitRequest
 from USERS.forms import HomeOwnerForm, UserForm
 from HOMEOWNER.forms import ResidentForm
 from .forms import SecretaryForm, EditOwnerForm, PropertyForm, EventForm, RepairmanForm, AnnouncementForm, AnnouncementCommentForm
@@ -42,6 +42,90 @@ def admin_dashboard(request):
     totalProperties = Property.objects.all().count
     occupied_properties = Property.objects.filter(availability='occupied')
     return render(request, 'admin_dashboard.html', {'totalPendings':totalPendings, 'maintenances':maintenances, 'events':events, 'totalProperties':totalProperties, 'totalHomeowners':totalHomeowners, 'occupied_properties':occupied_properties})
+
+@login_required
+def analytics(request):
+    return render(request, 'analytics.html')
+
+from django.db.models import Count
+from django.http import HttpResponse
+from django.shortcuts import render
+from matplotlib import pyplot as plt
+from matplotlib.dates import MonthLocator, DateFormatter, WeekdayLocator
+from datetime import datetime, timedelta
+from django.db.models.functions import TruncMonth, TruncWeek
+
+def dashboard_graphs(request):
+    # Monthly Maintenance Requests
+    current_year = datetime.now().year
+    monthly_maintenance = (
+        Maintenance_request.objects
+        .filter(date_requested__year=current_year)
+        .annotate(month=TruncMonth('date_requested'))
+        .values('month')
+        .annotate(count=Count('id'))
+        .order_by('month')
+    )
+
+    # Weekly Visit Requests
+    start_date = datetime.now() - timedelta(weeks=12)  # last 12 weeks
+    weekly_visits = (
+        VisitRequest.objects
+        .filter(created_at__gte=start_date)
+        .annotate(week=TruncWeek('created_at'))
+        .values('week')
+        .annotate(count=Count('id'))
+        .order_by('week')
+    )
+
+    # Count Total and Occupied Properties
+    total_properties = Property.objects.all().count()
+    occupied_properties = Property.objects.filter(availability='occupied').count()
+
+    # Prepare the pie chart data
+    property_labels = ['Occupied', 'Available']
+    property_sizes = [occupied_properties, total_properties - occupied_properties]  # Available count
+
+    # Plot Monthly Maintenance Requests and Weekly Visit Requests
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 15))  # Unpack into three axes
+
+    # Monthly Maintenance Requests
+    months = [entry['month'] for entry in monthly_maintenance]
+    maintenance_counts = [entry['count'] for entry in monthly_maintenance]
+    
+    ax1.plot(months, maintenance_counts, marker='o', color='b', label="Maintenance Requests")
+    ax1.xaxis.set_major_locator(MonthLocator())
+    ax1.xaxis.set_major_formatter(DateFormatter('%b'))
+    ax1.set_xlabel("Month")
+    ax1.set_ylabel("Number of Requests")
+    ax1.set_title("Maintenance Requests per Month")
+    ax1.grid(True)
+
+    # Weekly Visit Requests
+    weeks = [entry['week'] for entry in weekly_visits]
+    visit_counts = [entry['count'] for entry in weekly_visits]
+    
+    ax2.plot(weeks, visit_counts, marker='o', color='g', label="Visit Requests")
+    ax2.xaxis.set_major_locator(WeekdayLocator())
+    ax2.xaxis.set_major_formatter(DateFormatter('%b %d'))
+    ax2.set_xlabel("Week")
+    ax2.set_ylabel("Number of Requests")
+    ax2.set_title("Visit Requests per Week")
+    ax2.grid(True)
+
+    # Plot Occupied vs Available Properties
+    ax3.pie(property_sizes, labels=property_labels, autopct='%1.1f%%', startangle=140, colors=['#66b3ff', '#ff9999'])
+    ax3.axis('equal')  # Equal aspect ratio ensures pie chart is circular
+    ax3.set_title("Occupied vs Available Properties")
+
+    # Save plot to response
+    response = HttpResponse(content_type='image/png')
+    plt.tight_layout()
+    plt.savefig(response, format='png')
+    plt.close(fig)
+    
+    return response
+
 
 def maintenance_requests_data(request):
     # Aggregate requests created per month
@@ -1810,6 +1894,7 @@ from ADMIN.request_a_maintenance import handle_maintenance_request
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from ADMIN.emotional_support import provide_emotional_support, check_for_keywords
 from fuzzywuzzy import process
+from .response import responses
 
 # Initialize the sentiment analyzer
 sia = SentimentIntensityAnalyzer()
@@ -1982,32 +2067,31 @@ def get_bot_response(user_message, user_id, session):
     if user_message.lower() in ["latest events", "event", "events", 'community events', 'events in', 'upcoming events']:
         return 'I cannot fetch the events yet. But you can try to check the event section on your dashboard or on the sidebar panel.'
 
-    # General conversational fallback
-    responses = [
-        "That's interesting! Can you tell me more?",
-        "I see! What else would you like to talk about?",
-        "That's great! Do you have any other questions?",
-        "I'm here to chat! What would you like to discuss next?",
-    ]
+    # # General conversational fallback
+    # responses = [
+    #     "That's interesting! Can you tell me more?",
+    #     "I see! What else would you like to talk about?",
+    #     "That's great! Do you have any other questions?",
+    #     "I'm here to chat! What would you like to discuss next?",
+    # ]
 
-    # Try exact matching
-    all_queries = ChatbotResponse.objects.values_list('user_query', flat=True)
+    # Retrieve all keys from the responses dictionary for exact and fuzzy matching
+    user_message = user_message.lower()  # Normalize user input
+    all_queries = list(responses.keys())
+
+    # Check for an exact match in the predefined responses
     if user_message in all_queries:
-        responses = ChatbotResponse.objects.filter(user_query=user_message).values_list('bot_response', flat=True)
-        if responses:
-            return random.choice(responses)
+        return responses[user_message]  
 
     # Fuzzy matching for broader responses
     closest_match = process.extractOne(user_message, all_queries)
     if closest_match:  # Check if closest_match is valid
-        match_query, score = closest_match  # Unpack only if not None
-        if score >= 70:  # Ensure score is high enough
-            responses = ChatbotResponse.objects.filter(user_query=match_query).values_list('bot_response', flat=True)
-            if responses:
-                return random.choice(responses)
+        match_query, score = closest_match  # Unpack the match
+        if score >= 70:  # Ensure score is high enough for a match
+            return responses[match_query]  # Return a random response from the matched query
 
-    # If no match, use the fallback
-    return random.choice(responses)  # Return a general conversational prompt
+    # If no match was found, return a fallback response
+    return "I'm not sure how to respond to that."  # Default response
 
 
 # Functions like get_current_time_response(), get_current_date_response(), etc. remain the same
