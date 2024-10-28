@@ -102,37 +102,41 @@ class NonSuperUser(User):
 		proxy = True
 	
 class Property(models.Model):
-	description = (
+    BLOCK_CHOICES = [(i, i) for i in range(1, 21)]
+    HOUSE_CHOICES = [(i, i) for i in range(1, 21)]
+
+    description = (
 		('single', 'Single'),
 		('double', 'Double'),
 		('family', 'Family'),
 	)
-	availability_choices = (
+    availability_choices = (
 		('available', 'Available'),
 		('occupied', 'Occupied'),
 		('under_maintenance', 'Under maintenance'),
 	)
 
 	#household information
-	household_head = models.OneToOneField(HomeOwner, null=True, blank=True, on_delete=models.SET_NULL, related_name='household_head')
-	property_name = models.CharField(max_length=255)
-	contact_no = models.IntegerField(null=True, blank=True)
-	photo = models.ImageField(default="pope-francis-village.png")
-	#property detail
-	property_block_no = models.IntegerField()
-	property_house_no = models.IntegerField(unique=True)
-	lot_size = models.DecimalField(max_digits=10, decimal_places=2)
-	property_description = models.CharField(max_length=255, choices=description)
-	bathroom = models.IntegerField()
-	bedroom = models.IntegerField()
-	availability = models.CharField(max_length=255, choices=availability_choices, default="available")
-	date_registered = models.DateTimeField(auto_now_add=True)
+    household_head = models.OneToOneField(HomeOwner, null=True, blank=True, on_delete=models.SET_NULL, related_name='household_head')
+    property_name = models.CharField(max_length=255)
+    contact_no = models.IntegerField(null=True, blank=True)
+    photo = models.ImageField(default="pope-francis-village.png")
+    # Dropdown for block number
+    property_block_no = models.PositiveSmallIntegerField(choices=BLOCK_CHOICES)
+    # Dropdown for house number, with unique constraint
+    property_house_no = models.PositiveSmallIntegerField(choices=HOUSE_CHOICES, unique=True)
+    lot_size = models.DecimalField(max_digits=10, decimal_places=2)
+    property_description = models.CharField(max_length=255, choices=description)
+    bathroom = models.IntegerField()
+    bedroom = models.IntegerField()
+    availability = models.CharField(max_length=255, choices=availability_choices, default="available")
+    date_registered = models.DateTimeField(auto_now_add=True)
 
-	def __str__(self):
-		return self.property_name
+    def __str__(self):
+        return self.property_name
 	
-	class Meta:
-		verbose_name_plural = 'Properties'
+    class Meta:
+        verbose_name_plural = 'Properties'
 
 # New model to handle multiple images
 class PropertyImage(models.Model):
@@ -309,3 +313,22 @@ class ChatHistoryMessage(models.Model):
 
     def __str__(self):
         return f'{self.user.username} - {self.sender}: {self.message}'
+    
+
+class VisitRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('declined', 'Declined'),
+    ]
+
+    visitor_full_name = models.CharField(max_length=255)
+    visitor_relation = models.CharField(max_length=100)
+    visit_date = models.DateTimeField()
+    purpose = models.TextField()
+    household_head = models.ForeignKey(HomeOwner, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.visitor_full_name} - {self.visit_date.strftime('%Y-%m-%d %H:%M')}"

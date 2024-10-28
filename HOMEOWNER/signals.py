@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 from .models import Maintenance_request, Notification
 from django.utils import timezone
-from ADMIN.models import Comment, Event, Announcement
+from ADMIN.models import Comment, Event, Announcement, VisitRequest
 from USERS.models import HomeOwner
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -95,3 +95,23 @@ def send_announcement_notification(sender, instance, created, **kwargs):
                 message=f"New announcement '{instance.title}' has been posted! \n '{instance.content}'",
                 maintenance_request=None  # No link to maintenance in this case
             )
+
+# Signal to create a notification when a VisitRequest is created for a homeowner
+@receiver(post_save, sender=VisitRequest)
+def send_visitor_request_notification(sender, instance, created, **kwargs):
+    if created:
+        # Fetch the homeowner associated with the visit request
+        homeowner = instance.household_head
+
+        # Create a notification specifically for this homeowner
+        Notification.objects.create(
+            homeowner=homeowner.user, 
+            visit_request=instance,
+            icon='bi-person-check',  # Icon specific for visitor requests
+            message=(
+                f"Visit request from {instance.visitor_full_name} "
+                f"({instance.visitor_relation}) scheduled for {instance.visit_date.strftime('%B %d, %Y %I:%M %p')}. "
+                "Please review and confirm the visit."
+            ),
+            maintenance_request=None  # No link to maintenance in this case
+        )

@@ -43,6 +43,7 @@ urlpatterns = [
 	path('process_message/', process_message, name='process_message'),
     path('chat/', views.chat, name='chat'),
 	path('submit_feedback/', views.submit_feedback, name='submit_feedback'),
+    path('notifications/<int:notif_id>/details/', views.notification_details, name='notification_details'),
 ]
 
 

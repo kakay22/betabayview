@@ -147,7 +147,6 @@
 									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
 									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
 								</div>
-								https://2zcl4v96-8000.asse.devtunnels.ms/
 							</a>
 						{% elif notif.icon == 'bi-megaphone' %}
 							<a href="{% url 'owner_announcements' %}" type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-white text-card-foreground shadow-sm" data-v0-t="card"
@@ -164,6 +163,17 @@
 									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
 								</div>
 							</a>
+						{% elif notif.icon == 'bi-person-check' %}
+							<div type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-white text-card-foreground shadow-sm" data-v0-t="card"
+								data-id="{{ notif.pk }}"
+								data-bs-toggle="modal"
+								data-bs-target="#verifyVisitModal{{ notif.pk}}">
+								<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+							</div>
 						{% else %}
 							{% if notif.notif_url %}
 							<div onclick="location.href='{{ notif.notif_url }}'" class="notification-item cursor-pointer border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-white text-card-foreground shadow-sm" data-v0-t="card">
@@ -196,7 +206,6 @@
 							</div>
 							{% endif %}
 						{% endif %}
-
 					{% else %} <!--if notif is unread-->
 						{% if notif.icon == 'bi-check-circle' %}
 							<div type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card"
@@ -247,6 +256,17 @@
 									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
 								</div>
 							</a>
+						{% elif notif.icon == 'bi-person-check' %}
+							<div type="button" class="notification-item border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card"
+								data-id="{{ notif.pk }}"
+								data-bs-toggle="modal"
+								data-bs-target="#verifyVisitModal{{ notif.pk}}">
+								<i class="bi {{ notif.icon }} text-[1.5rem] px-2 bg-gray-300 rounded-md"></i> <!-- Default Icon -->
+								<div>
+									<p class="text-sm notif-message pointer-events-none">{{ notif.message|safe }}</p>
+									<p class="text-sm text-gray-500">{{ notif.created_at }}</p>
+								</div>
+							</div>
 						{% else %}
 							{% if notif.notif_url %}
 							<div onclick="location.href='{{ notif.notif_url }}'" class="notification-item cursor-pointer border flex justify-start gap-2 items-center py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card" data-id="{{ notif.pk }}">
@@ -287,6 +307,29 @@
 							data-bs-target="#viewModal{{ notif.pk}}" class="notification-item border py-3 p-3 hover:bg-gray-300 transition-all duration-75 bg-gray-200 text-card-foreground shadow-sm" data-v0-t="card">
 							<p class="text-sm">{{ notif.message|safe }} </p> <p class="text-sm text-gray-500">{{ notif.maintenance_request.date_requested }}</p>
 							</div> -->
+
+					<!-- Modal for Visit Request -->
+				<div class="modal fade" id="verifyVisitModal{{ notif.pk }}" tabindex="-1" aria-labelledby="verifyVisitModalLabel{{ notif.pk }}" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="verifyVisitModalLabel{{ notif.pk }}">Visit Request Details from {{ notif.visit_request.visitor_full_name }}</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body" id="modalContent{{ notif.pk }}">
+								<!-- Visit request details will be loaded here dynamically -->
+								<p><strong>Visitor Name:</strong> {{ notif.visit_request.visitor_full_name }}</p>
+								<p><strong>Relation:</strong> {{ notif.visit_request.visitor_relation }}</p>
+								<p><strong>Visit Date:</strong> {{ notif.visit_request.visit_date }}</p>
+								<p><strong>Purpose:</strong> {{ notif.visit_request.purpose }}</p>
+							</div>
+							<div class="modal-footer">
+								<button class="btn btn-success">Accept</button>
+								<button class="btn btn-danger">Reject</button>
+							</div>
+						</div>
+					</div>
+				</div>
 
 
 				<!-- verfication Modal for notification -->

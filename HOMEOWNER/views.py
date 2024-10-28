@@ -930,3 +930,17 @@ def submit_feedback(request):
 
         messages.success(request, 'Thank you for your feedback!')
         return redirect('owner_dashboard')  # Replace with your desired redirect URL
+
+#for visit request notification
+def notification_details(request, notif_id):
+    try:
+        notification = Notification.objects.get(pk=notif_id)
+        visit_request = notification.visit_request  # assuming you have this relation
+        return JsonResponse({
+            'visitor_full_name': visit_request.visitor_full_name,
+            'visitor_relation': visit_request.visitor_relation,
+            'visit_date': visit_request.visit_date.strftime('%Y-%m-%d %H:%M'),
+            'purpose': visit_request.purpose
+        })
+    except Notification.DoesNotExist:
+        return JsonResponse({'error': 'Notification not found'}, status=404)

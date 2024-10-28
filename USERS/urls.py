@@ -8,6 +8,7 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('', views.main, name='main'),
+	path('submit_visit_request/', views.submit_visit_request, name='submit_visit_request'),
     path('home-owner/', views.ownerLogin, name='ownerLogin'),
     path('owner_dashboard/', views.owner_dashboard, name='owner_dashboard'),
 	path('check_property/', views.check_property, name='check_property'),

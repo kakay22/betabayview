@@ -61,9 +61,9 @@ class PropertyForm(forms.ModelForm):
         fields = ['property_name', 'photo', 'bedroom', 'bathroom', 'property_block_no', 'property_house_no', 'property_description', 'lot_size']
         widgets = {
             'property_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'property_block_no': forms.NumberInput(attrs={'class': 'form-control'}),
-            'property_house_no': forms.NumberInput(attrs={'class': 'form-control'}),
+            'photo': forms.ClearableFileInput(attrs={'class': 'form-control', 'required':'required'}),
+            'property_block_no': forms.Select(attrs={'class': 'form-control'}),
+            'property_house_no': forms.Select(attrs={'class': 'form-control'}),
             'lot_size': forms.NumberInput(attrs={'class': 'form-control'}),
             'bathroom': forms.NumberInput(attrs={'class': 'form-control'}),
             'bedroom': forms.NumberInput(attrs={'class': 'form-control'}),

@@ -6,7 +6,6 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.apps import apps  # Import apps to use get_model
 
-
 # Create your models here.
 class Maintenance_request(models.Model):
     name_of_owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -32,20 +31,25 @@ class Activitie(models.Model):
 	def __str__(self):
 		return self.name_of_activity
 
-class Notification(models.Model):
-	homeowner = models.ForeignKey(User, on_delete=models.CASCADE)
-	icon = models.CharField(max_length=255, default='bi-info-circle')
-	message = models.TextField()
-	is_read = models.BooleanField(default=False)
-	created_at = models.DateTimeField(default=timezone.now)
-	maintenance_request = models.ForeignKey(
-        Maintenance_request, 
-        on_delete=models.CASCADE, 
-        null=True,  # Allow the field to be null
-        blank=True  # Allow the field to be empty
-    )
-	notif_url = models.URLField(max_length=255, null=True, blank=True)  # Add the notif_url field
 
-	def __str__(self):
-		return self.message
-	
+class Notification(models.Model):
+    homeowner = models.ForeignKey(User, on_delete=models.CASCADE)
+    icon = models.CharField(max_length=255, default='bi-info-circle')
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    maintenance_request = models.ForeignKey(
+        'Maintenance_request', 
+        on_delete=models.CASCADE, 
+        null=True
+    )
+    visit_request = models.ForeignKey(
+        'ADMIN.VisitRequest', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True
+    )
+    notif_url = models.URLField(max_length=255, null=True, blank=True)  # Add the notif_url field
+
+    def __str__(self):
+        return self.message

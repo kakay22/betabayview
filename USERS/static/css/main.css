@@ -40,3 +40,201 @@
 	top: -100%;
   }
 }
+
+.custom-icon {
+  position: relative;
+}
+
+.custom-marker {
+  width: 30px; /* Width of the circular marker */
+  height: 30px; /* Height of the circular marker */
+  border-radius: 50%; /* Make it circular */
+  overflow: hidden; /* Hide overflow */
+  border: 2px solid white; /* Optional: add a border */
+}
+/* Styles for clicked button */
+.button-active {
+  background-color: green !important;
+  color: white;
+}
+#house-buttons {
+position: absolute;
+top: 10%; /* Distance from the top */
+left: 0; /* Distance from the left */
+padding: 10px 4%;
+border-radius: 8px;
+z-index: 1000; /* Make sure it appears above the map */
+width: 100%;
+overflow-x: scroll; /* Enable horizontal scrolling */
+display: flex; /* Use flexbox for layout */
+flex-direction: row; /* Arrange buttons in a row */
+white-space: nowrap; /* Prevent wrapping of buttons */
+}
+
+/* For Webkit browsers (Chrome, Safari) */
+#house-buttons::-webkit-scrollbar {
+display: none; /* Hide scrollbar */
+}
+
+.house-button {
+margin: 5px; /* Spacing between buttons */
+padding: 10px;
+background-color: white; /* Button color */
+border: none;
+border-radius: 5px;
+cursor: pointer;
+text-align: center; /* Center-align text */
+font-size: 14px; /* Font size */
+transition: background-color 0.3s; /* Transition for hover effect */
+flex: 0 0 auto; /* Prevent buttons from stretching */
+font-size: 0.875rem /* 14px */;
+line-height: 1.25rem /* 20px */;
+}
+
+/* Optional: Add hover effect for buttons */
+.house-button:hover {
+background-color: rgb(216, 209, 209); /* Darker shade on hover */
+}
+.popup-container {
+width: 200px; /* Set width for popup */
+}
+
+.popup-image {
+width: 100%; /* Make image responsive */
+height: auto;
+}
+
+.popup-button {
+display: inline-block;
+margin-top: 5px;
+padding: 5px 10px;
+background-color: #28a745 !important; /* Request button color */
+color: white;
+text-decoration: none;
+border-radius: 5px;
+}
+
+.popup-button:hover {
+background-color: #218838 !important; /* Darker shade on hover */
+}
+.popup-container {
+max-width: 250px;
+font-family: Arial, sans-serif;
+}
+
+.popup-title {
+text-align: center;
+font-size: 1.2em;
+}
+
+.popup-head {
+color: gray;
+}
+
+.popup-image {
+width: 100%;
+height: auto;
+border-radius: 5px;
+margin: 10px 0;
+}
+
+.popup-description {
+font-size: 0.9em;
+color: #555;
+}
+
+.popup-button {
+display: block;
+text-align: center;
+background-color: #007BFF;
+color: white;
+padding: 8px;
+border-radius: 5px;
+text-decoration: none;
+cursor: pointer;
+}
+.splide__slide {
+display: flex;
+justify-content: center;
+}
+
+.user {
+max-width: 300px;   /* Adjust this based on your card size */
+margin: 0 auto;
+transition: background-color 0.3s ease;
+}
+
+.user.blue-bg {
+background-color: blue;  /* Blue background for side cards */
+}
+
+.user img {
+max-width: 100%;
+height: auto;
+}
+/* Dark pagination styling */
+.splide__pagination {
+display: flex;
+justify-content: center;
+margin-top: 1rem;
+}
+
+.splide__pagination__page {
+width: 12px;
+height: 12px;
+background-color: rgba(0, 0, 0, 0.6); /* Dark background for pagination dots */
+border-radius: 50%;
+margin: 0 5px;
+transition: background-color 0.3s ease;
+cursor: pointer;
+}
+
+.splide__pagination__page.is-active {
+background-color: #000; /* Solid black color for active dot */
+}
+
+a, button{
+backdrop-filter: blur(3px);
+}
+
+#mapBtn:hover, #createBtn:hover {
+background-color: transparent !important;  /* No background color on hover */
+box-shadow: inset 0px -5px 10px rgba(0, 0, 0, 0.4); /* Inside bottom shadow */
+transition: box-shadow 0.3s ease;  /* Smooth transition */
+border: 2px solid rgb(105, 102, 102);
+color: teal;
+}
+
+
+/* Responsive styling for smaller screens */
+@media (max-width: 900px) {
+.splide__slide {
+width: 70vw;
+height: 16rem;
+}
+}
+body, html {
+margin: 0;
+padding: 0;
+width: 100%;
+height: 100%;
+overflow: hidden;
+}
+#infoBox {
+position: fixed;
+bottom: 10%;
+left: 50%;
+transform: translateX(-50%);
+padding: 10px;
+background-color: rgba(0, 0, 0, 0.5);
+color: white;
+text-align: center;
+font-size: 1.2em;
+border-radius: 8px;
+}
+.modal-backdrop {
+  z-index: 1050 !important; /* Ensure backdrop is below the modal */
+}
+.modal {
+  z-index: 1051 !important; /* Ensure modal is above the backdrop */
+}

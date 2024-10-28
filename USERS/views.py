@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from .models import HomeOwner, Resident
 from HOMEOWNER.models import Activitie, Maintenance_request
 from .forms import UserForm, HomeOwnerForm, OwnerLoginForm, SecretaryLoginForm
-from ADMIN.models import Secretary, Event, Log, Property
+from ADMIN.models import Secretary, Event, Log, Property, VisitRequest
 from django.contrib import messages
 from HOMEOWNER.models import Notification
 from SECRETARY.signals import create_homeowner_notification
@@ -17,11 +17,97 @@ from django.conf import settings
 from .forms import PasswordResetRequestForm
 from .models import PasswordResetToken
 from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from datetime import datetime
+from dateutil import parser
+from django.utils import timezone
 
 
-# Create your views here.
+def submit_visit_request(request):
+    if request.method == 'POST':
+        try:
+            # Load JSON data from the request body
+            data = json.loads(request.body)
+
+            # Extract the required fields
+            visitor_full_name = data.get('visitor_full_name')
+            visitor_relation = data.get('visitor_relation')
+            visit_date_string = data.get('visit_date')
+            purpose = data.get('purpose')
+            household_head_name = data.get('household_head')
+
+            # Make the visit date timezone-aware
+            visit_date = timezone.make_aware(parser.parse(visit_date_string))
+
+            # Validate required fields
+            if not all([visitor_full_name, visitor_relation, visit_date, purpose]):
+                return JsonResponse({'error': 'All fields are required.'}, status=400)
+
+            # Fetch the HomeOwner instance based on the household head's username
+            try:
+                household_head = HomeOwner.objects.get(user__username=household_head_name)
+            except HomeOwner.DoesNotExist:
+                return JsonResponse({'error': 'Household head not found.'}, status=404)
+
+            # Create and save the visit request
+            visit_request = VisitRequest(
+                visitor_full_name=visitor_full_name,
+                visitor_relation=visitor_relation,
+                visit_date=visit_date,
+                purpose=purpose,
+                household_head=household_head,
+            )
+            visit_request.save()  # Save the visit request to the database
+
+            # Get homeowner's full name and email
+            owner_full_name = f"{household_head.user.first_name} {household_head.user.last_name}"
+            homeowner_email = household_head.user.email
+
+            # Log the visit request creation
+            log_entry = Log(
+                log_type='info',  # Log type can be 'info', 'warning', 'error', etc.
+                description=f"Visitor '{visitor_full_name}' requested a visit to '{owner_full_name}' on {visit_date}.",
+                user=household_head.user,  # Log the user associated with the household head
+                action='Created Visit Request'  # Specify the action taken
+            )
+            log_entry.save()  # Save the log entry to the database
+
+            # Send an email to the household head regarding the visit request
+            send_email_to_household_head(
+                owner_full_name, visitor_full_name, visitor_relation, visit_date, purpose, homeowner_email
+            )
+
+            return JsonResponse({'message': 'Visit request submitted successfully!'}, status=200)
+
+        except ValueError as ve:
+            return JsonResponse({'error': f'Invalid date format: {str(ve)}'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Internal server error: {str(e)}'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+def send_email_to_household_head(owner_full_name, visitor_name, relation, visit_date, purpose, recipient_email):
+    subject = "New Visitor Request - Confirmation Needed"
+    message = (
+        f"Dear {owner_full_name},\n\n"
+        f"A new visitor request has been submitted with the following details:\n\n"
+        f"Visitor Name: {visitor_name}\n"
+        f"Relation to Household: {relation}\n"
+        f"Scheduled Visit Date: {visit_date}\n"
+        f"Purpose of Visit: {purpose}\n\n"
+        "Please review this request and confirm whether it should be approved.\n\n"
+        "Thank you,\nYour Security Team"
+    )
+    send_mail(subject, message, 'bbvhhousingmanagement@gmail.com', [recipient_email])
+
+
 def main(request):
-	return render(request, 'main.html')
+    properties = Property.objects.select_related('household_head').all().order_by('property_house_no')
+    return render(request, 'main.html', {'properties':properties})
 
 def register(request):
     mess = ''

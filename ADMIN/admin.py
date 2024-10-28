@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Secretary, Event, Comment, Property, Message, MaintenancePersonnel, AdminNotification, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, ChatbotResponse, Feedback, ChatConversation, ChatFeedback, ChatHistoryMessage
+from .models import Secretary, Event, Comment, Property, Message, MaintenancePersonnel, AdminNotification, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, ChatbotResponse, Feedback, ChatConversation, ChatFeedback, ChatHistoryMessage, VisitRequest
 
 # Register your models here.
 admin.site.register(Secretary)
@@ -19,10 +19,15 @@ admin.site.register(Feedback)
 admin.site.register(ChatFeedback)
 admin.site.register(ChatHistoryMessage)
 
-
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
     list_display = ('title', 'created_by', 'created_at', 'is_active')
     list_filter = ('is_active', 'created_at')
     search_fields = ('title', 'content')
 
+
+@admin.register(VisitRequest)
+class VisitRequestAdmin(admin.ModelAdmin):
+    list_display = ('visitor_full_name', 'visit_date', 'household_head', 'status', 'created_at')
+    list_filter = ('status', 'household_head')
+    search_fields = ('visitor_full_name', 'visitor_relation', 'purpose')
