@@ -70,6 +70,9 @@ urlpatterns = [
     path('submit_chatFeedback/<int:conversation_id>/', views.submit_chatFeedback, name='submit_chatFeedback'),
     path('chat/history/', views.get_chat_history, name='get_chat_history'),
     path('save-feedback/', views.save_feedback, name='save_feedback'),
+    path('chat-logs/', views.chat_logs, name='chat_logs'),  # URL for viewing chat logs
+    path('chat-logs/edit/<int:id>/', views.chat_edit, name='chat_edit'),  # URL for editing a specific chat conversation
+    path('chat-logs/delete/<int:id>/', views.chat_delete, name='chat_delete'),  # URL for deleting a specific chat conversation
 ]
 
 

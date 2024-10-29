@@ -1,0 +1,202 @@
+{% extends 'admin_panel.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user }} / {% block title %} Chatbot Logs {% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-gray-100">
+    {% block content %}
+    <link rel="stylesheet" href="{% static 'css/admin-pop-up-mess.css' %}">
+
+    <div class="w-full md:w-[85%] max-[770px]:h-full h-[90%] bg-white absolute right-0 top-[4rem] md:top-[3.8rem] mt-[.8rem] shadow-md rounded-md p-4 overflow-y-auto overflow-x-hidden">
+		{% for message in messages %}
+		<p id="pop-up-mess" class="alert py-2 absolute border-none bg-white shadow-md shadow-gray-400 text-black">
+			{% if message.tags == 'error' %}
+				<i class="bi bi-x-circle-fill text-red-600"></i> {{ message }}
+			{% elif message.tags == 'success' %}
+				<i class="bi bi-check-circle-fill text-green-600"></i> {{ message }}
+			{% else %}
+				<i class="bi bi-info-circle-fill text-blue-600"></i> {{ message }}
+			{% endif %}
+		</p>
+		{% endfor %}
+	
+		<h1 class="text-2xl font-bold mb-4">Chatbot Logs Management</h1>
+		
+		<form id="filterForm" method="GET" action="{% url 'chat_logs' %}">
+			<div class="mb-4 flex flex-col md:flex-row items-center justify-between">
+				<div class="form-check me-4">
+					<input type="checkbox" id="likesFilter" class="form-check-input" name="likes" onchange="this.form.submit()" {% if request.GET.likes == 'on' %}checked{% endif %}>
+					<label for="likesFilter" class="form-check-label">Show Conversations with Likes</label>
+				</div>
+				<div class="form-check">
+					<input type="checkbox" id="dislikesFilter" class="form-check-input" name="dislikes" onchange="this.form.submit()" {% if request.GET.dislikes == 'on' %}checked{% endif %}>
+					<label for="dislikesFilter" class="form-check-label">Show Conversations with Dislikes</label>
+				</div>
+			</div>
+		</form>
+		
+		<div class="table-responsive">
+			<table class="table table-striped" id="conversationTable">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>User</th>
+						<th>User Message</th>
+						<th>Bot Response</th>
+						<th>Timestamp</th>
+						<th>Likes</th>
+						<th>Dislikes</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for item in conversations %}
+					<tr>
+						<td>{{ item.conversation.id }}</td>
+						<td>{{ item.conversation.user.username }}</td>
+						<td>{{ item.conversation.user_message|truncatewords:10 }}</td>
+						<td>{{ item.conversation.bot_response|truncatewords:10 }}</td>
+						<td>{{ item.conversation.timestamp|date:"Y-m-d H:i" }}</td>
+						<td>{{ item.has_like|yesno:"Yes,No" }}</td>
+						<td>{{ item.has_dislike|yesno:"Yes,No" }}</td>
+						<td>
+							<button class="btn btn-primary btn-sm editBtn" 
+								data-id="{{ item.conversation.id }}" 
+								data-user="{{ item.conversation.user.username }}" 
+								data-message="{{ item.conversation.user_message }}" 
+								data-response="{{ item.conversation.bot_response }}" 
+								data-likes="{{ item.conversation.likes }}" 
+								data-dislikes="{{ item.conversation.dislikes }}" 
+								data-bs-toggle="modal" 
+								data-bs-target="#editModal">Edit</button>
+								<button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal" 
+										data-id="{{ conversation.id }}" data-message="Are you sure you want to delete this conversation?">
+									Delete
+								</button>
+						</td>
+					</tr>
+					{% empty %}
+					<tr>
+						<td colspan="8" class="text-center">No conversations found.</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+
+			<!-- Edit Modal -->
+		<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="editModalLabel">Edit Chat Conversation</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form id="editForm" method="POST" action="{% url 'chat_edit' 0 %}">
+							{% csrf_token %}
+							<input type="hidden" id="editConversationId" name="conversationId">
+							<div class="mb-3">
+								<label for="editUserMessage" class="form-label">User Message</label>
+								<textarea class="form-control pointer-events-none" id="editUserMessage" name="userMessage" rows="3" readonly></textarea>
+							</div>
+							<div class="mb-3">
+								<label for="editBotResponse" class="form-label">Bot Response</label>
+								<textarea class="form-control" id="editBotResponse" name="botResponse" rows="3"></textarea>
+							</div>
+							<button type="submit" class="btn btn-primary">Save Changes</button>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<!-- Delete Confirmation Modal -->
+			<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<p id="deleteConfirmationMessage">Are you sure you want to delete this conversation?</p>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+							<form id="deleteForm" method="post">
+								{% csrf_token %}
+								<input type="hidden" id="deleteConversationId" name="conversationId">
+								<button type="submit" class="btn btn-danger">Delete</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				const likesFilter = document.getElementById('likesFilter');
+				const dislikesFilter = document.getElementById('dislikesFilter');
+				const conversationTable = document.getElementById('conversationTable');
+		
+				function filterConversations() {
+					const showLikes = likesFilter.checked;
+					const showDislikes = dislikesFilter.checked;
+					const rows = conversationTable.getElementsByTagName('tr');
+		
+					for (let i = 1; i < rows.length; i++) { // Start at 1 to skip the header row
+						const likes = parseInt(rows[i].cells[5].innerText) > 0;
+						const dislikes = parseInt(rows[i].cells[6].innerText) > 0;
+		
+						if ((showLikes && likes) || (showDislikes && dislikes)) {
+							rows[i].style.display = '';
+						} else {
+							rows[i].style.display = 'none';
+						}
+					}
+				}
+		
+				const editButtons = document.querySelectorAll('.editBtn');
+				editButtons.forEach(button => {
+					button.addEventListener('click', function () {
+						const conversationId = this.getAttribute('data-id');
+						const userMessage = this.getAttribute('data-message');
+						const botResponse = this.getAttribute('data-response');
+		
+						document.getElementById('editConversationId').value = conversationId;
+						document.getElementById('editUserMessage').value = userMessage; // Set user message
+						document.getElementById('editBotResponse').value = botResponse; // Set bot response
+					});
+				});
+			});
+		</script>
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				const deleteModal = document.getElementById('deleteModal');
+				deleteModal.addEventListener('show.bs.modal', function (event) {
+					const button = event.relatedTarget; // Button that triggered the modal
+					const conversationId = button.getAttribute('data-id'); // Extract info from data-* attributes
+					const message = button.getAttribute('data-message');
+		
+					// Update the modal's content
+					const modalBody = deleteModal.querySelector('#deleteConfirmationMessage');
+					modalBody.textContent = message;
+		
+					// Set the action for the delete form with the conversation ID
+					const deleteForm = deleteModal.querySelector('#deleteForm');
+					deleteForm.action = "{% url 'chat_delete' '0' %}".replace('0', conversationId); // Correctly replace with the conversation ID
+				});
+			});
+		</script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<script src="{% static 'js/admin_dropdown_menu.js' %}"></script>
+    {% endblock content %}
+</body>
+</html>

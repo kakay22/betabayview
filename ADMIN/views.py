@@ -60,19 +60,21 @@ from django.db.models import Count
 from django.db.models.functions import TruncMonth, TruncWeek
 
 def dashboard_graphs_data(request):
-    # Monthly Maintenance Requests
-    current_year = datetime.now().year
-    monthly_maintenance = (
+   # Weekly Maintenance Requests
+    current_year = timezone.now().year
+    start_date = timezone.now() - timedelta(weeks=12)  # Limit to last 12 weeks if desired
+
+    weekly_maintenance = (
         Maintenance_request.objects
-        .filter(date_requested__year=current_year)
-        .annotate(month=TruncMonth('date_requested'))
-        .values('month')
+        .filter(date_requested__year=current_year, date_requested__gte=start_date)
+        .annotate(week=TruncWeek('date_requested'))
+        .values('week')
         .annotate(count=Count('id'))
-        .order_by('month')
+        .order_by('week')
     )
     
     # Weekly Visit Requests
-    start_date = datetime.now() - timedelta(weeks=12)
+    start_date = timezone.now() - timedelta(weeks=12)
     weekly_visits = (
         VisitRequest.objects
         .filter(created_at__gte=start_date)
@@ -88,9 +90,9 @@ def dashboard_graphs_data(request):
 
     # Prepare data for JSON response
     data = {
-        "monthly_maintenance": {
-            "months": [entry['month'].strftime('%b') for entry in monthly_maintenance],
-            "counts": [entry['count'] for entry in monthly_maintenance],
+        "weekly_maintenance": {
+            "weeks": [entry['week'].strftime('%b') for entry in weekly_maintenance],
+            "counts": [entry['count'] for entry in weekly_maintenance],
         },
         "weekly_visits": {
             "weeks": [entry['week'].strftime('%b %d') for entry in weekly_visits],
@@ -1599,6 +1601,54 @@ from datetime import datetime
 import random
 from .joke_response import get_joke_response
 from .emotional_support import provide_advice  # Adjust the import based on your project structure
+
+@login_required
+def chat_logs(request):
+    # Get all ChatConversation instances
+    conversations = ChatConversation.objects.all().order_by('-timestamp')
+
+    # Initialize the feedback variables
+    feedback_likes = []
+    feedback_dislikes = []
+
+    # Check filter parameters from request
+    show_likes = request.GET.get('likes', 'off') == 'on'
+    show_dislikes = request.GET.get('dislikes', 'off') == 'on'
+
+    # Get feedback if the filters are active
+    if show_likes:
+        feedback_likes = ChatFeedback.objects.filter(feedback_type='like').values_list('conversation_id', flat=True)
+
+    if show_dislikes:
+        feedback_dislikes = ChatFeedback.objects.filter(feedback_type='dislike').values_list('conversation_id', flat=True)
+
+    # Prepare the conversation list with feedback information
+    filtered_conversations = []
+    for conversation in conversations:
+        conversation_data = {
+            'conversation': conversation,
+            'has_like': conversation.id in feedback_likes,
+            'has_dislike': conversation.id in feedback_dislikes
+        }
+        filtered_conversations.append(conversation_data)
+
+    return render(request, 'chatbot_logs.html', {'conversations': filtered_conversations})
+
+@login_required
+def chat_edit(request, id):
+    conversation = get_object_or_404(ChatConversation, id=id)
+    if request.method == "POST":
+        conversation.likes = request.POST.get('likes', conversation.likes)
+        conversation.dislikes = request.POST.get('dislikes', conversation.dislikes)
+        conversation.save()
+        return redirect('chat_logs')
+    return render(request, 'chat_logs.html', {'conversation': conversation})
+
+@login_required
+def chat_delete(request, id):
+    conversation = get_object_or_404(ChatConversation, id=id)
+    conversation.delete()
+    return redirect('chat_logs')
 
 # Detect agreement from user
 def analyze_agreement(user_message):
