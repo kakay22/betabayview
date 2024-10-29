@@ -54,8 +54,12 @@ from matplotlib import pyplot as plt
 from matplotlib.dates import MonthLocator, DateFormatter, WeekdayLocator
 from datetime import datetime, timedelta
 from django.db.models.functions import TruncMonth, TruncWeek
+from django.http import JsonResponse
+from datetime import datetime, timedelta
+from django.db.models import Count
+from django.db.models.functions import TruncMonth, TruncWeek
 
-def dashboard_graphs(request):
+def dashboard_graphs_data(request):
     # Monthly Maintenance Requests
     current_year = datetime.now().year
     monthly_maintenance = (
@@ -66,9 +70,9 @@ def dashboard_graphs(request):
         .annotate(count=Count('id'))
         .order_by('month')
     )
-
+    
     # Weekly Visit Requests
-    start_date = datetime.now() - timedelta(weeks=12)  # last 12 weeks
+    start_date = datetime.now() - timedelta(weeks=12)
     weekly_visits = (
         VisitRequest.objects
         .filter(created_at__gte=start_date)
@@ -77,54 +81,100 @@ def dashboard_graphs(request):
         .annotate(count=Count('id'))
         .order_by('week')
     )
-
-    # Count Total and Occupied Properties
+    
+    # Total and Occupied Properties
     total_properties = Property.objects.all().count()
     occupied_properties = Property.objects.filter(availability='occupied').count()
 
-    # Prepare the pie chart data
-    property_labels = ['Occupied', 'Available']
-    property_sizes = [occupied_properties, total_properties - occupied_properties]  # Available count
+    # Prepare data for JSON response
+    data = {
+        "monthly_maintenance": {
+            "months": [entry['month'].strftime('%b') for entry in monthly_maintenance],
+            "counts": [entry['count'] for entry in monthly_maintenance],
+        },
+        "weekly_visits": {
+            "weeks": [entry['week'].strftime('%b %d') for entry in weekly_visits],
+            "counts": [entry['count'] for entry in weekly_visits],
+        },
+        "properties": {
+            "labels": ["Occupied", "Available"],
+            "sizes": [occupied_properties, total_properties - occupied_properties],
+        }
+    }
 
-    # Plot Monthly Maintenance Requests and Weekly Visit Requests
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 15))  # Unpack into three axes
+    return JsonResponse(data)
 
-    # Monthly Maintenance Requests
-    months = [entry['month'] for entry in monthly_maintenance]
-    maintenance_counts = [entry['count'] for entry in monthly_maintenance]
+
+# def dashboard_graphs(request):
+#     # Monthly Maintenance Requests
+#     current_year = datetime.now().year
+#     monthly_maintenance = (
+#         Maintenance_request.objects
+#         .filter(date_requested__year=current_year)
+#         .annotate(month=TruncMonth('date_requested'))
+#         .values('month')
+#         .annotate(count=Count('id'))
+#         .order_by('month')
+#     )
+
+#     # Weekly Visit Requests
+#     start_date = datetime.now() - timedelta(weeks=12)  # last 12 weeks
+#     weekly_visits = (
+#         VisitRequest.objects
+#         .filter(created_at__gte=start_date)
+#         .annotate(week=TruncWeek('created_at'))
+#         .values('week')
+#         .annotate(count=Count('id'))
+#         .order_by('week')
+#     )
+
+#     # Count Total and Occupied Properties
+#     total_properties = Property.objects.all().count()
+#     occupied_properties = Property.objects.filter(availability='occupied').count()
+
+#     # Prepare the pie chart data
+#     property_labels = ['Occupied', 'Available']
+#     property_sizes = [occupied_properties, total_properties - occupied_properties]  # Available count
+
+#     # Plot Monthly Maintenance Requests and Weekly Visit Requests
+#     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 15))  # Unpack into three axes
+
+#     # Monthly Maintenance Requests
+#     months = [entry['month'] for entry in monthly_maintenance]
+#     maintenance_counts = [entry['count'] for entry in monthly_maintenance]
     
-    ax1.plot(months, maintenance_counts, marker='o', color='b', label="Maintenance Requests")
-    ax1.xaxis.set_major_locator(MonthLocator())
-    ax1.xaxis.set_major_formatter(DateFormatter('%b'))
-    ax1.set_xlabel("Month")
-    ax1.set_ylabel("Number of Requests")
-    ax1.set_title("Maintenance Requests per Month")
-    ax1.grid(True)
+#     ax1.plot(months, maintenance_counts, marker='o', color='b', label="Maintenance Requests")
+#     ax1.xaxis.set_major_locator(MonthLocator())
+#     ax1.xaxis.set_major_formatter(DateFormatter('%b'))
+#     ax1.set_xlabel("Month")
+#     ax1.set_ylabel("Number of Requests")
+#     ax1.set_title("Maintenance Requests per Month")
+#     ax1.grid(True)
 
-    # Weekly Visit Requests
-    weeks = [entry['week'] for entry in weekly_visits]
-    visit_counts = [entry['count'] for entry in weekly_visits]
+#     # Weekly Visit Requests
+#     weeks = [entry['week'] for entry in weekly_visits]
+#     visit_counts = [entry['count'] for entry in weekly_visits]
     
-    ax2.plot(weeks, visit_counts, marker='o', color='g', label="Visit Requests")
-    ax2.xaxis.set_major_locator(WeekdayLocator())
-    ax2.xaxis.set_major_formatter(DateFormatter('%b %d'))
-    ax2.set_xlabel("Week")
-    ax2.set_ylabel("Number of Requests")
-    ax2.set_title("Visit Requests per Week")
-    ax2.grid(True)
+#     ax2.plot(weeks, visit_counts, marker='o', color='g', label="Visit Requests")
+#     ax2.xaxis.set_major_locator(WeekdayLocator())
+#     ax2.xaxis.set_major_formatter(DateFormatter('%b %d'))
+#     ax2.set_xlabel("Week")
+#     ax2.set_ylabel("Number of Requests")
+#     ax2.set_title("Visit Requests per Week")
+#     ax2.grid(True)
 
-    # Plot Occupied vs Available Properties
-    ax3.pie(property_sizes, labels=property_labels, autopct='%1.1f%%', startangle=140, colors=['#66b3ff', '#ff9999'])
-    ax3.axis('equal')  # Equal aspect ratio ensures pie chart is circular
-    ax3.set_title("Occupied vs Available Properties")
+#     # Plot Occupied vs Available Properties
+#     ax3.pie(property_sizes, labels=property_labels, autopct='%1.1f%%', startangle=140, colors=['#66b3ff', '#ff9999'])
+#     ax3.axis('equal')  # Equal aspect ratio ensures pie chart is circular
+#     ax3.set_title("Occupied vs Available Properties")
 
-    # Save plot to response
-    response = HttpResponse(content_type='image/png')
-    plt.tight_layout()
-    plt.savefig(response, format='png')
-    plt.close(fig)
+#     # Save plot to response
+#     response = HttpResponse(content_type='image/png')
+#     plt.tight_layout()
+#     plt.savefig(response, format='png')
+#     plt.close(fig)
     
-    return response
+#     return response
 
 
 def maintenance_requests_data(request):

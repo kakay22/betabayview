@@ -5,8 +5,9 @@ from django.urls import path
 urlpatterns = [
 	path('check-auth-status/', views.check_auth_status, name='check_auth_status'),
     path('admin dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('dashboard/graphs-data/', views.dashboard_graphs_data, name='dashboard_graphs_data'),
     path('analytics/', views.analytics, name='analytics'),
-    path('dashboard/graphs/', views.dashboard_graphs, name='dashboard_graphs'),
+    # path('dashboard/graphs/', views.dashboard_graphs, name='dashboard_graphs'),
     path('maintenance_requests_data/', views.maintenance_requests_data, name='maintenance_requests_data'),
     path('homeowners/', views.homeowners, name='homeowners'),
 	# path('filter_properties/', views.filter_properties, name='filter_properties'),
