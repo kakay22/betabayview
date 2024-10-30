@@ -35,16 +35,13 @@ class CustomPasswordChangeForm(PasswordChangeForm):
             'required': 'required',  # Marking as required
         })
 
-class UserForm(UserCreationForm):
+
+
+class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "username", "email", "password1", "password2"]
+        fields = ["first_name", "last_name", "email"]
         widgets = {
-            'username': forms.TextInput(attrs={
-                'class': 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                'maxlength': '10',
-                'required': 'required',
-            }),
             'first_name': forms.TextInput(attrs={
                 'class': 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
                 'required': 'required',
@@ -59,14 +56,44 @@ class UserForm(UserCreationForm):
                 
                 'required': 'required',
             }),
+        }
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise ValidationError("This email address is already in use.")
+        return email
+        
+
+class VerificationForm(forms.Form):
+    verification_code = forms.CharField(
+        max_length=6,
+        label='Verification Code',
+        widget=forms.NumberInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': 'Enter your code',
+        })
+    )
+
+
+class CompleteRegistrationForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ['username', 'password1', 'password2']
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:ring focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'Enter your username',
+                'required': 'required',
+            }),
             'password1': forms.PasswordInput(attrs={
-                'class': 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-1 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                'placeholder': 'Password',
-                'required': 'required'
+                'class': 'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:ring focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'Enter your password',
+                'required': 'required',
             }),
             'password2': forms.PasswordInput(attrs={
-                'class': 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-1 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                'placeholder': 'Confirm Password',
+                'class': 'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:ring focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'Confirm your password',
                 'required': 'required',
             }),
         }

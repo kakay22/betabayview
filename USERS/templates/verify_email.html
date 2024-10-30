@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Email</title>
+  <link rel="icon" href="{% static 'users/logo.png' %}" type="image/x-icon">
+  <link href="{% static 'css/output_users.css' %}" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <!-- <script src="{% static 'js/preload.js' %}"></script> -->
+  <script src="{% static 'js/closemess.js' %}"></script>
+  <style>
+    .error{
+      border: 1px solid red;
+      color: red;
+    }
+  </style>
+</head>
+
+<body class="relative h-[100dvh] w-[100dvw] overflow-y-scroll overflow-x-hidden">
+  <!-- Loading Spinner (hidden until request is sent) -->
+  <div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+    <div class="spinner-border text-primary" role="status">
+    </div>
+          <span class="">Loading...</span>
+  </div>
+
+  <img class="absolute h-full w-full top-0 left-0" src="{% static 'users/pope-francis-village.png' %}" alt="">
+  
+  <div class="shadow-md bg-gray-100 z-[99] flex justify-center items-center absolute h-[100%] w-full"
+    style="background-color: rgba(255, 255, 255, 0.8);">
+
+
+    <div class="w-full max-[550px]:h-full max-w-[30rem] bg-white absolute py-2 px-2 border-gray-200 rounded-lg shadow-md p-6">
+      <a class="text-[1.5rem] ml-5 hover:bg-gray-500 p-2 px-[.80rem] flex justify-center items-center mt-3 rounded-full absolute"
+        href="{% url 'main' %}">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+
+      <div class="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md mt-10">
+		<h1 class="text-xl font-semibold text-center">Verify Your Email - Step 2 of 3</h1>
+		<p class="text-gray-700 text-center">
+			A verification code has been sent to your email: <strong>{{ email }}</strong>.
+		</p>
+	
+      <form method="post" action="{% url 'register' %}" class="mt-4 flex flex-col items-center">
+        {% csrf_token %}
+        <div class="mb-4">
+            <label class="block text-gray-600 font-medium mb-1">Enter Verification Code:</label>
+            <div class="flex space-x-2 justify-center">
+              <input type="text" name="code1" maxlength="1" required
+                  class="w-10 h-10 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0" oninput="validateInput(this, 'code2')">
+              <input type="text" name="code2" maxlength="1" required
+                  class="w-10 h-10 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0" oninput="validateInput(this, 'code3')">
+              <input type="text" name="code3" maxlength="1" required
+                  class="w-10 h-10 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0" oninput="validateInput(this, 'code4')">
+              <input type="text" name="code4" maxlength="1" required
+                  class="w-10 h-10 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0" oninput="validateInput(this, 'code5')">
+              <input type="text" name="code5" maxlength="1" required
+                  class="w-10 h-10 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0" oninput="validateInput(this, 'code6')">
+              <input type="text" name="code6" maxlength="1" required
+                  class="w-10 h-10 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0">
+                </div>
+            </div>    
+            <input type="hidden" name="step" value="2">
+        <button type="submit"
+            class="w-full py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-200">
+            Verify Code
+        </button>
+    </form>
+  
+    <script>
+      function validateInput(input, nextId) {
+          // Allow only digits and replace the input value
+          const value = input.value.replace(/[^0-9]/g, '');
+      
+          // Update the input field with the valid digit
+          input.value = value;
+      
+          // Move to the next input if the value is a digit and the length is equal to maxLength
+          if (value.length === 1 && input.value.length >= input.maxLength) {
+              document.getElementsByName(nextId)[0].focus();
+          }
+      }
+      </script>
+    
+		{% if mess %}
+			<ul class="error mt-4 text-red-600">
+				<li class="bg-red-100 text-red-700 px-4 py-2 rounded-md mb-2">{{ mess }}</li>
+			</ul>
+		{% endif %}
+	</div>	
+  </div>
+  </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+</body>
+
+</html>

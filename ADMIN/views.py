@@ -2165,15 +2165,7 @@ def get_bot_response(user_message, user_id, session):
             return "There are no announcements at the moment."
 
     if user_message.lower() in ["latest events", "event", "events", 'community events', 'events in', 'upcoming events']:
-        return 'I cannot fetch the events yet. But you can try to check the event section on your dashboard or on the sidebar panel.'
-
-    # # General conversational fallback
-    # responses = [
-    #     "That's interesting! Can you tell me more?",
-    #     "I see! What else would you like to talk about?",
-    #     "That's great! Do you have any other questions?",
-    #     "I'm here to chat! What would you like to discuss next?",
-    # ]
+        return 'I cannot fetch the events yet. But you can try to check the event section on your dashboard or on the sidebar panel.'   
 
     # Retrieve all keys from the responses dictionary for exact and fuzzy matching
     user_message = user_message.lower()  # Normalize user input

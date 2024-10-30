@@ -19,6 +19,7 @@ urlpatterns = [
     path('Admin/', views.adminLogin, name='adminLogin'),
     path('adminLogout/', views.adminLogout, name='adminLogout'),
     path('register/', views.register, name='register'),
+	path('register_success/', views.register_success, name='register_success'),
     path('ar/', views.ar_view, name='ar_view'),
 	path('reset-password/', views.password_reset_request2, name='password_reset_request2'),
     path('reset-password/<str:token>/', views.password_reset_confirm2, name='password_reset_confirm2'),

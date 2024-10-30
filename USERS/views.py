@@ -121,49 +121,141 @@ def main(request):
     properties = Property.objects.select_related('household_head').all().order_by('property_house_no')
     return render(request, 'main.html', {'properties':properties})
 
+from django.utils import timezone
+from django.core.mail import send_mail
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import UserForm, VerificationForm, CompleteRegistrationForm
+import random
+import logging
+from django.core.mail import EmailMultiAlternatives
+from django.utils.html import format_html
+
+logger = logging.getLogger(__name__)
+
 def register(request):
-    mess = ''
+    step = request.POST.get('step', '1')  # Default to step 1 if not provided
+    form = UserForm()  # Initialize the form at the beginning
+
     if request.method == 'POST':
-        form = UserForm(request.POST)
-
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        email = request.POST.get('email')
-
-        if first_name == '':
-            form.add_error('first_name', 'This field is required.')
-        if last_name == '':   
-            form.add_error('last_name', 'This field is required.')
-        if email == '':
-            form.add_error('email', 'This field is required.')
-        else:
+        if step == '1':  # First step: Collect first name, last name, and email
+            form = UserForm(request.POST)
+            
             if form.is_valid():
-                    user = form.save()
-                    homeowner = HomeOwner.objects.create(
-                        user = user,
-                        pending=True,
-                    )
-                    
-                    homeowner.save()
-                    messages.success(request, 'Your account has been created and is pending approval.')
-                    
-                    #create notification for secretary and admin
-                    create_homeowner_notification(homeowner)
-                    admin_create_homeowner_notification(homeowner)
+                first_name = form.cleaned_data['first_name']
+                last_name = form.cleaned_data['last_name']
+                email = form.cleaned_data['email']
 
-                    # Create a log entry
-                    Log.objects.create(
-                        log_type='info',
-                        description=f'New homeowner registered for pending: {homeowner.user.username}.',
-                        user=None
-                    )
+                # Store values in the session
+                request.session['first_name'] = first_name
+                request.session['last_name'] = last_name
+                request.session['email'] = email
 
-                    return redirect('register')
-    else:
-        form = UserForm()
+                # Generate and save verification code
+                code = random.randint(100000, 999999)
+                request.session['verification_code'] = code
+                request.session.set_expiry(300)  # Set session to expire in 5 minutes
 
-    return render(request, 'register.html', {'form': form, 'mess':mess})
+                # Create the email content
+                subject = 'Your Verification Code'
+                body = format_html(
+                    '''
+                    <p>Hello,</p>
+                    <p>Thank you for registering with us! To complete your registration, please use the following verification code:</p>
+                    <p style="font-weight: bold; font-size: 1.5em;">Verification Code: {}</p>
+                    <p>Please enter this code on the verification page to proceed. If you did not request this code, please disregard this email.</p>
+                    <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
+                    <p>Best regards,<br>The Beta Bayview Team</p>
+                    '''.format(code)
+                )
 
+                # Send the email
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=body,  # This is still in plain text, see the next step
+                    from_email='no-reply@example.com',
+                    to=[email]
+                )
+
+                # Attach the HTML version
+                email.attach_alternative(body, "text/html")
+
+                # Send the email
+                email.send(fail_silently=False)
+
+                email_user = request.session.get('email')
+
+                # Proceed to step 2: Verification code entry
+                return render(request, 'verify_email.html', {'email': email_user})
+            else:
+                logger.warning("UserForm is not valid: %s", form.errors)
+
+        elif step == '2':  # Second step: Verify the code
+            mess = ""
+            code1 = request.POST.get('code1', '')
+            code2 = request.POST.get('code2', '')
+            code3 = request.POST.get('code3', '')
+            code4 = request.POST.get('code4', '')
+            code5 = request.POST.get('code5', '')
+            code6 = request.POST.get('code6', '')
+
+            verification_code = ''.join([code1, code2, code3, code4, code5, code6])  # Combine the individual codes
+
+            if verification_code and int(verification_code) == request.session.get('verification_code'):
+                # Clear verification code after success
+                del request.session['verification_code']
+                return render(request, 'register_complete.html', {'form': CompleteRegistrationForm()})
+            else:
+                mess = 'Invalid verification code. Please try again.'
+                # Re-render the verification page with the email address
+                email = request.session.get('email')
+                return render(request, 'verify_email.html', {'email': email, 'mess':mess})   
+        
+        elif step == '3':  # Final step: Complete registration with username and password
+            form = CompleteRegistrationForm(request.POST)
+            
+            if form.is_valid():
+                user = form.save(commit=False)
+
+                # Fetch session data and set to user fields
+                user.email = request.session.get('email')
+                user.first_name = request.session.get('first_name')
+                user.last_name = request.session.get('last_name')
+
+                # Ensure all fields are not None before saving
+                if not all([user.email, user.first_name, user.last_name]):
+                    messages.error(request, "Registration data is missing. Please try again.")
+                    return redirect('register')  # Redirect to start if data is missing
+
+                user.save()
+
+                # Create HomeOwner and log entry
+                homeowner = HomeOwner.objects.create(user=user, pending=True)
+                Log.objects.create(
+                    log_type='info',
+                    description=f'New homeowner registered for pending: {homeowner.user.username}.',
+                    user=None
+                )
+                return redirect('register_success')  # Change to your success page
+            
+            else:
+                # Log warning and add error messages
+                logger.warning("CompleteRegistrationForm is not valid: %s", form.errors)
+                # for field, errors in form.errors.items():
+                #     for error in errors:
+                #         messages.error(request, f"{field.capitalize()}: {error}")
+                        
+                # Re-render the form with errors to indicate required fields were not completed
+                return render(request, 'register_complete.html', {'form': form})
+
+        else:
+            form = UserForm()  # Initial form for the first step
+            
+    # Render the initial registration form
+    return render(request, 'register.html', {'form': form, 'step': step})
+
+def register_success(request):
+    return render(request, 'register_success.html')
 
 def ownerLogin(request):
     message = request.GET.get('message', None)

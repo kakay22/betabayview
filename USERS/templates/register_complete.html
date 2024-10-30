@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Account</title>
+  <title>Register Complete</title>
   <link rel="icon" href="{% static 'users/logo.png' %}" type="image/x-icon">
   <link href="{% static 'css/output_users.css' %}" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -17,6 +17,32 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
   <!-- <script src="{% static 'js/preload.js' %}"></script> -->
   <script src="{% static 'js/closemess.js' %}"></script>
+  <style>
+	input[type="text"],
+	input[type="email"],
+	input[type="password"] {
+		width: 100%;
+		padding: 0.45rem;
+		border-radius: 0.375rem;
+		border: 1px solid #d1d5db; /* Light gray border */
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+		transition: border-color 0.3s, box-shadow 0.3s;
+	}
+
+	input[type="text"]:focus,
+	input[type="email"]:focus,
+	input[type="password"]:focus {
+		border-color: #3b82f6; /* Blue border on focus */
+		box-shadow: 0 0 0 3px rgba(59, 130, 247, 0.3); /* Blue shadow */
+		outline: none;
+	}
+
+	input[type="text"].error,
+	input[type="email"].error,
+	input[type="password"].error {
+		border-color: #ef4444; /* Red border for error */
+	}
+  </style>
 </head>
 
 <body class="relative h-[100dvh] w-[100dvw] overflow-y-scroll overflow-x-hidden">
@@ -39,54 +65,44 @@
         <i class="bi bi-arrow-left"></i>
       </a>
 
-      <div class="container mt-5">
-        <div class="p-4">
-          <div class="card-body">
-            <h3 class="card-title text-center">Register - Step 1 of 3</h3>
-            <p class="text-center text-muted">Enter your basic information to get started.</p>
-            
-            <form method="post" action="{% url 'register' %}" class="mt-4">
-              {% csrf_token %}
-
-              <input type="hidden" name="step" value="1">
-              
-              <!-- First Name Field -->
-              <div class="form-group mb-2">
-                {{ form.first_name.label_tag }}
-                {{ form.first_name }}
-                {% if form.first_name.errors %}
-                  <div class="text-red-500 text-sm">{{ form.first_name.errors }}</div>
-                {% endif %}
-              </div>
-      
-              <!-- Last Name Field -->
-              <div class="form-group mb-2">
-                {{ form.last_name.label_tag }}
-                {{ form.last_name }}
-                {% if form.last_name.errors %}
-                  <div class="text-red-500 text-sm">{{ form.last_name.errors }}</div>
-                {% endif %}
-              </div>
-      
-              <!-- Email Field -->
-              <div class="form-group mb-2">
-                {{ form.email.label_tag }}
-                {{ form.email }}
-                {% if form.email.errors %}
-                  <div class="text-red-500 text-sm">{{ form.email.errors }}</div>
-                {% endif %}
-                <small class="form-text text-muted">We'll send a verification code to this email address.</small>
-              </div>
-      
-              <!-- Hidden Step Field -->
-              <input type="hidden" name="step" value="1">
-      
-              <!-- Submit Button -->
-              <button type="submit" class="btn btn-primary w-full mt-3">Send Verification Code</button>
-            </form>
-          </div>
-        </div>
-      </div>
+      <div class="w-full max-w-md mx-auto mt-4 p-3">
+		<h1 class="text-xl text-center font-semibold text-gray-800 mb-4">Complete Registration - Step 3 of 3</h1>
+	
+		<form method="post" action="{% url 'register' %}" class="bg-white rounded-lg px-8 pt-6 pb-8 mb-4">
+			{% csrf_token %}
+			<input type="hidden" name="step" value="3">
+	
+			<div class="mb-2">
+				<label class="form-label" for="username">Username</label>
+				{{ form.username }}  <!-- This will now have the Tailwind styles applied -->
+				{% if form.username.errors %}
+					<div class="text-red-500 mt-1 text-sm">{{ form.username.errors }}</div>
+				{% endif %}
+			</div>
+		
+			<div class="mb-2">
+				<label class="form-label" for="password1">Password</label>
+				{{ form.password1 }}  <!-- This will now have the Tailwind styles applied -->
+				{% if form.password1.errors %}
+					<div class="text-red-500 mt-1 text-sm">{{ form.password1.errors }}</div>
+				{% endif %}
+			</div>
+		
+			<div class="mb-2">
+				<label class="form-label" for="password2">Confirm password</label>
+				{{ form.password2 }}  <!-- This will now have the Tailwind styles applied -->
+				{% if form.password2.errors %}
+					<div class="text-red-500 mt-1 text-sm">{{ form.password2.errors }}</div>
+				{% endif %}
+			</div>
+		
+			<button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+				Complete Registration
+			</button>
+		</form>
+	</div>	
+	
+  </div>
   </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
