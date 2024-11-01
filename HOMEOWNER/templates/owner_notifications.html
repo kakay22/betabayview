@@ -345,6 +345,7 @@
 								alert(response.message);
 								$('#verifyVisitModal' + notifId).modal('hide');
 								// Optionally refresh the notifications list here or update the UI
+								window.location.reload()
 							},
 							error: function(xhr) {
 								alert("Error: " + xhr.responseJSON.error);

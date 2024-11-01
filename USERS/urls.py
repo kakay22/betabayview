@@ -26,6 +26,7 @@ urlpatterns = [
 	path('reset-password/', views.password_reset_request2, name='password_reset_request2'),
     path('reset-password/<str:token>/', views.password_reset_confirm2, name='password_reset_confirm2'),
     path('password_reset_complete/', views.password_reset_complete, name='password_reset_complete'),
+    path('ar_with_js/<int:pk>', views.ar_with_js, name='ar_with_js'),
 ]
 
 

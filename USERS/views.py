@@ -54,6 +54,8 @@ def submit_visit_request(request):
             visit_date_string = data.get('visit_date')
             purpose = data.get('purpose')
             household_head_name = data.get('household_head')
+            lat = data.get('lat')
+            lng = data.get('lng')
 
             # Validate required fields
             if not all([visitor_full_name, visitor_relation, visit_date_string, purpose, household_head_name]):
@@ -68,13 +70,15 @@ def submit_visit_request(request):
             except HomeOwner.DoesNotExist:
                 return JsonResponse({'error': 'Household head not found.'}, status=404)
 
-            # Create and save the visit request
+            # Create and save the visit request with lat and lng
             visit_request = VisitRequest(
                 visitor_full_name=visitor_full_name,
                 visitor_relation=visitor_relation,
                 visit_date=visit_date,
                 purpose=purpose,
                 household_head=household_head,
+                lat=lat,  # Store latitude
+                lng=lng   # Store longitude
             )
             visit_request.save()  # Save the visit request to the database
 
@@ -569,3 +573,7 @@ def password_reset_confirm2(request, token):
 
 def password_reset_complete(request):
     return render(request, 'password_reset_complete.html')
+
+def ar_with_js(request, pk):
+    visit_request = VisitRequest.objects.get(pk=pk)
+    return render(request, 'ar_with_js.html', {'visit_request':visit_request})

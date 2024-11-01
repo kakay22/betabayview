@@ -22,8 +22,6 @@
     <script src="{% static 'js/map.js' %}"></script>
     <!-- <script src="{% static 'js/preload.js' %}"></script> -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe-ar/1.8.0/aframe-ar.min.js"></script>     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -113,9 +111,10 @@
                                                     <p class="mb-1"><strong>Purpose:</strong> {{ request.purpose }}</p>
                                                     <p class="mb-1"><strong>Status:</strong> {{ request.get_status_display }}</p>
                                                     <p class="mb-1"><strong>Visit to:</strong> {{ request.household_head.user.first_name }}</p>
+                                                    <p class="mb-1"><strong>Coordinates:</strong> lat:{{ request.lat }}, lng: {{ request.lng }}</p>
 
                                                     {% if request.status == 'approved' %}
-                                                        <button type="button" class="btn btn-success" onclick="navigateToVisit('{{ request.visit_date }}')">Navigate</button>
+                                                        <a href="{% url 'ar_with_js' request.pk %}" type="button" class="btn btn-success">Navigate</a>
                                                     {% endif %}
                                                 </div>
                                             {% endfor %}
@@ -249,7 +248,7 @@
                         <form id="visitRequestForm">
                             {% csrf_token %}
                             <input type="hidden" id="householdHead" name="household_head">
-
+                            <input type="hidden" id="house_no" name="house_no">
                             <div class="mb-3">
                                 <label for="visitorFullName" class="form-label">Full Name</label>
                                 <input type="text" class="form-control" id="visitorFullName" placeholder="Enter your full name" required>
@@ -286,22 +285,94 @@
     </div>
 
     <script>
-        function openVisitRequestModal(householdHead) {
-            console.log("Household Head:", householdHead);  // Debug: Check if householdHead is passed correctly
+        function openVisitRequestModal(householdHead, houseNo) {
 
+            // Coordinates for houses 1-60
+            const houses = [
+                { number: 1, lat: 11.219784, lng: 125.023665 },
+                { number: 2, lat: 11.219721, lng: 125.023620 },
+                { number: 3, lat: 11.219627, lng: 125.023566 },
+                { number: 4, lat: 11.219561, lng: 125.023520 },
+                { number: 5, lat: 11.219492, lng: 125.023488 },
+                { number: 6, lat: 11.219416, lng: 125.023426 },
+                { number: 7, lat: 11.219353, lng: 125.023306 },
+                { number: 8, lat: 11.219319, lng: 125.023182 },
+                { number: 9, lat: 11.219274, lng: 125.023094 },
+                { number: 10, lat: 11.219258, lng: 125.023008 },
+                { number: 11, lat: 11.219240, lng: 125.022919 },
+                { number: 12, lat: 11.219195, lng: 125.022804 },
+                { number: 13, lat: 11.219179, lng: 125.022723 },
+                { number: 14, lat: 11.219145, lng: 125.022651 },
+                { number: 15, lat: 11.219106, lng: 125.022565 },
+                { number: 16, lat: 11.219077, lng: 125.022463 },
+                { number: 17, lat: 11.219035, lng: 125.022353 },
+                { number: 18, lat: 11.218998, lng: 125.022238 },
+                { number: 19, lat: 11.218979, lng: 125.022152 },
+                { number: 20, lat: 11.218958, lng: 125.022066 },
+                { number: 21, lat: 11.220047, lng: 125.023319 },
+                { number: 22, lat: 11.219947, lng: 125.023233 },
+                { number: 23, lat: 11.219842, lng: 125.023163 },
+                { number: 24, lat: 11.219600, lng: 125.022943 },
+                { number: 25, lat: 11.219495, lng: 125.022712 },
+                { number: 26, lat: 11.219406, lng: 125.022498 },
+                { number: 27, lat: 11.219342, lng: 125.022321 },
+                { number: 28, lat: 11.219279, lng: 125.022101 },
+                { number: 29, lat: 11.219174, lng: 125.021934 },
+                { number: 30, lat: 11.220258, lng: 125.023061 },
+                { number: 31, lat: 11.220326, lng: 125.022889 },
+                { number: 32, lat: 11.220437, lng: 125.022755 },
+                { number: 33, lat: 11.220511, lng: 125.022664 },
+                { number: 34, lat: 11.220605, lng: 125.022503 },
+                { number: 35, lat: 11.220700, lng: 125.022385 },
+                { number: 36, lat: 11.220063, lng: 125.022830 },
+                { number: 37, lat: 11.220168, lng: 125.022610 },
+                { number: 38, lat: 11.220426, lng: 125.023453 },
+                { number: 39, lat: 11.220463, lng: 125.022272 },
+                { number: 40, lat: 11.220568, lng: 125.022101 },
+                { number: 41, lat: 11.219816, lng: 125.022557 },
+                { number: 42, lat: 11.219774, lng: 125.022364 },
+                { number: 43, lat: 11.219669, lng: 125.022106 },
+                { number: 44, lat: 11.219600, lng: 125.021865 },
+                { number: 45, lat: 11.220132, lng: 125.022101 },
+                { number: 46, lat: 11.220253, lng: 125.021860 },
+                { number: 47, lat: 11.219953, lng: 125.021806 },
+                { number: 48, lat: 11.219890, lng: 125.021564 },
+                { number: 49, lat: 11.220079, lng: 125.021532 },
+                { number: 50, lat: 11.219079, lng: 125.021688 },
+                { number: 51, lat: 11.218906, lng: 125.021505 },
+                { number: 52, lat: 11.218753, lng: 125.021344 },
+                { number: 53, lat: 11.218611, lng: 125.021173 },
+                { number: 54, lat: 11.218495, lng: 125.021006 },
+                { number: 55, lat: 11.218343, lng: 125.020872 },
+                { number: 56, lat: 11.220810, lng: 125.021919 },
+                { number: 57, lat: 11.220668, lng: 125.021699 },
+                { number: 58, lat: 11.220434, lng: 125.021372 },
+                { number: 59, lat: 11.220639, lng: 125.020943 },
+                { number: 60, lat: 11.221024, lng: 125.021466 }
+            ];
+
+            console.log("Household Head:", householdHead);  // Debug: Check if householdHead is passed correctly
+            console.log("House number:", houseNo);  // Debug: Check if householdHead is passed correctly
+            
             const modalTitle = document.getElementById('visitRequestModalLabel');
             if (modalTitle) {
                 // Set the title with the household head's name or fallback to a default
                 modalTitle.textContent = `Request a Visit for ${householdHead || "Homeowner"}`;
                 console.log("Modal Title Updated:", modalTitle.textContent);  // Debug: Check the updated title
+                console.log("fetched house no:", houseNo)
             }
 
             // Set the hidden input value
             const householdHeadInput = document.getElementById('householdHead');
-            if (M) {
-                householdHeadInput.value = householdHead || "Homeowner";
-                console.log("Hidden Input Updated:", householdHeadInput.value);  // Debug: Check the updated input value
-            }
+            const houseNoInput = document.getElementById('house_no');
+            // if (M) {
+            //     householdHeadInput.value = householdHead || "Homeowner";
+            //     console.log("Hidden Input Updated:", householdHeadInput.value);  // Debug: Check the updated input value
+            // }
+
+            householdHeadInput.value = householdHead || "Homeowner";
+            houseNoInput.value = houseNo;
+            console.log("Hidden Input Updated:", householdHeadInput.value);  // Debug: Check the updated input value
 
             // Initialize and show the modal
             const modal = new bootstrap.Modal(document.getElementById('visitRequestModal'), {
@@ -326,31 +397,48 @@
                     const visitDate = $('#visitDate').val();
                     const purpose = $('#visitPurpose').val();
                     const householdHead = $('#householdHead').val();
+                    const houseNo = parseInt($('#house_no').val());
+
+                    // Log household head for troubleshooting
+                    console.log("Household Head:", householdHead);
+
+                    // Find the coordinates for the household head's house number
+                    const houseData = houses.find(house => house.number === houseNo);
+
+                    console.log("Matching House Data:", houseData);  // Log matched house data for debugging
 
                     if (!visitorFullName || !visitorRelation || !visitDate || !purpose) {
                         alert("Please fill in all required fields.");
                         return;
-                    }else{
+                    } else {
                         loader.classList.remove('hidden');
+
+                        // Prepare the data to send, including latitude and longitude if found
                         const requestData = {
                             visitor_full_name: visitorFullName,
                             visitor_relation: visitorRelation,
                             visit_date: visitDate,
                             purpose: purpose,
-                            household_head: householdHead
+                            household_head: householdHead,
+                            house_no: houseNo,  // Pass house number for reference
+                            lat: houseData ? houseData.lat : null,  // Include latitude if available
+                            lng: houseData ? houseData.lng : null   // Include longitude if available
                         };
 
+                        console.log("Request Data:", requestData);  // Log request data for debugging
+
+                        // Proceed with your AJAX request
                         $.ajax({
                             url: requestUrl,
                             type: 'POST',
                             contentType: 'application/json',
                             data: JSON.stringify(requestData),
-                            headers: { 'X-CSRFToken': csrfToken },  // Include the CSRF token in the headers
+                            headers: { 'X-CSRFToken': csrfToken },
                             success: function(response) {
                                 loader.classList.add('hidden');
                                 $('#visitRequestModal').modal('hide');
                                 $('#visitRequestForm')[0].reset();
-                                window.location.reload()
+                                window.location.reload();
                             },
                             error: function(xhr, status, error) {
                                 alert("There was an error submitting your request. Please try again.");
@@ -359,8 +447,8 @@
                         });
                     }
 
-                    
                 });
+
             });
 
         }
@@ -543,16 +631,7 @@
                             <p class="popup-description">House type: ${property.property_description}</p>
                             <p class="popup-description">Block no: ${property.property_block_no}</p>
                             <p class="popup-description">House no: ${property.property_house_no}</p>
-                            <a id="visitRequestButton" 
-                                class="popup-button cursor-pointer text-white {% if visit_requests %} bg-orange-500 {% endif %} " 
-                                onclick="handleVisitRequestButtonClick('${property.household_head || "Homeowner"}')" 
-                                title="{% if visit_requests %}You already have a pending visit request.{% else %}Click to request a visit.{% endif %}">
-                                {% if visit_requests %}
-                                    Request Pending
-                                {% else %}
-                                    Request a Visit
-                                {% endif %}
-                            </a>
+                            <a class="popup-button text-white cursor-pointer" onclick="openVisitRequestModal('${property.household_head}','${property.property_house_no}')">Request a visit</a>
                         </div>
                     `;
                     

@@ -337,6 +337,9 @@ class VisitRequest(models.Model):
     household_head = models.ForeignKey(HomeOwner, on_delete=models.CASCADE)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)  # Latitude field
+    lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)  # Longitude field
+    
 
     def __str__(self):
         return f"{self.visitor_full_name} - {self.visit_date.strftime('%Y-%m-%d %H:%M')}"
