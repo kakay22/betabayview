@@ -28,6 +28,11 @@ from django.utils import timezone
 # views.py
 from django.http import JsonResponse
 
+
+def homepage(request):
+    properties = Property.objects.select_related('household_head').all().order_by('property_house_no')
+    return render(request, 'homepage.html', {'properties':properties})
+
 def get_target_coordinates(request):
     # Example coordinates for the target point (update with your values or database values)
     target_coordinates = {
@@ -50,12 +55,12 @@ def submit_visit_request(request):
             purpose = data.get('purpose')
             household_head_name = data.get('household_head')
 
-            # Make the visit date timezone-aware
-            visit_date = timezone.make_aware(parser.parse(visit_date_string))
-
             # Validate required fields
-            if not all([visitor_full_name, visitor_relation, visit_date, purpose]):
+            if not all([visitor_full_name, visitor_relation, visit_date_string, purpose, household_head_name]):
                 return JsonResponse({'error': 'All fields are required.'}, status=400)
+
+            # Convert visit date to timezone-aware format
+            visit_date = timezone.make_aware(parser.parse(visit_date_string))
 
             # Fetch the HomeOwner instance based on the household head's username
             try:
@@ -73,16 +78,19 @@ def submit_visit_request(request):
             )
             visit_request.save()  # Save the visit request to the database
 
+            # Store visitor's full name in session for future filtering
+            request.session['visitor_full_name'] = visitor_full_name
+
             # Get homeowner's full name and email
             owner_full_name = f"{household_head.user.first_name} {household_head.user.last_name}"
             homeowner_email = household_head.user.email
 
             # Log the visit request creation
             log_entry = Log(
-                log_type='info',  # Log type can be 'info', 'warning', 'error', etc.
+                log_type='info',
                 description=f"Visitor '{visitor_full_name}' requested a visit to '{owner_full_name}' on {visit_date}.",
-                user=household_head.user,  # Log the user associated with the household head
-                action='Created Visit Request'  # Specify the action taken
+                user=household_head.user,
+                action='Created Visit Request'
             )
             log_entry.save()  # Save the log entry to the database
 
@@ -91,16 +99,22 @@ def submit_visit_request(request):
                 owner_full_name, visitor_full_name, visitor_relation, visit_date, purpose, homeowner_email
             )
 
+            messages.success(request, 'Visit request submitted successfully!')
             return JsonResponse({'message': 'Visit request submitted successfully!'}, status=200)
 
         except ValueError as ve:
+            # Handle date parsing errors
             return JsonResponse({'error': f'Invalid date format: {str(ve)}'}, status=400)
         except json.JSONDecodeError:
+            # Handle JSON decoding errors
             return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
         except Exception as e:
+            # General error handler for unexpected issues
             return JsonResponse({'error': f'Internal server error: {str(e)}'}, status=500)
 
+    # Return a method not allowed error for non-POST requests
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
 
 def send_email_to_household_head(owner_full_name, visitor_name, relation, visit_date, purpose, recipient_email):
     subject = "New Visitor Request - Confirmation Needed"
@@ -117,9 +131,33 @@ def send_email_to_household_head(owner_full_name, visitor_name, relation, visit_
     send_mail(subject, message, 'bbvhhousingmanagement@gmail.com', [recipient_email])
 
 
+def map(request):
+    # Get the filter type from the query parameters; default to 'houses'
+    filter_type = request.GET.get('filter', 'houses')
+
+    # Retrieve properties or events based on the filter type
+    if filter_type == 'houses':
+        labels = Property.objects.select_related('household_head').all().order_by('property_house_no')
+    elif filter_type == 'events':
+        labels = Event.objects.all()
+    else:
+        labels = Property.objects.select_related('household_head').all().order_by('property_house_no')  # Fallback to properties
+
+    # Retrieve the visitor's full name from the session
+    visitor_full_name = request.session.get('visitor_full_name')
+
+    # Filter visit requests based on the visitor's full name if it exists
+    visit_requests = VisitRequest.objects.filter(visitor_full_name=visitor_full_name) if visitor_full_name else None
+
+    return render(request, 'map.html', {
+        'labels': labels,    # Either properties or events
+        'visit_requests': visit_requests,
+        'filter_type': filter_type
+    })
+
+
 def main(request):
-    properties = Property.objects.select_related('household_head').all().order_by('property_house_no')
-    return render(request, 'main.html', {'properties':properties})
+    return render(request, 'main.html')
 
 from django.utils import timezone
 from django.core.mail import send_mail

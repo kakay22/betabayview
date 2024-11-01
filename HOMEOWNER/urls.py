@@ -44,6 +44,7 @@ urlpatterns = [
     path('chat/', views.chat, name='chat'),
 	path('submit_feedback/', views.submit_feedback, name='submit_feedback'),
     path('notifications/<int:notif_id>/details/', views.notification_details, name='notification_details'),
+	path('update-visit-request/<int:pk>/', views.update_visit_request, name='update_visit_request'),
 ]
 
 

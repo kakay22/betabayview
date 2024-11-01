@@ -1,8 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
-    var form = document.getElementById('form');
-    var loader = document.getElementById('pre-loader');
+    // Select all <form> tags in the document
+    const forms = document.querySelectorAll('form');
+    
+    // Select the loading spinner
+    const loader = document.getElementById('loadingSpinner');
 
-    form.addEventListener('submit', function(event) {
-        loader.style.display = 'flex';  // Show the loader
+    // Log the forms to the console
+    forms.forEach((form) => {
+        // Event listener for form submission
+        form.addEventListener('submit', function(event) {
+            // Show the loader
+            loader.classList.remove('hidden');
+        });
     });
 });

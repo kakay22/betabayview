@@ -197,7 +197,7 @@ a, button{
 backdrop-filter: blur(3px);
 }
 
-#mapBtn:hover, #createBtn:hover {
+#createBtn:hover {
 background-color: transparent !important;  /* No background color on hover */
 box-shadow: inset 0px -5px 10px rgba(0, 0, 0, 0.4); /* Inside bottom shadow */
 transition: box-shadow 0.3s ease;  /* Smooth transition */
@@ -218,7 +218,6 @@ margin: 0;
 padding: 0;
 width: 100%;
 height: 100%;
-overflow: hidden;
 }
 #infoBox {
 position: fixed;
@@ -237,4 +236,30 @@ border-radius: 8px;
 }
 .modal {
   z-index: 1051 !important; /* Ensure modal is above the backdrop */
+}
+
+.legend {
+  background-color: white;
+  padding: 10px;
+  border: 2px solid black;
+  border-radius: 5px;
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1000; /* Ensure it is on top of the map */
+}
+.legend-item:hover{
+  background: #b3b1b1;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  cursor: pointer; /* Change cursor to pointer on hover */
+}
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  margin-right: 5px;
 }

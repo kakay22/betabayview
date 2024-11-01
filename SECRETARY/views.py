@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from USERS.models import HomeOwner, Resident
-from ADMIN.models import Secretary, Event, Comment, Property, Message, MaintenancePersonnel, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder
+from ADMIN.models import Secretary, Event, Comment, Property, Message, MaintenancePersonnel, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, PropertyModel
 from USERS.forms import HomeOwnerForm, UserForm
 from ADMIN.forms import SecretaryForm, EditOwnerForm, PropertyForm, EventForm, RepairmanForm, AnnouncementForm, AnnouncementCommentForm
 from SECRETARY.forms import ResidentForm
@@ -1003,21 +1003,30 @@ def sec_properties(request):
     # Filter logic for availability and block
     availability_filter = request.GET.get('availability')
     block_filter = request.GET.get('block')
+    model_filter = request.GET.get('property_model')
 
     properties = Property.objects.all()
+    property_models = PropertyModel.objects.all()
 
     if availability_filter:
         properties = properties.filter(availability=availability_filter)
 
     if block_filter:
         properties = properties.filter(property_block_no=block_filter)
+    
+    # Filter by model
+    if model_filter:
+        properties = properties.filter(property_model=model_filter)  # Adjust according to your model field name
 
     property_images = PropertyImage.objects.all()
+
 
     if request.method == 'POST':
         form = PropertyForm(request.POST, request.FILES)
         if form.is_valid():
-            new_property = form.save()
+            new_property = form.save(commit=False)
+            new_property.property_model = form.cleaned_data['property_model']  # Set the property model
+            new_property.save()  # Save the new property to the database
             messages.success(request, 'Property added successfully!')
             
             Log.objects.create(
@@ -1044,7 +1053,9 @@ def sec_properties(request):
         'profile': profile,
         'property_images': property_images,
         'availability_filter': availability_filter,
-        'block_filter': block_filter
+        'block_filter': block_filter,
+        'property_models':property_models,
+        'model_filter':model_filter
     })
 
 def sec_property_detail(request, pk):

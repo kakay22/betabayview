@@ -139,6 +139,14 @@
                     <option value="3" {% if block_filter == "3" %}selected{% endif %}>Block 3</option>
                     <!-- Add more block options as needed -->
                 </select>
+
+                <!-- Filter by Model -->
+                <select class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" name="model" id="model" onchange="this.form.submit()">
+                    <option value="" {% if not model_filter %}selected{% endif %}>All Models</option>
+                    {% for model in property_models %}
+                        <option value="{{ model }}" {% if model_filter == model.model_name %}selected{% endif %}>{{ model }}</option>
+                    {% endfor %}
+                </select>
             </form>            
 
             <div class="w-full flex justify-end">
@@ -211,6 +219,16 @@
                                     {% for error in form.property_name.errors %}
                                     <div class="text-red-500 text-sm">{{ error }}</div>
                                     {% endfor %}
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="property_name" class="form-label font-sm">Property model</label>
+                                    <select class="form-control" name="property_model" id="property_model" required>
+                                        <option value="" selected>---------</option>
+                                        {% for model in property_models %}
+                                            <option value="{{ model.model_name }}">{{ model.model_name }}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
         
                                 <div class="mb-2">

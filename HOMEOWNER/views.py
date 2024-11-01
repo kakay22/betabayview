@@ -6,7 +6,7 @@ from django.contrib import messages
 from USERS.models import HomeOwner, Resident
 from USERS.forms import HomeOwnerForm, UserForm, EditUserForm
 from .models import Maintenance_request, Activitie, Notification
-from ADMIN.models import Event, Comment, Message, Property, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, Feedback
+from ADMIN.models import Event, Comment, Message, Property, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, Feedback, VisitRequest
 from django.urls import reverse
 from django.http import JsonResponse
 from google.cloud import dialogflow_v2 as dialogflow
@@ -944,3 +944,29 @@ def notification_details(request, notif_id):
         })
     except Notification.DoesNotExist:
         return JsonResponse({'error': 'Notification not found'}, status=404)
+
+from django.http import JsonResponse
+
+def update_visit_request(request, pk):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        try:
+            visit_request = VisitRequest.objects.get(pk=pk)
+
+            if action == 'accept':
+                visit_request.status = 'approved'
+                visit_request.save()
+                return JsonResponse({'message': 'Visit request accepted.'}, status=200)
+
+            elif action == 'reject':
+                visit_request.status = 'declined'
+                visit_request.save()
+                return JsonResponse({'message': 'Visit request rejected.'}, status=200)
+
+            return JsonResponse({'error': 'Invalid action.'}, status=400)
+
+        except VisitRequest.DoesNotExist:
+            return JsonResponse({'error': 'Visit request not found.'}, status=404)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)

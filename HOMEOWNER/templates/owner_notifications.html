@@ -308,7 +308,7 @@
 							<p class="text-sm">{{ notif.message|safe }} </p> <p class="text-sm text-gray-500">{{ notif.maintenance_request.date_requested }}</p>
 							</div> -->
 
-					<!-- Modal for Visit Request -->
+				<!-- Modal for Visit Request -->
 				<div class="modal fade" id="verifyVisitModal{{ notif.pk }}" tabindex="-1" aria-labelledby="verifyVisitModalLabel{{ notif.pk }}" aria-hidden="true">
 					<div class="modal-dialog">
 						<div class="modal-content">
@@ -324,12 +324,54 @@
 								<p><strong>Purpose:</strong> {{ notif.visit_request.purpose }}</p>
 							</div>
 							<div class="modal-footer">
-								<button class="btn btn-success">Accept</button>
-								<button class="btn btn-danger">Reject</button>
-							</div>
+								<button class="btn btn-success" onclick="acceptVisitRequest({{ notif.pk }})">Accept</button>
+								<button class="btn btn-danger" onclick="rejectVisitRequest({{ notif.pk }})">Reject</button>
+							</div>							
 						</div>
 					</div>
 				</div>
+
+				<!--accept or reject visit request-->
+				<script>
+					function acceptVisitRequest(notifId) {
+						$.ajax({
+							url: `/update-visit-request/${notifId}/`, // Update the URL based on your routing
+							type: 'POST',
+							data: {
+								'action': 'accept',
+								'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val() // CSRF token if needed
+							},
+							success: function(response) {
+								alert(response.message);
+								$('#verifyVisitModal' + notifId).modal('hide');
+								// Optionally refresh the notifications list here or update the UI
+							},
+							error: function(xhr) {
+								alert("Error: " + xhr.responseJSON.error);
+							}
+						});
+					}
+
+					function rejectVisitRequest(notifId) {
+						$.ajax({
+							url: `/update-visit-request/${notifId}/`, // Update the URL based on your routing
+							type: 'POST',
+							data: {
+								'action': 'reject',
+								'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val() // CSRF token if needed
+							},
+							success: function(response) {
+								alert(response.message);
+								$('#verifyVisitModal' + notifId).modal('hide');
+								// Optionally refresh the notifications list here or update the UI
+							},
+							error: function(xhr) {
+								alert("Error: " + xhr.responseJSON.error);
+							}
+						});
+					}
+
+				</script>
 
 
 				<!-- verfication Modal for notification -->

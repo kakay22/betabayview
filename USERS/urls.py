@@ -7,7 +7,9 @@ from django.contrib.auth import views as auth_views
 
 
 urlpatterns = [
-    path('', views.main, name='main'),
+    path('', views.homepage, name='homepage'),
+	path('main', views.main, name='main'),
+	path('map', views.map, name='map'),
     path('api/target-coordinates/', views.get_target_coordinates, name='target-coordinates'),
 	path('submit_visit_request/', views.submit_visit_request, name='submit_visit_request'),
     path('home-owner/', views.ownerLogin, name='ownerLogin'),

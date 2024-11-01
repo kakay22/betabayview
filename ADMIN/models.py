@@ -100,6 +100,13 @@ class NonSuperUser(User):
 	objects = NonSuperUserManager()
 	class Meta:
 		proxy = True
+
+class PropertyModel(models.Model):
+    model_name = models.CharField(max_length=300)
+
+    def __str__(self):
+        return self.model_name
+
 	
 class Property(models.Model):
     BLOCK_CHOICES = [(i, i) for i in range(1, 21)]
@@ -119,6 +126,7 @@ class Property(models.Model):
 	#household information
     household_head = models.OneToOneField(HomeOwner, null=True, blank=True, on_delete=models.SET_NULL, related_name='household_head')
     property_name = models.CharField(max_length=255)
+    property_model = models.CharField(max_length=255, null=True, blank=True)
     contact_no = models.IntegerField(null=True, blank=True)
     photo = models.ImageField(default="pope-francis-village.png")
     # Dropdown for block number
