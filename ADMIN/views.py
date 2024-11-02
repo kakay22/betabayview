@@ -2038,7 +2038,7 @@ def get_bot_response(user_message, user_id, session, request):
     #         return "Money problems can be stressful. Would you like to discuss how you're managing your finances?"
     #     elif keyword_trigger == 'maintenance':
     #         session['last_topic'] = 'maintenance'
-    #         return "Are you facing maintenance issues? I can help you with that. Please specify the problem (e.g., plumbing, electrical, etc.)."
+    #         return "Are you facfing maintenance issues? I can help you with that. Please specify the problem (e.g., plumbing, electrical, etc.)."
 
     # Call the maintenance request handler
     response = handle_maintenance_request(user_message, user_id, session)
