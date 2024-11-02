@@ -13,11 +13,12 @@ export DJANGO_SETTINGS_MODULE=HMS.settings.production
 python manage.py migrate
 
 # Create superuser if it doesn't already exist
-echo "from django.contrib.auth import get_user_model; \
-User = get_user_model(); \
-if not User.objects.filter(username='admin').exists(): \
-    User.objects.create_superuser('admin', 'bbvhhousingmanagement@gmail.com', 'admin@2024')" \
-| python manage.py shell
+python manage.py shell <<EOF
+from django.contrib.auth import get_user_model
+User = get_user_model()
+if not User.objects.filter(username='admin').exists():
+    User.objects.create_superuser('admin', 'bbvhhousingmanagement@gmail.com', 'admin@2024')
+EOF
 
 # Start the Django application
 gunicorn HMS.wsgi --log-file -
