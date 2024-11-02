@@ -9,5 +9,8 @@ python -m nltk.downloader vader_lexicon
 # Set the DJANGO_SETTINGS_MODULE
 export DJANGO_SETTINGS_MODULE=HMS.settings.production
 
+# Run Django migrations
+python manage.py migrate
+
 # Start the Django application
 gunicorn HMS.wsgi --log-file -
