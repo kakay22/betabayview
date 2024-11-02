@@ -30,6 +30,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # URL path used to access media files
 MEDIA_URL = '/media/'
 
+# Root URL configuration
+ROOT_URLCONF = 'HMS.urls'  # Ensure this points to your urls.py
+
 
 
 
