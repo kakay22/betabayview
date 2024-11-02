@@ -1709,7 +1709,7 @@ def process_message(request):
 
             else:
                 # Handle normal bot responses for other conversations
-                bot_reply = get_bot_response(user_message, user.id, request.session)
+                bot_reply = get_bot_response(user_message, user.id, request.session, request)
                 context['jokes_told'] = []  # Reset jokes when changing topic
                 context['last_topic'] = None  # Reset topic when out of joke context
 
@@ -2009,37 +2009,36 @@ from .response import responses
 # Initialize the sentiment analyzer
 sia = SentimentIntensityAnalyzer()
 
-def get_bot_response(user_message, user_id, session):
+def get_bot_response(user_message, user_id, session, request):
 
-    context = {}
+    # context = {}
 
-    # Check for emotional or keyword triggers
-    keyword_trigger = check_for_keywords(user_message)
+    # # Check for emotional or keyword triggers
+    # keyword_trigger = check_for_keywords(user_message)
 
-    if keyword_trigger:
-        if keyword_trigger in ['positive', 'negative']:
-            # Trigger emotional support response if positive or negative emotion is detected
-            emotion_response = provide_emotional_support(user_message, context, sia)
-            if emotion_response:
-                return emotion_response
+    # if keyword_trigger:
+    #     if keyword_trigger in ['positive', 'negative']:
+    #         # Trigger emotional support response if positive or negative emotion is detected
+    #         emotion_response = provide_emotional_support(user_message, context, sia)
+    #         if emotion_response:
+    #             return emotion_response
 
-        # Trigger responses based on specific issues like work, health, relationships, etc.
-        if keyword_trigger == 'work':
-            session['last_topic'] = 'work'
-            return "It sounds like you're having some work stress. What's going on at work?"
-        elif keyword_trigger == 'relationship':
-            session['last_topic'] = 'relationship'
-            return "Relationship problems can be tough. Do you want to talk about it?"
-        elif keyword_trigger == 'health':
-            session['last_topic'] = 'health'
-            return "Health is important. Is there something in particular that you're feeling unwell about?"
-        elif keyword_trigger == 'financial':
-            session['last_topic'] = 'financial'
-            return "Money problems can be stressful. Would you like to discuss how you're managing your finances?"
-        elif keyword_trigger == 'maintenance':
-            session['last_topic'] = 'maintenance'
-            return "Are you facing maintenance issues? I can help you with that. Please specify the problem (e.g., plumbing, electrical, etc.)."
-
+    #     # Trigger responses based on specific issues like work, health, relationships, etc.
+    #     if keyword_trigger == 'work':
+    #         session['last_topic'] = 'work'
+    #         return "It sounds like you're having some work stress. What's going on at work?"
+    #     elif keyword_trigger == 'relationship':
+    #         session['last_topic'] = 'relationship'
+    #         return "Relationship problems can be tough. Do you want to talk about it?"
+    #     elif keyword_trigger == 'health':
+    #         session['last_topic'] = 'health'
+    #         return "Health is important. Is there something in particular that you're feeling unwell about?"
+    #     elif keyword_trigger == 'financial':
+    #         session['last_topic'] = 'financial'
+    #         return "Money problems can be stressful. Would you like to discuss how you're managing your finances?"
+    #     elif keyword_trigger == 'maintenance':
+    #         session['last_topic'] = 'maintenance'
+    #         return "Are you facing maintenance issues? I can help you with that. Please specify the problem (e.g., plumbing, electrical, etc.)."
 
     # Call the maintenance request handler
     response = handle_maintenance_request(user_message, user_id, session)
@@ -2192,8 +2191,34 @@ def get_bot_response(user_message, user_id, session):
         if score >= 70:  # Ensure score is high enough for a match
             return responses[match_query]  # Return a random response from the matched query
 
+    # If no match was found, fallback to Dialogflow for a response
+    dialogflow_response = get_dialogflow_response(user_message, request)  # Call your function to get the response from Dialogflow
+    if dialogflow_response:
+        return dialogflow_response
+
     # If no match was found, return a fallback response
     return "I'm not sure how to respond to that."  # Default response
+
+from google.cloud import dialogflow_v2 as dialogflow
+
+def get_dialogflow_response(user_message, request):
+    # Assuming the user is logged in and you can access their ID
+    user_id = request.user.id  # Get the logged-in user's ID
+    project_id = 'dynamic-cooler-434604-i2'
+
+    session_client = dialogflow.SessionsClient()
+    session = session_client.session_path(project_id, str(user_id))  # Use user ID as session ID
+
+    text_input = dialogflow.TextInput(text=user_message, language_code='en')
+    query_input = dialogflow.QueryInput(text=text_input)
+
+    try:
+        response = session_client.detect_intent(session=session, query_input=query_input)
+        print(response)
+        return response.query_result.fulfillment_text
+    except Exception as e:
+        print(f"Error communicating with Dialogflow: {e}")
+        return "I'm having trouble connecting to my support service."
 
 
 # Functions like get_current_time_response(), get_current_date_response(), etc. remain the same

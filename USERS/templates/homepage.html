@@ -106,6 +106,35 @@
 </head>
 
 <body class="bg-gray-50">
+	<iframe id="chatbase-frame" class="hidden"
+	src="https://www.chatbase.co/chatbot-iframe/3mB7KsfJ--tsoHhcb4BC3"
+	width="100%" 
+	style="height: 100%; min-height: 700px; display: none;"
+	frameborder="0">
+	</iframe>
+
+
+	<!-- Hide the Chatbase chat bubble -->
+	<style>
+		.chatbase-bubble {
+			display: none !important; /* Ensures the chat bubble is hidden */
+		}
+	</style>
+
+	<!-- Chatbase Script -->
+	<script>
+		window.embeddedChatbotConfig = {
+			chatbotId: "3mB7KsfJ--tsoHhcb4BC3",
+			domain: "www.chatbase.co"
+	}
+	</script>
+	<script
+		src="https://www.chatbase.co/embed.min.js"
+		chatbotId="3mB7KsfJ--tsoHhcb4BC3"
+		domain="www.chatbase.co"
+		defer>
+	</script>
+
     <!-- Header Section -->
 	<header class="bg-gradient-to-b from-white to-gray-100">
 		<div class="container mx-auto py-3 px-6 flex justify-between items-center">
