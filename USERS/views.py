@@ -278,6 +278,11 @@ def register(request):
                     description=f'New homeowner registered for pending: {homeowner.user.username}.',
                     user=None
                 )
+
+                # Notify the admin and secretary about the new homeowner registration
+                admin_create_homeowner_notification(homeowner)
+                create_homeowner_notification(homeowner)
+                    
                 return redirect('register_success')  # Change to your success page
             
             else:
