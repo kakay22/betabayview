@@ -12,6 +12,9 @@ export DJANGO_SETTINGS_MODULE=HMS.settings.production
 # Run Django migrations
 python manage.py migrate
 
+# Collect static files
+python manage.py collectstatic --noinput
+
 # Create superuser if it doesn't already exist
 python manage.py shell <<EOF
 from django.contrib.auth import get_user_model
