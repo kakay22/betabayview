@@ -44,10 +44,10 @@ ROOT_URLCONF = 'HMS.urls'  # Ensure this points to your urls.py
 SECRET_KEY = 'django-insecure-=x93jzj%n0x00h^d**2bv!2!r0&awbnk0kkorq=0(-9#8*m6eu'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', "*"]
-
+# Set ALLOWED_HOSTS to include Render domain or other trusted domains/IPs
+ALLOWED_HOSTS = ["betabay.onrender.com"]
 
 # Application definition
 
