@@ -6,6 +6,9 @@ if [ ! -d "venv" ]; then
 fi
 
 # Activate the virtual environment
+source venv/bin/activate
+
+# Activate the virtual environment
 source venv/bin/activate  # Adjust the path as necessary
 
 # Download the VADER lexicon
