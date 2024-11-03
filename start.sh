@@ -1,10 +1,15 @@
 #!/bin/bash
 
-# Activate the virtual environment
-source venv/bin/activate
-
-# Activate the virtual environment
-source venv/bin/activate  # Adjust the path as necessary
+# Create a virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    python -m venv venv
+    source venv/bin/activate
+    # Install packages from requirements.txt
+    pip install -r requirements.txt
+else
+    # Activate the virtual environment
+    source venv/bin/activate
+fi
 
 # Download the VADER lexicon
 python -m nltk.downloader vader_lexicon
