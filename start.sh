@@ -3,7 +3,7 @@
 # Create a virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
     python -m venv venv
-fivenv
+fi
 
 # Activate the virtual environment
 source venv/bin/activate  # Adjust the path as necessary
