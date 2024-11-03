@@ -1251,22 +1251,34 @@ def properties(request):
 
     if request.method == 'POST':
         form = PropertyForm(request.POST, request.FILES)
+
         if form.is_valid():
+            # Create a new property instance but don't save it to the database yet
             new_property = form.save(commit=False)
-            new_property.property_model = form.cleaned_data['property_model']  # Set the property model
-            new_property.save()  # Save the new property to the database
+
+            # Retrieve the property model value from the cleaned data and assign it
+            new_property.property_model = form.cleaned_data.get('property_model')
+            
+            # Save the new property instance to the database
+            new_property.save()
+
+            # Display a success message
             messages.success(request, 'Property added successfully!')
 
+            # Log the action in the Log model for tracking
             Log.objects.create(
                 log_type='info',
                 description=f"Admin '{request.user}' added a new property: '{new_property.property_name}'.",
                 user=request.user
             )
 
+            # If this request is an AJAX request, return a JSON response
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': 'Property added successfully!'})
 
+            # Redirect to the properties page with a success message in the URL
             return redirect('/properties/?message=Property added successfully!')
+
         else:
             errors = form.errors.as_json()
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
