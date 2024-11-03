@@ -64,7 +64,17 @@ INSTALLED_APPS = [
     'SECRETARY',
     'channels',
     'notifications',
+    'storages',
 ]
+
+# Set your AWS credentials and bucket name
+AWS_STORAGE_BUCKET_NAME = 'betabayview'
+AWS_S3_REGION_NAME = 'ap-southeast-1'  # e.g., us-east-1
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+
+# Set up S3 storage for media files
+DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Boto3Storage'
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
 ASGI_APPLICATION = 'HMS.asgi.application'
 
