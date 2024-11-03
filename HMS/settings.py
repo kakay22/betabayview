@@ -136,24 +136,11 @@ WSGI_APPLICATION = 'HMS.wsgi.application'
 import os
 import dj_database_url
 
-# Get the environment variable
-ENVIRONMENT = os.getenv('DJANGO_ENV', 'development')
-
-# Database configuration
-if ENVIRONMENT == 'development':
-    # Local development with SQLite
-    DATABASES = {
+DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         }
-    }
-else:
-    # Production with PostgreSQL (e.g., on Render)
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.getenv("DATABASE_URL")
-        )
     }
 
 
