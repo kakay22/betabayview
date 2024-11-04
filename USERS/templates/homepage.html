@@ -31,18 +31,6 @@
 		html {
 			scroll-behavior: smooth;
 		}
-		.title {
-			font-family: 'Great Vibes', cursive;
-			font-size: 5rem; /* Adjust size as needed */
-			letter-spacing: -0.5px;
-			color: #f8f9fa; /* A lighter shade for better contrast */
-		}
-
-		.subtitle {
-			font-family: 'Dancing Script', cursive;
-			font-size: 1.5rem; /* Adjust size for readability */
-			color: #e0e0e0;
-		}
         /* Fullscreen background image */
         .hero {
             height: 100vh; /* Full screen height */
@@ -211,20 +199,23 @@
 	<div class="absolute inset-0 bg-black bg-opacity-50"></div>
 
 	<!-- Container -->
-	<div class="container mx-auto relative z-10 flex flex-col md:flex-row justify-evenly items-center gap-6 px-4">
-		
+	<div class="container mx-auto relative z-10 flex items-center flex-col px-4">
+
 		<!-- Left Side Text -->
-		<div class="md:text-left mb-8 md:mb-0 md:w-1/2">
+		<div class="md:text-left text-center mb-8 md:mb-0 md:w-1/2">
 			<h1 class="title text-5xl md:text-7xl font-bold mb-4 leading-tight fade-in">
 				Beta Bayview Homes
 			</h1>
 			<p class="subtitle text-lg md:text-2xl mb-6 fade-in">
 				Experience the Privileged Life you deserve.
 			</p>
+			<p class="text-base md:text-lg mb-6 fade-in text-gray-300 max-w-lg">
+				Discover serene living spaces with modern designs, luxurious amenities, and a welcoming community.
+			</p>
 		</div>
 
-		<!-- Right Side Buttons -->
-		<div class="flex flex-col md:flex-row gap-4 fade-in">
+		<!-- Call-to-Action Buttons -->
+		<div class="flex flex-col md:flex-row gap-4 mt-8 fade-in">
 			<a href="{% url 'map' %}" class="border border-teal-500 bg-transparent text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-teal-500 hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105">
 				Map Overview
 			</a>
@@ -232,9 +223,9 @@
 				Create Account
 			</a>
 		</div>
-
 	</div>
 	</section>
+
 
 	<!-- Properties Section -->
 	<section id="properties" class="py-16 bg-gray-50 fade-in">

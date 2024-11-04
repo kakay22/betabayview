@@ -1682,6 +1682,28 @@ def analyze_joke_request(user_message):
     joke_triggers = ['tell me a joke', 'give me a joke', 'joke please', 'can you tell me a joke', 'joke', 'tell me more joke', 'another joke', 'more joke']
     return any(trigger in user_message.lower() for trigger in joke_triggers)
 
+import requests
+
+CHATBASE_API_KEY = "d2c2aea8-fe02-4412-af7c-90214efa82d7"
+CHATBASE_API_URL = "https://www.chatbase.co/api/v1/message"
+
+def get_chatbase_response(user_message, user_id):
+    payload = {
+        'api_key': CHATBASE_API_KEY,
+        'user_id': user_id,
+        'message': user_message,
+    }
+    try:
+        response = requests.post(CHATBASE_API_URL, json=payload)
+        response_data = response.json()
+        if response.status_code == 200:
+            return response_data.get('reply', 'No reply received from Chatbase')
+        else:
+            return "Error: Unable to get a reply from Chatbase"
+    except requests.RequestException as e:
+        return f"Error: {str(e)}"
+
+
 @csrf_exempt
 def process_message(request):
     if request.method == 'POST':
@@ -2023,35 +2045,6 @@ sia = SentimentIntensityAnalyzer()
 
 def get_bot_response(user_message, user_id, session, request):
 
-    # context = {}
-
-    # # Check for emotional or keyword triggers
-    # keyword_trigger = check_for_keywords(user_message)
-
-    # if keyword_trigger:
-    #     if keyword_trigger in ['positive', 'negative']:
-    #         # Trigger emotional support response if positive or negative emotion is detected
-    #         emotion_response = provide_emotional_support(user_message, context, sia)
-    #         if emotion_response:
-    #             return emotion_response
-
-    #     # Trigger responses based on specific issues like work, health, relationships, etc.
-    #     if keyword_trigger == 'work':
-    #         session['last_topic'] = 'work'
-    #         return "It sounds like you're having some work stress. What's going on at work?"
-    #     elif keyword_trigger == 'relationship':
-    #         session['last_topic'] = 'relationship'
-    #         return "Relationship problems can be tough. Do you want to talk about it?"
-    #     elif keyword_trigger == 'health':
-    #         session['last_topic'] = 'health'
-    #         return "Health is important. Is there something in particular that you're feeling unwell about?"
-    #     elif keyword_trigger == 'financial':
-    #         session['last_topic'] = 'financial'
-    #         return "Money problems can be stressful. Would you like to discuss how you're managing your finances?"
-    #     elif keyword_trigger == 'maintenance':
-    #         session['last_topic'] = 'maintenance'
-    #         return "Are you facfing maintenance issues? I can help you with that. Please specify the problem (e.g., plumbing, electrical, etc.)."
-
     # Call the maintenance request handler
     response = handle_maintenance_request(user_message, user_id, session)
     if response:
@@ -2190,18 +2183,18 @@ def get_bot_response(user_message, user_id, session, request):
 
     # Retrieve all keys from the responses dictionary for exact and fuzzy matching
     user_message = user_message.lower()  # Normalize user input
-    all_queries = list(responses.keys())
+    # all_queries = list(responses.keys())
 
-    # Check for an exact match in the predefined responses
-    if user_message in all_queries:
-        return responses[user_message]  
+    # # Check for an exact match in the predefined responses
+    # if user_message in all_queries:
+    #     return responses[user_message]  
 
-    # Fuzzy matching for broader responses
-    closest_match = process.extractOne(user_message, all_queries)
-    if closest_match:  # Check if closest_match is valid
-        match_query, score = closest_match  # Unpack the match
-        if score >= 70:  # Ensure score is high enough for a match
-            return responses[match_query]  # Return a random response from the matched query
+    # # Fuzzy matching for broader responses
+    # closest_match = process.extractOne(user_message, all_queries)
+    # if closest_match:  # Check if closest_match is valid
+    #     match_query, score = closest_match  # Unpack the match
+    #     if score >= 70:  # Ensure score is high enough for a match
+    #         return responses[match_query]  # Return a random response from the matched query
 
     # If no match was found, fallback to Dialogflow for a response
     dialogflow_response = get_dialogflow_response(user_message, request)  # Call your function to get the response from Dialogflow
