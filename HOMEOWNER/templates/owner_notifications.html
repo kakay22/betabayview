@@ -324,8 +324,11 @@
 								<p><strong>Purpose:</strong> {{ notif.visit_request.purpose }}</p>
 							</div>
 							<div class="modal-footer">
-								<button class="btn btn-success" onclick="acceptVisitRequest({{ notif.pk }})">Accept</button>
-								<button class="btn btn-danger" onclick="rejectVisitRequest({{ notif.pk }})">Reject</button>
+								<div class="notification" id="notification-{{ notif.pk }}">
+									<!-- Other notification content here -->
+									<button class="btn btn-success" onclick="acceptVisitRequest('{{ notif.pk }}')">Accept</button>
+									<button class="btn btn-danger" onclick="rejectVisitRequest('{{ notif.pk }}')">Reject</button>
+								</div>		
 							</div>							
 						</div>
 					</div>
@@ -348,7 +351,7 @@
 								window.location.reload()
 							},
 							error: function(xhr) {
-								alert("Error: " + xhr.responseJSON.error);
+								alert("Error: " + xhr.responseJSON.error + 'ID: '+ notifId);
 							}
 						});
 					}

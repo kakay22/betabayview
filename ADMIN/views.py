@@ -1253,11 +1253,13 @@ def properties(request):
         form = PropertyForm(request.POST, request.FILES)
 
         if form.is_valid():
+            property_model = request.POST.get('property_model')
+            
             # Create a new property instance but don't save it to the database yet
             new_property = form.save(commit=False)
 
             # Retrieve the property model value from the cleaned data and assign it
-            new_property.property_model = form.cleaned_data.get('property_model')
+            new_property.property_model = property_model
             
             # Save the new property instance to the database
             new_property.save()

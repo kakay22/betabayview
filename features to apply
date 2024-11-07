@@ -1,81 +1,140 @@
-1. Visitor Management System
-Feature: Implement a digital logbook to manage visitors coming into the subdivision. Residents can approve or deny visitor requests, and security personnel can be notified about approved visitors.
+{% load static %}
+<!DOCTYPE html>
+<html>
 
-Benefit: Improves security and transparency regarding visitor access.
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Navigate to {{ visit_target_full_name }}</title>
+    <link rel="icon" href="{% static 'users/betaIcon (1).png' %}" type="image/x-icon">
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+    <style>
+        /* Style for overlay containing exit button and visit info */
+        #overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            padding: 15px 20px;
+            background-color: rgba(0, 0, 0, 0.55);
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            color: #dfd6d6;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 360px;
+            z-index: 10;
+        }
+        #visitInfo {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        #exitButton {
+            padding: 10px 15px;
+            background-color: rgb(70, 69, 69);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #exitButton:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
 
-<!-- 2. Maintenance Requests Tracking
-Feature: Allow homeowners to request maintenance services through the platform. The system can categorize requests (e.g., plumbing, electrical) and assign technicians automatically or through manual approval.
+<body style='margin: 0; overflow: hidden;'>
+    <!-- Overlay with exit button and visit info -->
+    <div class="w-full" id="overlay">
+        <div class="flex flex-col" id="visitInfo">
+            <p><strong>Visit to:</strong> {{ visit_target_full_name }}</p>
+            <p><strong>Block:</strong> {{ visit_request.household_head.property.property_block_no }}</p>
+            <p><strong>Lot:</strong> {{ visit_request.household_head.property.property_house_no }}</p>
+            <p>
+                <strong>Coordinates:</strong>
+                <span id="lat">{{ visit_request.lat }}</span>,
+                <span id="lng">{{ visit_request.lng }}</span>
+            </p>
+            <p><strong>Distance:</strong> <span id="distance">Calculating...</span></p>
+        </div>
+        <a class="text-lg" href="{% url 'map' %}" id="exitButton"><i class="bi bi-x"></i></a>
+    </div>
 
-Benefit: Streamlines communication between residents and maintenance staff, ensuring timely repairs and tracking 
-ongoing or completed requests. -->
+    <!-- <img class="absolute top-2 right-2" src="{% static 'users/arrow.glb' %}" alt="" srcset=""> -->
 
-<!-- 4. Community Announcements and Event Management
-Feature: Add a module for announcements (e.g., power outages, subdivision meetings) and events (e.g., community gatherings) that can be broadcast to all residents.
+    <a-scene embedded arjs="sourceType: webcam;">
+        <a-assets timeout="10000">
+            <a-asset-item id="arrow" src="{% static 'users/direction_arrow.glb' %}"></a-asset-item>
+        </a-assets>
+    
+        <!-- Set the position to center the model on the screen -->
+        <a-entity
+            class="absolute top-[50%] left-[50%] z-[9999]"
+            gltf-model="#arrow"
+            position="0 -0.3 -3"
+            scale="0.7 0.1 2"
+            animation="property: rotation; to: 0 360 0; loop: true; dur: 4500; easing: linear"
+        ></a-entity>
 
-Benefit: Keeps the community informed and engaged, making communication efficient and transparent. -->
+        
+        <a-entity camera look-controls="pointerLockEnabled: true" position="0 0 0" near="0.5"></a-entity>
+    </a-scene>    
 
-<!-- 5. Household Member Management
-Feature: Allow homeowners to add, edit, or remove household members from their profile. The system could display details of each member for easy management.
-
-Benefit: Ensures accurate records of people living in each house and who can request maintenance or access other features. -->
-
-6. Automated Payment Reminders (Non-payment)
-Feature: Even if your system doesn’t handle payments directly, it can send reminders for monthly dues (e.g., HOA fees, utility bills) based on user-defined schedules.
-
-Benefit: Helps homeowners stay on top of financial obligations without needing to manually track them.
-
-<!-- 7. Interactive Route Mapping
-Feature: Use mapping features like Leaflet (as you're already using) to display key places within the community, like amenities, security outposts, and entry points. Allow users to request visits to other properties.
-
-Benefit: Enhances navigation and supports efficient visit scheduling. -->
-
-<!-- 8. Chatbot for FAQs and Assistance
-Feature: Integrate a chatbot (as you are planning) to answer frequently asked questions, assist with common requests, or guide users through the system.
-
-Benefit: Provides quick answers and improves user experience by reducing the need for direct human interaction. -->
-
-<!-- 9. Real-Time Notifications
-Feature: Send real-time push notifications or emails for things like maintenance status updates, security alerts, community announcements, or important system changes.
-
-Benefit: Keeps users up-to-date on important events and their ongoing requests. -->
-
-<!-- 10. Property Availability & Booking System
-Feature: For those properties within the community that are up for rent or sale, create a listing system where owners can showcase available units. Allow prospective renters or buyers to book viewings directly through the system.
-
-Benefit: Provides a marketplace within the community, simplifying transactions and property management. -->
-
-11. Complaint and Feedback System
-Feature: Provide homeowners with a platform to file complaints or give feedback about the community, services, or facilities. Include a tracking system so users can monitor the progress or resolution of their complaints.
-
-Benefit: Improves community management and resident satisfaction by addressing concerns.
-
-12. Energy and Utility Monitoring (Future Integration)
-Feature: Integrate energy and utility consumption monitoring systems, allowing homeowners to track their utility usage, promoting conservation and cost efficiency.
-
-Benefit: Promotes sustainability and helps homeowners manage their consumption.
-
-13. Emergency Alert System
-Feature: Create a built-in emergency alert system where residents can send SOS signals or get alerts during natural disasters, like typhoons, that might affect the community.
-
-Benefit: Ensures quick responses during emergencies, improving overall safety.
-These features can not only improve operational efficiency but also enhance the living experience for residents, providing them with tools for better property management and communication within their community.
-
-
-chatbot can:
-small talk
-tell current time
-tell current date
-tell latest announcements
-tell latest events
-tell management contact info
-tell your maintenance requests total, statuses
-tell your name
-tell infos about your property
-tell available property
-tell weather(in progress)
-
-actions:
-can command to request a maintenance
-
-
-
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const targetLat = parseFloat(document.getElementById('lat').textContent);
+            const targetLng = parseFloat(document.getElementById('lng').textContent);
+    
+            if (isNaN(targetLat) || isNaN(targetLng)) {
+                console.error("Invalid target coordinates:", targetLat, targetLng);
+            } else {
+                function calculateDistance(lat1, lng1, lat2, lng2) {
+                    const R = 6371e3; // Earth's radius in meters
+                    const phi1 = lat1 * (Math.PI / 180);
+                    const phi2 = lat2 * (Math.PI / 180);
+                    const deltaPhi = (lat2 - lat1) * (Math.PI / 180);
+                    const deltaLambda = (lng2 - lng1) * (Math.PI / 180);
+    
+                    const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                        Math.cos(phi1) * Math.cos(phi2) *
+                        Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    
+                    return R * c; // Distance in meters
+                }
+    
+                // Get arrow entity here to ensure it's available after DOM is loaded
+                const arrowEntity = document.getElementById('arrow');
+    
+                navigator.geolocation.watchPosition(position => {
+                    const { latitude, longitude } = position.coords;
+                    const distance = calculateDistance(latitude, longitude, targetLat, targetLng);
+                    document.getElementById('distance').textContent = `${distance.toFixed(2)} meters`;
+    
+                    // Calculate the angle to the target
+                    const angle = Math.atan2(targetLng - longitude, targetLat - latitude) * (180 / Math.PI);
+    
+                    // Update arrow orientation if arrowEntity is available
+                    if (arrowEntity) {
+                        arrowEntity.setAttribute('rotation', `0 ${angle} 0`);
+                    }
+                }, error => {
+                    console.error("Error getting position", error);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+                });
+            }
+        });
+    </script>
+    
+</body>
+</html>

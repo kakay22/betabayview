@@ -581,4 +581,7 @@ def password_reset_complete(request):
 
 def ar_with_js(request, pk):
     visit_request = VisitRequest.objects.get(pk=pk)
-    return render(request, 'ar_with_js.html', {'visit_request':visit_request})
+    visit_target_first_name = visit_request.household_head.user.first_name
+    visit_target_last_name = visit_request.household_head.user.last_name
+    visit_target_full_name = f"{visit_target_first_name} {visit_target_last_name}"
+    return render(request, 'ar_with_js.html', {'visit_request':visit_request, 'visit_target_full_name':visit_target_full_name})

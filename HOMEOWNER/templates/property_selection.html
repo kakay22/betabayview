@@ -73,7 +73,13 @@
 
 							<!-- Property Details -->
 							<div class="p-4 space-y-2">
-								<h2 class="text-xl font-bold text-gray-800">{{ property.property_name }}</h2>
+								<h2 class="text-xl font-bold text-gray-800">{{ property.property_name|title }}</h2>
+
+								<!-- Block Number -->
+								<p class="text-sm text-gray-600 flex items-center">
+									<i class="bi bi-house-door text-lg mr-2"></i> 
+									<strong>Model type: </strong> {{ property.property_model }}
+								</p>
 								
 								<!-- Block Number -->
 								<p class="text-sm text-gray-600 flex items-center">

@@ -480,6 +480,22 @@
             // Set the map view to Beta Bayview location with maximum zoom level
             const map = L.map('map').setView([initialLat, initialLng], 16);
 
+            // Use the browser's geolocation API to get the user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;                    
+
+                    // Add a marker at the user's location with a label popup
+                    const marker = L.marker([userLat, userLng]).addTo(map);
+                    marker.bindPopup("<b>Your Location</b><br>Lat: " + userLat.toFixed(5) + "<br>Lng: " + userLng.toFixed(5)).openPopup();
+                }, function(error) {
+                    console.error("Error retrieving location:", error);
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+
             map.zoomControl.remove();
 
             // Load the map tiles
@@ -581,18 +597,46 @@
             // Initialize markers array to store each marker
             let markers = [];
 
-            // Create a custom marker using a div
-            function createCustomMarkerImage(imageUrl) {
+            // // Create a custom marker using a div
+            // function createCustomMarkerImage(imageUrl) {
+            //     const markerDiv = document.createElement('div');
+            //     markerDiv.className = 'custom-marker';
+
+            //     // Set the background image
+            //     markerDiv.style.backgroundImage = `url(${imageUrl})`;
+            //     markerDiv.style.backgroundSize = 'cover'; // Cover the entire area
+            //     markerDiv.style.backgroundPosition = 'center'; // Center the image
+            //     markerDiv.style.borderRadius = '50%'; // Make it circular
+            //     markerDiv.style.width = '30px'; // Width of the marker
+            //     markerDiv.style.height = '30px'; // Height of the marker
+
+            //     return markerDiv;
+            // }
+
+            // Create a custom marker using a div with Bootstrap icon
+            function createCustomMarkerImage() {
+                // Create the marker div
                 const markerDiv = document.createElement('div');
                 markerDiv.className = 'custom-marker';
 
-                // Set the background image
-                markerDiv.style.backgroundImage = `url(${imageUrl})`;
-                markerDiv.style.backgroundSize = 'cover'; // Cover the entire area
-                markerDiv.style.backgroundPosition = 'center'; // Center the image
+                // Style the marker div to be circular
+                markerDiv.style.width = '25px'; // Adjust size as needed
+                markerDiv.style.height = '25px';
                 markerDiv.style.borderRadius = '50%'; // Make it circular
-                markerDiv.style.width = '30px'; // Width of the marker
-                markerDiv.style.height = '30px'; // Height of the marker
+                markerDiv.style.backgroundColor = '#fff'; // Background color
+                markerDiv.style.display = 'flex';
+                markerDiv.style.alignItems = 'center';
+                markerDiv.style.justifyContent = 'center';
+                markerDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)'; // Optional shadow for effect
+
+                // Create the icon element
+                const iconElement = document.createElement('i');
+                iconElement.className = 'bi bi-house-fill'; // Bootstrap's house icon
+                iconElement.style.fontSize = '17px'; // Adjust size as needed
+                iconElement.style.color = '#000'; // Icon color
+
+                // Append the icon to the marker div
+                markerDiv.appendChild(iconElement);
 
                 return markerDiv;
             }

@@ -33,7 +33,9 @@ MEDIA_URL = '/media/'
 # Root URL configuration
 ROOT_URLCONF = 'HMS.urls'  # Ensure this points to your urls.py
 
-
+# Set up S3 storage for media files
+DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Boto3Storage'
+MEDIA_URL = f'https://betabayview.s3.ap-southeast-1.amazonaws.com/'
 
 
 
