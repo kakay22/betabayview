@@ -151,7 +151,16 @@
                             <img class="w-8 h-8 rounded-full" src="{{ house.photo.url }}" alt="" srcset=""> {{ house.property_name }}
                         </div>
                     {% endfor %}
-                </div>       
+                </div>    
+
+                <!-- Container for house buttons -->
+                <div id="event-buttons" class="text-sm">
+                    {% for event in labels %}
+                        <div class="house-button shadow-md rounded-[20px] px-4 flex gap-2 items-center" data-index="{{ forloop.counter0 }}">
+                            <img class="w-8 h-8 rounded-full" src="{{ event.image.url }}" alt="{{ event.image.url }}" srcset=""> {{ house.property_name }}
+                        </div>
+                    {% endfor %}
+                </div>   
                 
                 <!-- Legend HTML -->
                 <div class="legend">

@@ -27,8 +27,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Directory where uploaded media files are stored
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# URL path used to access media files
+MEDIA_URL = '/media/'
+
 # Root URL configuration
 ROOT_URLCONF = 'HMS.urls'  # Ensure this points to your urls.py
+
+
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -71,9 +77,6 @@ import os
 # AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-1')  # Default to 'us-east-1' if not set
 # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 
-# AWS_S3_FILE_OVERWRITE = False
-# AWS_DEFAULT_ACL = 'public-read'
-
 ASGI_APPLICATION = 'HMS.asgi.application'
 
 CHANNEL_LAYERS = {
@@ -99,7 +102,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# WHITENOISE_ROOT = MEDIA_ROOT
+WHITENOISE_ROOT = MEDIA_ROOT
 
 ROOT_URLCONF = 'HMS.urls'
 
@@ -122,21 +125,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'HMS.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 import os
 import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv() 
 
 DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        }
-    }
+    'default': dj_database_url.config(default=os.getenv("DATABASE_URL"))
+}
 
+# Temporary debug code
+print("DATABASE_URL:", os.getenv("DATABASE_URL"))
 
+# DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#         }
+#     }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -174,18 +181,8 @@ USE_TZ = True
 # Define the URL and root for static files
 STATIC_URL = '/static/'
 
-# AWS S3 Settings
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = 'betabay'
-AWS_S3_REGION_NAME = 'ap-southeast-2'
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = 'public-read'  # or private if you want to restrict access
-
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
-
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Store uploaded media files in the 'media' directory
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_ROOT = os.path.join(BASE_DIR, 'media')
