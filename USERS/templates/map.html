@@ -27,6 +27,24 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{% static 'js/loading_submit.js' %}"></script>
     <link rel="stylesheet" href="{% static 'css/user-pop-up-mess.css' %}">
+    <style>
+        .custom-event-marker {
+        background-color: #ff6347; /* Marker background color */
+        color: white; /* Icon color */
+        border-radius: 50%; /* Circular shape */
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.5); /* Optional shadow */
+    }
+
+    .custom-event-marker i {
+        font-family: 'Bootstrap Icons';
+    }
+    </style>
 </head>
 
 <body class="relative h-[100dvh] w-[100dvw] overflow-y-scroll overflow-x-hidden">
@@ -157,7 +175,7 @@
                 <div id="event-buttons" class="text-sm">
                     {% for event in labels %}
                         <div class="house-button shadow-md rounded-[20px] px-4 flex gap-2 items-center" data-index="{{ forloop.counter0 }}">
-                            <img class="w-8 h-8 rounded-full" src="{{ event.image.url }}" alt="{{ event.image.url }}" srcset=""> {{ house.property_name }}
+                            <img class="w-8 h-8 rounded-full" src="" alt="{{ event.image.url }}" srcset=""> {{ event.event_name }}
                         </div>
                     {% endfor %}
                 </div>   
@@ -924,9 +942,23 @@
                 });
             }
 
+            // Function to create a custom circular marker with an event icon
+            function createEventMarkerIcon() {
+                return L.divIcon({
+                    className: 'custom-event-marker', // Custom class for styling
+                    html: '<i class="bi bi-calendar"></i>', // Event icon (Bootstrap icon)
+                    iconSize: [30, 30], // Marker size
+                    iconAnchor: [15, 15] // Center the icon
+                });
+            }
+
             // Function to add a marker using Leaflet
             function addMarker(location, options) {
-                const marker = L.marker(location).addTo(map); // Create and add the marker to the Leaflet map
+                // Create the marker with the custom icon and location
+                const marker = L.marker(location, {
+                    icon: createEventMarkerIcon(),
+                    title: options.title
+                }).addTo(map); // Add marker to the map
 
                 // Bind a popup to the marker with the event details
                 marker.bindPopup(`
@@ -940,6 +972,19 @@
                 `); // Use Leaflet's bindPopup method
             }
 
+            // Sample event data
+            const event = {
+                lat: 37.7749,
+                lng: -122.4194,
+                title: "Sample Event",
+                description: "This is a sample event description.",
+                date: "2024-12-31",
+                time: "10:00 AM",
+                image: "https://example.com/image.jpg"
+            };
+
+            // Call addMarker to place the event marker on the map
+            addMarker([event.lat, event.lng], event);
 
             function clearMarkers() {
                 markers.forEach(marker => {
