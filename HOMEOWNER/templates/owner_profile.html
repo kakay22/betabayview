@@ -103,9 +103,9 @@
         <div class="bg-white shadow-md h-[15rem] relative">
             <!--property image-->
             {% if my_property.photo.url %}
-                <img src="{{ my_property.photo.url }}" alt="Property Image" class="w-full h-full object-cover">
+                <img src="{{ my_property.photo.url }}" alt="{{ my_property.photo.url }}" class="w-full h-full object-cover">
             {% else %}
-                <img src="{% static 'users/placeholder.png' %}" alt="Property Image" class="w-full h-full object-cover">
+                <img src="{% static 'users/placeholder.png' %}" alt="{% static 'users/placeholder.png' %}" class="w-full h-full object-cover">
             {% endif %}
 
             <!--profile image-->
