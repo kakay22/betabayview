@@ -119,18 +119,11 @@ WSGI_APPLICATION = 'HMS.wsgi.application'
 
 # import dj_database_url
 
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.getenv("DATABASE_URL")
-#     )
-# }
-
 DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        }
-    }
+    'default': dj_database_url.config(
+        default=os.getenv("DATABASE_URL")
+    )
+}
 
 #for variable environment on render
 # DATABASE_URL = postgresql://postgres:IXfFtNOSFQKPylkpBBBNvoJMUqbWcYtv@autorack.proxy.rlwy.net:50668/railway
