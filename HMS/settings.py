@@ -27,9 +27,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Directory where uploaded media files are stored
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# URL path used to access media files
-MEDIA_URL = '/media/'
-
 # Root URL configuration
 ROOT_URLCONF = 'HMS.urls'  # Ensure this points to your urls.py
 
@@ -177,8 +174,17 @@ USE_TZ = True
 # Define the URL and root for static files
 STATIC_URL = '/static/'
 
-# Local media settings
-MEDIA_URL = '/media/'
+# AWS S3 Settings
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = 'public-read'  # or private if you want to restrict access
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
+
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Store uploaded media files in the 'media' directory
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
