@@ -47,7 +47,11 @@
 
         <div class="bg-white shadow-md h-[20rem] relative mt-[3rem] rounded-md">
             <!--property image-->
-            <img src="{{ owner.property.photo.url }}" alt="Property Image" class="w-full h-full object-cover rounded-md">
+			{% if owner.property %}
+				<img src="{{ owner.property.photo.url }}" alt="Property Image" class="w-full h-full object-cover rounded-md">
+			{% else %}
+				<img src="{% static 'users/placeholder.png' %}" alt="{% static 'users/placeholder.png' %}" class="w-full h-full object-cover rounded-md">
+			{% endif %}
 
             <!--profile image-->
             <div class="absolute right-3 h-[11rem] w-[11rem] top-[-30%] bg-white p-2 rounded-full">

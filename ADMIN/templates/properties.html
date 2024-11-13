@@ -143,9 +143,9 @@
                 <!-- Filter by Model -->
                 <select class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" name="model" id="model" onchange="this.form.submit()">
                     <option value="" {% if not model_filter %}selected{% endif %}>All Models</option>
-                    {% for model in property_models %}
-                        <option value="{{ model }}" {% if model_filter == model.model_name %}selected{% endif %}>{{ model }}</option>
-                    {% endfor %}
+                    <option value="aphrodite" {% if model_filter == 'aphrodite' %}selected{% endif %}>Aphrodite</option>
+                    <option value="athena" {% if model_filter == 'athena' %}selected{% endif %}>Athena</option>
+                    <option value="nike" {% if model_filter == 'nike' %}selected{% endif %}>Nike</option>
                 </select>
 
             </form>                        

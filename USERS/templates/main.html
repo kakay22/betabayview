@@ -49,31 +49,27 @@
                     </a>
                     <h1 class="w-full text-[1.5rem] text-center mb-0 md:mb-4 md:py-4 px-3">Select Your Role</h1>
                 </div>
-
             
                 <!-- Slider with focused center card and blue side cards -->
                 <div class="splide max-w-[500px] m-auto" aria-label="Select usertype" id="userSlider">
                     <div class="splide__track">
                         <ul class="splide__list">
                             <li class="splide__slide" data-user="Owner">
-                                <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md">
-                                    <img class="mt-1 md:mt-3" src="{% static 'users/homeOwner.png' %}" alt="home owner image">
-                                    
-                                    <i class="bi bi-check-circle-fill"></i>
+                                <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md flex items-center justify-center">
+                                    <img class="mt-1 md:mt-3 max-h-[250px] max-w-[400px] object-contain" src="{% static 'users/homeOwner.png' %}" alt="home owner image">
+                                    <i class="bi bi-check-circle-fill absolute bottom-3 right-3"></i>
                                 </div>
                             </li>
                             <li class="splide__slide" data-user="Secretary">
-                                <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md">
-                                    <img class="mt-3" src="{% static 'users/secretary.png' %}" alt="secretary image">
-                                    
-                                    <i class="bi bi-check-circle-fill"></i>
+                                <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md flex items-center justify-center">
+                                    <img class="mt-3 max-h-[250px] max-w-[400px] object-contain" src="{% static 'users/secretary.png' %}" alt="secretary image">
+                                    <i class="bi bi-check-circle-fill absolute bottom-3 right-3"></i>
                                 </div>
                             </li>
                             <li class="splide__slide" data-user="Admin">
-                                <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md">
-                                    <img class="mt-3" src="{% static 'users/admin.png' %}" alt="admin image">
-                                    
-                                    <i class="bi bi-check-circle-fill"></i>
+                                <div class="user w-full px-3 cursor-pointer transition relative duration-[.3s] rounded-md flex items-center justify-center">
+                                    <img class="mt-3 max-h-[250px] max-w-[400px] object-contain" src="{% static 'users/admin.png' %}" alt="admin image">
+                                    <i class="bi bi-check-circle-fill absolute bottom-3 right-3"></i>
                                 </div>
                             </li>
                         </ul>
@@ -154,19 +150,7 @@
         const users = document.querySelectorAll('.user');
         const user = document.getElementById('user');
         const conBtn = document.getElementById('conBtn');
-        const mapBtn = document.getElementById('mapBtn');
-        const mapContainer = document.getElementById('mapContainer');
-        const closeMapBtn = document.getElementById('closeMapBtn');
         const mapMessage = document.getElementById('mapMessage');
-
-        mapBtn.addEventListener('click', () => {
-            mapContainer.classList.remove('hidden');
-            initMap()
-        });
-
-        closeMapBtn.addEventListener('click', () => {
-            mapContainer.classList.add('hidden');
-        });
 
         function initMap() {
             if (document.getElementById('map').children.length > 0) return;
@@ -360,10 +344,6 @@
                 }
             };
         }
-
-        closeMapBtn.addEventListener('click', () => {
-            mapContainer.classList.add('hidden');
-        });
 
     </script>
 </body>

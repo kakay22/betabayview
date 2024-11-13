@@ -1229,73 +1229,79 @@ def delete_event(request, pk):
 
 @login_required
 def properties(request):
-    # Filter logic for availability and block
+    # Retrieve filters from the GET request
     availability_filter = request.GET.get('availability')
     block_filter = request.GET.get('block')
-    model_filter = request.GET.get('property_model')
+    model_filter = request.GET.get('model')  # updated to match the `name` attribute in the select
 
+    # Query all properties and property models
     properties = Property.objects.all()
     property_models = PropertyModel.objects.all()
 
+    # Apply availability filter
     if availability_filter:
         properties = properties.filter(availability=availability_filter)
 
+    # Apply block filter
     if block_filter:
         properties = properties.filter(property_block_no=block_filter)
 
-    # Filter by model
+    # Apply model filter, adjusting for the property model field
     if model_filter:
-        properties = properties.filter(property_model=model_filter)  # Adjust according to your model field name
+        properties = properties.filter(property_model=model_filter)  # Adjust `property_model__name` as needed
 
+    # Query all property images for display
     property_images = PropertyImage.objects.all()
 
+    # Handle form submission for adding a new property
     if request.method == 'POST':
         form = PropertyForm(request.POST, request.FILES)
 
         if form.is_valid():
-            property_model = request.POST.get('property_model')
-            
             # Create a new property instance but don't save it to the database yet
             new_property = form.save(commit=False)
 
-            # Retrieve the property model value from the cleaned data and assign it
-            new_property.property_model = property_model
+            # Assign the property model based on the form data
+            property_model_id = request.POST.get('property_model')
+            if property_model_id:
+                new_property.property_model_id = property_model_id
             
             # Save the new property instance to the database
             new_property.save()
 
-            # Display a success message
-            messages.success(request, 'Property added successfully!')
-
-            # Log the action in the Log model for tracking
+            # Log the action for tracking
             Log.objects.create(
                 log_type='info',
                 description=f"Admin '{request.user}' added a new property: '{new_property.property_name}'.",
                 user=request.user
             )
 
-            # If this request is an AJAX request, return a JSON response
+            # Return a JSON response for AJAX requests
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': 'Property added successfully!'})
 
-            # Redirect to the properties page with a success message in the URL
+            # Redirect with success message for non-AJAX requests
+            messages.success(request, 'Property added successfully!')
             return redirect('/properties/?message=Property added successfully!')
 
         else:
+            # Return form errors as JSON for AJAX requests
             errors = form.errors.as_json()
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': errors})
     else:
+        # Initialize an empty form if the request is not a POST
         form = PropertyForm()
 
+    # Render the properties page with filtering and form handling
     return render(request, 'properties.html', {
         'properties': properties,
         'form': form,
         'property_images': property_images,
         'availability_filter': availability_filter,
         'block_filter': block_filter,
-        'property_models':property_models,
-        'model_filter':model_filter
+        'property_models': property_models,
+        'model_filter': model_filter
     })
 
 def admin_property_detail(request, pk):
@@ -1739,7 +1745,7 @@ def process_message(request):
                 if analyze_agreement(user_message):
                     bot_reply = get_joke_response(context)
                 else:
-                    bot_reply = get_bot_response(user_message, user.id, request.session)
+                    bot_reply = get_bot_response(user_message, user.id, request.session, request)
                     context['last_topic'] = None  # End the joke topic
                     context['jokes_told'] = []  # Reset jokes list
 
@@ -2198,13 +2204,74 @@ def get_bot_response(user_message, user_id, session, request):
     #     if score >= 70:  # Ensure score is high enough for a match
     #         return responses[match_query]  # Return a random response from the matched query
 
-    # If no match was found, fallback to Dialogflow for a response
-    dialogflow_response = get_dialogflow_response(user_message, request)  # Call your function to get the response from Dialogflow
-    if dialogflow_response:
-        return dialogflow_response
+    # # If no match was found, fallback to Dialogflow for a response
+    # dialogflow_response = get_dialogflow_response(user_message, request)  # Call your function to get the response from Dialogflow
+    # if dialogflow_response:
+    #     return dialogflow_response
+
+    # Check for matches in your local system, or fallback to Chatbase if no match is found
+    chatbase_response = get_chatbase_response(user_message, request)
+    if chatbase_response:
+        return chatbase_response
 
     # If no match was found, return a fallback response
     return "I'm not sure how to respond to that."  # Default response
+
+# Replace with your Chatbase API key
+CHATBASE_API_KEY = 'd2c2aea8-fe02-4412-af7c-90214efa82d7'  # Your Chatbase API Key
+CHATBOT_ID = 'JiPiv2wOvAUbPJA6DJ2Tx'  # Your Chatbase chatbot ID
+
+import json
+
+# Function to get response from Chatbase
+def get_chatbase_response(user_message, request):
+    chatbase_api_url = 'https://www.chatbase.co/api/v1/chat'  # Chatbase API endpoint
+    
+    # Prepare the payload for the Chatbase request
+    payload = {
+        "messages": [
+            {"content": user_message, "role": "user"}
+        ],
+        "chatbotId": CHATBOT_ID,
+        "stream": False,
+        "temperature": 0.5,
+        "model": "gpt-4o",
+    }
+
+    headers = {
+        'Authorization': f'Bearer {CHATBASE_API_KEY}',
+        'Content-Type': 'application/json',
+    }
+    
+    try:
+        # Send the message to Chatbase API
+        response = requests.post(chatbase_api_url, headers=headers, json=payload)
+        
+        # Log response status and content for debugging
+        print("Response status code:", response.status_code)
+        print("Response content:", response.text)
+        
+        # Check if the response contains JSON data
+        if response.status_code == 200:
+            try:
+                # Parse the JSON response
+                response_data = response.json()
+                
+                # Extract the text response from the JSON structure
+                chatbase_response = response_data.get("text", "I'm sorry, I couldn't understand that.")
+                
+                return chatbase_response
+            except json.JSONDecodeError:
+                print("Error: Response is not valid JSON")
+                return "Sorry, the response from Chatbase could not be processed."
+        else:
+            # Log error details if status code is not 200
+            print("Error: Non-200 status code received.")
+            return f"Error from Chatbase: {response.status_code} - {response.text}"
+    except requests.RequestException as e:
+        print(f"Error connecting to Chatbase: {e}")
+        return "Sorry, I encountered a connection error while processing your request."
+
 
 from google.cloud import dialogflow_v2 as dialogflow
 

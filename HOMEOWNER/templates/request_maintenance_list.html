@@ -75,7 +75,7 @@
 
                     <!-- Progress bar -->
                     <div class="flex flex-col">
-                        {% if percentage_used %}
+                        {% if percentage_used >= 0 %}
                             <div class="bg-gray-300 rounded-full h-2.5 md:w-96 w-full mb-2">
                                 <!-- Progress bar based on percentage -->
                                 {% if percentage_used == 100 %}
