@@ -73,6 +73,9 @@ urlpatterns = [
     path('chat-logs/', views.chat_logs, name='chat_logs'),  # URL for viewing chat logs
     path('chat-logs/edit/<int:id>/', views.chat_edit, name='chat_edit'),  # URL for editing a specific chat conversation
     path('chat-logs/delete/<int:id>/', views.chat_delete, name='chat_delete'),  # URL for deleting a specific chat conversation
+	path('admin_emergency_contact/', views.admin_emergency_contact, name='admin_emergency_contact'),
+	path('emergency-contacts/edit/<int:contact_id>/', views.edit_contact, name='edit_contact'),
+    path('emergency-contacts/delete/<int:contact_id>/', views.delete_contact, name='delete_contact'),
 ]
 
 

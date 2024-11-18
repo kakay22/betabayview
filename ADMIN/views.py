@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from USERS.models import HomeOwner, Resident
-from .models import Secretary, Event, Comment, Property, Message, MaintenancePersonnel, AdminNotification, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, ChatFeedback, ChatHistoryMessage, VisitRequest, PropertyModel
+from .models import Secretary, Event, Comment, Property, Message, MaintenancePersonnel, AdminNotification, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, ChatFeedback, ChatHistoryMessage, VisitRequest, PropertyModel, EmergencyContact
 from USERS.forms import HomeOwnerForm, UserForm
 from HOMEOWNER.forms import ResidentForm
 from .forms import SecretaryForm, EditOwnerForm, PropertyForm, EventForm, RepairmanForm, AnnouncementForm, AnnouncementCommentForm
@@ -2322,3 +2322,48 @@ def submit_chatFeedback(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request.'}, status=400)
 
 
+def admin_emergency_contact(request):
+    name = ""
+    department = ""
+    phone = ""
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        department = request.POST.get('department')
+        phone = request.POST.get('phone')
+
+        if not name and department and phone:
+            messages.error(request, 'All fields are required')
+        else:
+            EmergencyContact.objects.create(
+                name=name,
+                department=department,
+                phone=phone
+            )
+            messages.success(request, 'Emergency contact saved!')
+            return redirect('admin_emergency_contact')
+
+    emergency_contacts = EmergencyContact.objects.all()
+    return render(request, 'admin_emergency_contact.html', {'emergency_contacts':emergency_contacts, 'name':name, 'department':department, 'phone':phone})
+
+def edit_contact(request, contact_id):
+    contact = get_object_or_404(EmergencyContact, id=contact_id)
+    if request.method == 'POST':
+        contact.name = request.POST.get('name')
+        contact.department = request.POST.get('department')
+        contact.phone = request.POST.get('phone')
+        contact.save()
+        messages.success(request, 'Contact updated successfully!')
+        return redirect('admin_emergency_contact')
+    messages.error(request, 'Invalid request.')
+    return redirect('admin_emergency_contact')
+
+
+def delete_contact(request, contact_id):
+    contact = get_object_or_404(EmergencyContact, id=contact_id)
+    if request.method == 'POST':
+        contact.delete()
+        messages.success(request, 'Contact deleted successfully!')
+        return redirect('admin_emergency_contact')
+    messages.error(request, 'Invalid request.')
+    return redirect('admin_emergency_contact')

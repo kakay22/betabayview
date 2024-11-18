@@ -52,27 +52,27 @@
         </div>
 
         <!-- Emergency Contacts Grid -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-		{% for contact in emergency_contacts %}
-		<div class="bg-white rounded-lg shadow-xl p-6 transition-transform transform hover:scale-105 hover:shadow-2xl duration-300 ease-in-out">
-			<!-- Contact Name -->
-			<h3 class="text-xl font-semibold text-gray-800 mb-2 truncate">{{ contact.name }}</h3>
-			<!-- Department -->
-			<p class="text-gray-600 mb-2">{{ contact.department }}</p>
-			<!-- Phone -->
-			<p class="text-gray-700 mt-2 text-sm flex items-center space-x-2">
-				<span class="material-icons text-blue-500">phone</span>
-				<span>{{ contact.phone }}</span>
-			</p>
-			<!-- More Info Button -->
-			<button class="mt-4 text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200">More Info</button>
-		</div>
-		{% empty %}
-		<div class="col-span-full text-center text-gray-500">
-			No contacts found.
-		</div>
-		{% endfor %}
-	</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for contact in emergency_contacts %}
+            <div class="bg-white rounded-lg shadow-xl p-6 transition-transform transform hover:scale-105 hover:shadow-2xl duration-300 ease-in-out">
+                <!-- Contact Name -->
+                <h3 class="text-xl font-semibold text-gray-800 mb-2 truncate">{{ contact.name }}</h3>
+                <!-- Department -->
+                <p class="text-gray-600 mb-2">{{ contact.department }}</p>
+                <!-- Phone -->
+                <p class="text-gray-700 mt-2 text-sm flex items-center space-x-2">
+                    <span class="material-icons text-blue-500">phone</span>
+                    <span>{{ contact.phone }}</span>
+                </p>
+                <!-- More Info Button -->
+                <button class="mt-4 text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200">More Info</button>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center text-gray-500">
+                No contacts found.
+            </div>
+            {% endfor %}
+        </div>
 
 
     </div>
