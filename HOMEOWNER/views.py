@@ -6,7 +6,7 @@ from django.contrib import messages
 from USERS.models import HomeOwner, Resident
 from USERS.forms import HomeOwnerForm, UserForm, EditUserForm
 from .models import Maintenance_request, Activitie, Notification
-from ADMIN.models import Event, Comment, Message, Property, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, Feedback, VisitRequest
+from ADMIN.models import Event, Comment, Message, Property, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, Feedback, VisitRequest, EmergencyContact
 from django.urls import reverse
 from django.http import JsonResponse
 from google.cloud import dialogflow_v2 as dialogflow
@@ -970,3 +970,22 @@ def update_visit_request(request, pk):
             return JsonResponse({'error': 'Visit request not found.'}, status=404)
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+def emergencyContacts(request):
+    owner = get_object_or_404(User, pk=request.user.pk)
+    homeowner = HomeOwner.objects.get(user=owner)
+    profile = homeowner.profile_picture.url
+    
+    # Get the search query from the GET request
+    search_term = request.GET.get('search', '').lower()
+
+    # Filter emergency contacts based on search term
+    emergency_contacts = EmergencyContact.objects.filter(
+        name__icontains=search_term
+    )
+
+    # Pass the filtered contacts to the template
+    return render(request, 'emergencyContacts.html', {
+        'profile': profile,
+        'emergency_contacts': emergency_contacts
+    })

@@ -343,3 +343,9 @@ class VisitRequest(models.Model):
 
     def __str__(self):
         return f"{self.visitor_full_name} - {self.visit_date.strftime('%Y-%m-%d %H:%M')}"
+
+
+class EmergencyContact(models.Model):
+    name = models.CharField(max_length=100)
+    department = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20)

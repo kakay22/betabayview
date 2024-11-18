@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Secretary, Event, Comment, Property, Message, MaintenancePersonnel, AdminNotification, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, ChatbotResponse, Feedback, ChatConversation, ChatFeedback, ChatHistoryMessage, VisitRequest, PropertyModel
+from .models import Secretary, Event, Comment, Property, Message, MaintenancePersonnel, AdminNotification, Log, PropertyImage, Announcement, AnnouncementComment, PaymentReminder, ChatbotResponse, Feedback, ChatConversation, ChatFeedback, ChatHistoryMessage, VisitRequest, PropertyModel, EmergencyContact
 
 # Register your models here.
 admin.site.register(Secretary)
@@ -19,6 +19,7 @@ admin.site.register(Feedback)
 admin.site.register(ChatFeedback)
 admin.site.register(ChatHistoryMessage)
 admin.site.register(PropertyModel)
+admin.site.register(EmergencyContact)
 
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
