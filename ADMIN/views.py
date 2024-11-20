@@ -2053,6 +2053,21 @@ sia = SentimentIntensityAnalyzer()
 
 def get_bot_response(user_message, user_id, session, request):
 
+    if any(keyword in user_message.lower() for keyword in ["emergency contacts", "emergency contact list", "show emergency contacts", "help contacts"]):
+        # Fetch emergency contacts
+        contacts = EmergencyContact.objects.all().values('name', 'department', 'phone')
+        if contacts.exists():
+            response_message = "Here are the emergency contacts:\n \n"
+            for contact in contacts:
+                response_message += (
+                    f"- Name: {contact['name']}\n"
+                    f"  Department: {contact['department']}\n"
+                    f"  Phone: {contact['phone']}\n\n"
+                )
+            return response_message
+        else:
+            return "There are no emergency contacts available at the moment."
+
     # Call the maintenance request handler
     response = handle_maintenance_request(user_message, user_id, session)
     if response:

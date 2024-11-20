@@ -671,36 +671,52 @@ def get_profile_message(sender_username):
     except HomeOwner.DoesNotExist:
         return None
 
+from django.template.defaultfilters import timesince
+from django.http import JsonResponse
+
 @login_required
 def owner_messages(request):
-    user = User.objects.get(username=request.user)
+    user = request.user
     homeowner = HomeOwner.objects.get(user=user)
     user_name = request.user.username
-    notifications = Notification.objects.filter(homeowner=user).order_by('-created_at')
-    profile = homeowner.profile_picture.url
+    profile_picture_url = homeowner.profile_picture.url
     id = user.pk
 
-    messages = Message.objects.all()
+    # Fetch notifications for the user
+    notifications = Notification.objects.filter(homeowner=user).order_by('-created_at')
+
+    # Fetch all messages with their associated profile pictures and formatted times
+    messages = Message.objects.all().order_by('sent_time')  # Order messages by time sent
     messages_with_pictures = []
 
     for message in messages:
+        # Format sent_time using Django's timesince filter
+        formatted_time = timesince(message.sent_time)
         profile_picture_url = get_profile_message(request.user)
         messages_with_pictures.append({
-            'message': message,
+            'message': message.message,
+            'sender': message.sender,
             'profile_picture_url': profile_picture_url,
+            'sent_time': message.sent_time.isoformat(),  # Ensure we pass the time in ISO format
+            'formatted_time': formatted_time,  # Pass the human-readable time
         })
 
     if request.method == 'POST':
-        message = request.POST.get('message')
-        if message:
+        message_text = request.POST.get('message')
+        if message_text:
             new_message = Message.objects.create(
                 sender=user_name,
-                message=message,
+                message=message_text,
             )
             new_message.save()
             return redirect('owner_messages')
 
-    return render(request, 'owner_messages.html', {'profile':profile, 'id':id, 'notifications':notifications, 'messages_with_pictures':messages_with_pictures})
+    return render(request, 'owner_messages.html', {
+        'profile': profile_picture_url,
+        'id': id,
+        'notifications': notifications,
+        'messages_with_pictures': messages_with_pictures,
+    })
 
 from django.contrib.auth import login
 
@@ -767,6 +783,32 @@ def owner_profile(request):
         'message': message,
     })
 
+import json
+
+@csrf_exempt
+def post_message(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        message = data.get('message')
+        sender = data.get('sender')
+
+        if message and sender:
+            Message.objects.create(message=message, sender=sender)
+            return JsonResponse({'status': 'success'}, status=200)
+    return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+
+def get_new_messages(request):
+    last_message_id = request.GET.get('last_message_id', 0)
+    messages = Message.objects.filter(id__gt=last_message_id).order_by('sent_time')
+    message_list = [
+        {
+            'id': msg.id,
+            'message': msg.message,
+            'sender': msg.sender,
+            'sent_time': msg.sent_time,
+        } for msg in messages
+    ]
+    return JsonResponse({'messages': message_list})
 
 def owner_notifications(request):
     message = request.GET.get('message', None)
@@ -989,3 +1031,9 @@ def emergencyContacts(request):
         'profile': profile,
         'emergency_contacts': emergency_contacts
     })
+
+def live_chat(request):
+    owner = get_object_or_404(User, pk=request.user.pk)
+    homeowner = HomeOwner.objects.get(user=owner)
+    profile = homeowner.profile_picture.url
+    return render(request, 'live_chat.html', {'profile':profile})

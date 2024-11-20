@@ -124,32 +124,59 @@
 
 		<!-- Input Container -->
 		<div id="inputContainer" class="py-3 border-t border-gray-300 w-full bg-white flex-col">
+		
 			<!-- Suggestions -->
 			<div id="suggestionsContainer" class="overflow-x-auto overflow-y-hidden flex gap-3 w-full px-4 py-2"
-				style="z-index: 2000; display: flex; align-items: center;">
-				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
-						data-prompt="About my property">About my property</button>
+			style="z-index: 2000; display: flex; align-items: center;">
+			<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+					data-prompt="Emergency Contacts">
+				<i class="material-icons text-red-500">phone</i> Emergency contacts
+			</button>
 
-				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
-						data-prompt="My maintenance request list">My maintenance request list</button>
+			<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+					data-prompt="About my property">
+				<i class="material-icons text-green-500">home</i> About my property
+			</button>
 
-				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
-						data-prompt="Submit maintenance request">Submit maintenance request</button>
+			<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+					data-prompt="My maintenance request list">
+				<i class="material-icons text-purple-500">format_list_bulleted</i> My maintenance request list
+			</button>
 
-				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
-						data-prompt="Upcoming events">Upcoming events</button>
+			<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+					data-prompt="Submit maintenance request">
+				<i class="material-icons text-orange-500">build</i> Submit maintenance request
+			</button>
 
-				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
-						data-prompt="Latest Announcements">Latest Announcements</button>
+			<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+					data-prompt="Upcoming events">
+				<i class="material-icons text-teal-500">event</i> Upcoming events
+			</button>
 
-				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
-						data-prompt="Support team contact info">Support team contact info</button>
-				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
-						data-prompt="Tell me a joke">Tell me a joke</button>
-				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
-						data-prompt="What is the time?">What is the time?</button>
-				<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
-						data-prompt="What is the date today?">What is the date today?</button>
+			<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+					data-prompt="Latest Announcements">
+				<i class="material-icons text-yellow-500">campaign</i> Latest Announcements
+			</button>
+
+			<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+					data-prompt="Support team contact info">
+				<i class="material-icons text-pink-500">support_agent</i> Support team contact info
+			</button>
+
+			<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+					data-prompt="Tell me a joke">
+				<i class="material-icons text-yellow-400">emoji_emotions</i> Tell me a joke
+			</button>
+
+			<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+					data-prompt="What is the time?">
+				<i class="material-icons text-blue-400">access_time</i> What is the time?
+			</button>
+
+			<button class="suggestion-btn bg-blue-500 text-gray-700 px-4 py-2 rounded-full hover:bg-blue-600 transition duration-200 text-sm md:text-base"
+					data-prompt="What is the date today?">
+				<i class="material-icons text-indigo-500">today</i> What is the date today?
+			</button>
 			</div>
 
 			<div class="flex items-center justify-between w-full">
@@ -197,7 +224,7 @@
     <div id="header" class="w-[100vw] flex justify-end items-center py-[.7rem] px-3 shadow-md bg-white relative">
         <i id="menuBtn" class="bi bi-list absolute left-3 text-[1.3rem] font-semibold py-0 ml-2 md:hidden"></i>
 
-		<a href="{% url 'owner_dashboard' %}" class="text-left md:left-[18%] left-[12%] absolute font-bold text-[1rem] flex items-center duration-300 hover:text-teal-500">
+		<a href="{% url 'owner_dashboard' %}" class="text-left md:left-[18%] hidden md:block left-[12%] absolute font-bold text-[1rem] flex items-center duration-300 hover:text-teal-500">
 			<span class="text-[1.25rem]">
 				Beta Bayiew
 			</span>
@@ -328,6 +355,12 @@
 				class="flex items-center gap-3 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
 				<span class="material-icons p-1 px-2 rounded-md bg-[#304650]">announcement</span>
 				<span class="text-sm">Announcements</span>
+			</a>
+
+			<a href="{% url 'live_chat' %}"
+				class="flex items-center gap-3 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white">
+				<span class="material-icons p-1 px-2 rounded-md bg-[#304650]">support_agent</span>
+				<span class="text-sm">Chat with our team</span>
 			</a>
 
 			<a href="{% url 'emergencyContacts' %}"
@@ -474,26 +507,6 @@
 
 			// Polling every 5 seconds
 			setInterval(fetchMessages, 1000);
-
-			// Mark messages as read and navigate to messages page
-			$('#message-button').click(function () {
-				$.ajax({
-					url: '{% url "mark_messages_as_read" %}',
-					method: 'POST',
-					headers: {
-						'X-CSRFToken': '{{ csrf_token }}'
-					},
-					success: function (data) {
-						if (data.status === 'ok') {
-							$('#message-indicator').hide(); // Hide the red dot indicator
-							window.location.href = '{% url "owner_messages" %}'; // Redirect to messages page
-						}
-					},
-					error: function (jqXHR, textStatus, errorThrown) {
-						console.error('Error marking messages as read:', textStatus, errorThrown);
-					}
-				});
-			});
 		})
 
 		//check if owner owns a property
@@ -978,6 +991,19 @@
 		});
 	</script>
 
+
+	<!--hide chatbubble on live chat-->
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			// Check if the URL contains "live_chat"
+			if (window.location.pathname.includes("live_chat")) {
+				const chatBubble = document.getElementById("chatBubble");
+				if (chatBubble) {
+					chatBubble.style.display = "none";
+				}
+			}
+		});
+	</script>
 
 	{% block extra_js %}
 	{% endblock extra_js %}

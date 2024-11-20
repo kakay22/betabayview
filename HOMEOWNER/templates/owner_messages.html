@@ -6,117 +6,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %} {{ user }} / Messages {% endblock title %}</title>
+    <title>{% block title %} Live Chat {% endblock title %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+    <style>
+        /* Initially hide the timestamp inside the message bubble */
+    .message-bubble .timestamp {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    /* Show timestamp on hover */
+    .message-bubble:hover .timestamp {
+        opacity: 1;
+    }
+    </style>
 </head>
 
 <body class="bg-gray-100">
     {% block content %}
 
-    <!--PROFILE MODAL-->
-	<div class="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-		<div class="modal-dialog modal-dialog-centered">
-		  <div class="modal-content">
-			<div class="modal-header">
-			  <h5 class="modal-title w-full text-center" id="exampleModalToggleLabel">PROFILE</h5>
-			  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<div class="modal-body">
-				<div class="w-full flex justify-center py-3">
-					<div class="w-40 h-40 shadow-md rounded-full bg-gray-600 relative">
-						<img class="w-40 h-40 shadow-md rounded-full object-cover"
-							src="{{ profile }}" alt="profile pic" srcset="">
-						<button class="bi bi-pen px-2 py-[.3rem] absolute text-[1.2rem] bottom-[1rem] right-[1rem] rounded-full bg-white shadow-md shadow-gray-600" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal" data-bs-dismiss="modal"></button>
-					</div>
-				</div>
-				<h1 class="w-full text-center text-[2rem]">Hello, {{ user }}!</h1>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-			</div>
-		  </div>
-		</div>
-	  </div>
-	  <div class="modal fade" id="exampleModalToggle2" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-		<div class="modal-dialog modal-dialog-centered">
-		  <div class="modal-content">
-			<div class="modal-header">
-			  <h5 class="modal-title" id="exampleModalToggleLabel2">EDIT PICTURE</h5>
-			  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<div class="modal-body">
-				<div class="w-full flex justify-center py-3">
-					<div class="w-40 h-40 shadow-md rounded-full bg-gray-600 relative">
-						<img id="imagePreview" class="w-40 h-40 shadow-md rounded-full object-cover"
-							src="{{ profile }}" alt="profile pic" srcset="">
-						<img id="imagePreview" src="" alt="" class="hidden w-40 h-40 shadow-md rounded-full object-cover">
-					</div>
-				</div>
-			</div>
-			<div class="modal-footer">
-				<form action="{% url 'update_picture' id %}" method="post" enctype="multipart/form-data">
-					{% csrf_token %}
-					<input id="imageUpload" type="file" name="picture" id="picture">
-					<button type="submit" class="btn btn-primary">SAVE</button>
-				</form>
-			  <a href="{% url 'household_members' %}" class="btn btn-secondary">CANCEL</a>
-			</div>
-		  </div>
-		</div>
-	  </div>
+    <div id="loadingSpinner" class="fixed inset-0 flex flex-col items-center justify-center bg-gray-800 bg-opacity-50 hidden z-[999999999999]">
+        <div class="spinner-border text-primary" role="status">
+        </div>
+        <span class="">Loading...</span>
+    </div>
 
-    <!--Content container-->
+    <!-- Chat container -->
     <div class="w-full md:w-[73%] lg:w-[84.5%] max-[770px]:h-full h-[88%] bg-white absolute md:right-2 top-[4.3rem] md:top-[4.5rem] shadow-md rounded-md p-4 overflow-y-auto overflow-x-hidden">
-		<div class="w-full h-full">
-			<!-- Messenger -->
-			<div class="flex flex-col h-full">
-				<!-- Messages Display Area -->
-				<div id="messages" class="flex-1 overflow-y-auto p-4 space-y-4 ">
-					<!-- Sample Messages -->
-					{% for item in messages_with_pictures %}
-						{% if item.message.sender == user.username %}
-						<div id="message" class="flex items-end justify-end space-x-1">
-							<div>
-								<div class="bg-blue-500 rounded-lg p-2 max-w-x cursor-pointer" title="{{ item.message.sent_time|timesince }} ago">
-									<span class="block text-sm text-white word-break">{{ item.message.message}}</span>
-								</div>
-								<span class="text-[.7rem] text-gray-500">{{ item.message.sent_time|timesince }}</span>
-							</div>
-						</div>
-						{% else %}
-						<div id="message" class="flex items-end space-x-2 mb-4">
-							<img src="{{ item.profile_picture_url }}" class="w-8 h-8 rounded-full" alt="User Avatar">
-							<div>
-								<span id="sender" class="text-[.8rem] text-gray-600">{{ item.message.sender }}</span>
-								<div>
-									<div class="bg-gray-200 rounded-lg p-2 max-w-xs cursor-pointer" title="{{ item.message.sent_time|timesince }} ago">
-										<div>
-											<span class="block text-sm text-gray-700 word-break">{{ item.message.message}}</span>
-										</div>
-									</div>
-									<span class="text-[.7rem] text-gray-500">{{ item.message.sent_time|timesince }}</span>
-								</div>
-							</div>
-						</div>
-						{% endif %}
-					{% endfor %}
-				</div>
-				<!-- Input Area -->
-				<form id="post-form" class="mt-4 flex items-center space-x-2 border-t p-4">
-					{% csrf_token %}
+        <div class="flex flex-col h-full">
+            <!-- Messages Display Area -->
+            <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Messages will be dynamically added here -->
+            </div>
 
-					<input type="hidden" id="sender" name="sender" value="{{ user }}">
-					<input id="message-input" type="text" name="message" class="flex-1 bg-gray-100 rounded-full px-4 py-2 focus:outline-none" placeholder="Type a message...">
-					<button type="submit" id="send-button" class="bg-blue-500 text-white px-4 py-2 rounded-full">Send</button>
-				</div>
-			</div>
-		</div>
-	</div>
-	
+            <!-- Message Input Area -->
+            <form id="post-form" class="mt-4 flex items-center space-x-2 border-t p-4 bg-gray-100 rounded-b-lg">
+                {% csrf_token %}
+                <input type="hidden" id="sender" name="sender" value="{{ user }}">
+                <input id="message-input" type="text" name="message" class="flex-1 bg-gray-200 rounded-full px-4 py-2 focus:outline-none" placeholder="Type a message..." required>
+                <button type="submit" id="send-button" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-all">Send</button>
+            </form>
+        </div>
+    </div>
+
     {% endblock content %}
 
     {% block extra_js %}
@@ -125,81 +61,66 @@
         integrity="sha384-ONBsiAlrNpJw8zW/FivQc6No5E0nEyBuNb/aD4sSR/Q8+TF55hS9KN06IwcX0J2i"
         crossorigin="anonymous"></script>
 
-    <script type="text/javascript">
-        document.getElementById('imageUpload').addEventListener('change', (e) => {
-			const file = event.target.files[0]
-			if(file){
-				const reader = new FileReader();
-				reader.onload = function(e){
-					const img = document.getElementById('imagePreview');
-					img.src = e.target.result;
-					img.style.display = 'block'
-				}
-				reader.readAsDataURL(file);
-			}
-		})
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    const messagesContainer = document.getElementById("messages");
+    const messageInput = document.getElementById("message-input");
+    const postForm = document.getElementById("post-form");
+    const currentUser = "{{ user }}"; // Current logged-in user
+    let lastMessageId = 0;
 
-		// Store the IDs of notifications that have already been displayed
-		let displayedNotificationIds = new Set();
+    // Scroll to the bottom of the messages container
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
 
-		document.addEventListener('DOMContentLoaded', (e) => {
-        const messagesContainer = document.getElementById("messages");
-        const currentUser = "{{ user }}"; // Get the current logged-in user's username
-
-		$(document).ready(function() {
-    const messagesContainer = $('#messages');
-
+    // Fetch messages and display them
     function fetchMessages() {
-        $.ajax({
-            url: "{% url 'get_new_messages' %}",
-            method: 'GET',
-            success: function(data) {
+        fetch(`/get-new-messages/?last_message_id=${lastMessageId}`)
+            .then(response => response.json())
+            .then(data => {
+                let newMessages = false;
 
-                // Sort messages to ensure they are in chronological order
-                data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                data.messages.forEach(message => {
+                    newMessages = true;
+                    const isCurrentUser = message.sender === currentUser;
+                    const messageElement = document.createElement('div');
+                    messageElement.className = isCurrentUser
+                        ? 'flex items-end space-x-3 justify-end'
+                        : 'flex items-start space-x-3';
 
-                // Render each message
-                data.forEach(function(message) {
-                    let messageElement = document.createElement('div');
+                    // Message Bubble with Timestamp inside (hidden by default)
+                    const messageBubble = `
+                        <div class="${isCurrentUser ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-800'} p-3 rounded-lg shadow-md max-w-xs message-bubble">
+                            <p>${message.message}</p>
+                            <span class="text-xs block mt-1 timestamp ${isCurrentUser ? 'text-right' : 'text-left'}">
+                                ${formatTimestamp(message.sent_time)}
+                            </span>
+                        </div>
+                    `;
 
-                    if (message.sender === currentUser) {
-                        messageElement.className = "message flex items-end justify-end space-x-1 mb-4";
-                        messageElement.innerHTML = `
-                            <div class="bg-blue-500 rounded-lg p-2 max-w-xs">
-                                <span class="block text-sm text-white break-words">${message.message}</span>
-                            </div>`;
-                    } else {
-                        messageElement.className = "message flex items-end space-x-2 mb-4";
-                        messageElement.innerHTML = `
-                            <img src="${message.profile_picture_url}" class="w-8 h-8 rounded-full" alt="User Avatar">
-                            <div>
-                                <span class="text-[.8rem] text-gray-600">${message.sender}</span>
-                                <div class="bg-gray-200 rounded-lg p-2 max-w-xs" title='${message.created_at}'>
-                                    <span class="block text-sm text-gray-700 break-words">${message.message}</span>
-                                </div>
-                            </div>`;
-                    }
+                    // Profile picture and message bubble (with timestamp inside)
+                    messageElement.innerHTML = isCurrentUser
+                        ? `${messageBubble}<img src="{% static 'users/homeOwner.png' %}" alt="User Avatar" class="w-10 h-10 rounded-full shadow mt-2">`
+                        : `<img src="{% static 'images/admin-avatar.png' %}" alt="Admin Avatar" class="w-10 h-10 rounded-full shadow mt-2">${messageBubble}`;
 
-                    messagesContainer.append(messageElement);
+                    messagesContainer.appendChild(messageElement);
+                    lastMessageId = message.id;
                 });
 
-                // Scroll to the bottom to show the latest message
-                messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Error fetching messages:', textStatus, errorThrown);
-            }
-        });
+                if (newMessages) {
+                    scrollToBottom();
+                }
+            })
+            .catch(error => console.error('Error fetching messages:', error));
     }
 
     // Handle message submission
-    $('#post-form').on('submit', function(e) {
+    postForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        let messageInput = $('#message-input');
-        let message = messageInput.val().trim();
-
-        if (messageInput !== "") {
+        const message = messageInput.value.trim();
+        if (message !== "") {
             $.ajax({
                 type: 'POST',
                 url: "{% url 'owner_messages' %}",
@@ -207,47 +128,45 @@
                     message: message,
                     csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
                 },
-                success: function() {
-                    // Clear the message input after sending
-                    messageInput.val('');
-                    fetchMessages(); // Fetch all messages after sending
+                success: function () {
+                    messageInput.value = ''; // Clear the input field
+                    fetchMessages(); // Fetch updated messages
+                    scrollToBottom(); // Scroll to the bottom after sending
                 },
-                error: function(jqXHR, textStatus, errorThrown) {
+                error: function (jqXHR, textStatus, errorThrown) {
                     console.error('Error sending message:', textStatus, errorThrown);
                 }
             });
         }
     });
 
-    // Initial fetch of messages when the page loads
+    // Initial message fetch on page load
     fetchMessages();
 
-	//fetch unread notification
-	function fetchUnreadCount() {
-            fetch("{% url 'owner_unread_notifications_count' %}")
-                .then(response => response.json())
-                .then(data => {
-                    const notificationCount = data.unread_count;
-                    const notificationBadge = document.querySelector('.notification-badge');
-                    if (notificationCount > 0) {
-                        notificationBadge.textContent = notificationCount;
-                        notificationBadge.classList.remove('hidden'); // Show badge
-                    } else {
-                        notificationBadge.classList.add('hidden'); // Hide badge
-                    }
-                });
+    // Real-time update: periodically fetch new messages every 2 seconds
+    setInterval(fetchMessages, 2000);
+
+    // Add hover effect to show timestamp inside the message bubble
+    document.addEventListener('mouseover', (e) => {
+        if (e.target.closest('.message-bubble')) {
+            const timestamp = e.target.closest('.message-bubble').querySelector('.timestamp');
+            if (timestamp) {
+                timestamp.style.opacity = 1;
+            }
         }
-        // Call this function to check unread notifications every .5 second
-        setInterval(fetchUnreadCount, 500);
-        fetchUnreadCount();  // Initial call to set the count immediately
-});
-
-
-		// Scroll to the bottom on initial load
-		messagesContainer.scroll({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
     });
 
-	</script>
+    document.addEventListener('mouseout', (e) => {
+        if (e.target.closest('.message-bubble')) {
+            const timestamp = e.target.closest('.message-bubble').querySelector('.timestamp');
+            if (timestamp) {
+                timestamp.style.opacity = 0;
+            }
+        }
+    });
+});
+
+    </script>
     {% endblock extra_js %}
 </body>
 

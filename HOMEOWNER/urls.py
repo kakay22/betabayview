@@ -30,7 +30,7 @@ urlpatterns = [
     path('owner_unread_notifications_count/', views.owner_unread_notifications_count, name='owner_unread_notifications_count'),
     path('mark_single_notification_as_read/<int:notification_id>/', views.mark_single_notification_as_read, name='mark_single_notification_as_read'),
     path('notifications/mark-read/', views.mark_notifications_as_read, name='mark_notifications_as_read'),
-    path('owner_messages/', views.owner_messages, name='owner_messages'),
+    # path('owner_messages/', views.owner_messages, name='owner_messages'),
     path('get_new_messages/', views.get_new_messages, name='get_new_messages'),
 	path('mark_messages_as_read/', views.mark_messages_as_read, name='mark_messages_as_read'),
 	path('owner_profile/', views.owner_profile, name="owner_profile"),
@@ -46,6 +46,9 @@ urlpatterns = [
     path('notifications/<int:notif_id>/details/', views.notification_details, name='notification_details'),
 	path('update-visit-request/<int:pk>/', views.update_visit_request, name='update_visit_request'),
 	path('emergencyContacts/', views.emergencyContacts, name='emergencyContacts'),
+    path('live_chat/', views.live_chat, name='live_chat'),
+	path('post-message/', views.post_message, name='post_message'),
+    path('get-new-messages/', views.get_new_messages, name='get_new_messages'),
 ]
 
 
