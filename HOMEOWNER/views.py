@@ -1037,3 +1037,20 @@ def live_chat(request):
     homeowner = HomeOwner.objects.get(user=owner)
     profile = homeowner.profile_picture.url
     return render(request, 'live_chat.html', {'profile':profile})
+
+@login_required
+def get_unread_messages_count(request):
+    unread_count = Message.objects.filter(
+        is_read=False
+    ).exclude(sender=request.user.username).count()
+    return JsonResponse({'unread_count': unread_count})
+
+@login_required
+def mark_all_messages_as_read(request):
+    # Mark all messages sent to the current user as read
+    Message.objects.filter(
+        is_read=False
+    ).exclude(sender=request.user.username).update(is_read=True)
+    return JsonResponse({'status': 'success'})
+
+

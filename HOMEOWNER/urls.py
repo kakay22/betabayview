@@ -49,6 +49,8 @@ urlpatterns = [
     path('live_chat/', views.live_chat, name='live_chat'),
 	path('post-message/', views.post_message, name='post_message'),
     path('get-new-messages/', views.get_new_messages, name='get_new_messages'),
+    path('get-unread-messages-count/', views.get_unread_messages_count, name='get_unread_messages_count'),
+    path('mark-all-messages-as-read/', views.mark_all_messages_as_read, name='mark_all_messages_as_read'),
 ]
 
 

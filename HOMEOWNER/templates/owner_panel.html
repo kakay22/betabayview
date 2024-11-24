@@ -1,10 +1,10 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="csrf-token" content="{{ csrf_token }}">
 	<title>{% block title %} {% endblock title %}</title>
 	<link rel="icon" href="{% static 'users/betaIcon (1).png' %}" type="image/x-icon">
 	<script src="https://cdn.tailwindcss.com"></script>
@@ -254,8 +254,16 @@
 
 			<script src="{% static 'js/search-suggestions.js' %}"></script>
 
+			<!--messages-->
+			<a id="chatBtn" href="{% url 'live_chat' %}" class="bi bi-chat-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="notifications">
+				<span class="message-indicator absolute top-0 right-0 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs">
+                    0
+                </span>
+			</a>
+			<!--end messages-->
+
 			<!--notifications-->
-			<a href="{% url 'owner_notifications' %}" class="bi bi-bell text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="notifications">
+			<a href="{% url 'owner_notifications' %}" class="bi bi-bell-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="notifications">
 				<span class="notification-badge absolute top-0 right-0 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs hidden">
                     0
                 </span>
@@ -403,6 +411,29 @@
 		crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 	<script src="{% static 'js/owner_loading_submit.js' %}"></script>
+	<script>
+		// Store the IDs of notifications that have already been displayed
+		let displayedNotificationIds = new Set();
+
+		//fetch unread notification
+		function fetchUnreadCount() {
+            fetch("{% url 'owner_unread_notifications_count' %}")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationCount = data.unread_count;
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationCount > 0) {
+                        notificationBadge.textContent = notificationCount;
+                        notificationBadge.classList.remove('hidden'); // Show badge
+                    } else {
+                        notificationBadge.classList.add('hidden'); // Hide badge
+                    }
+                });
+        }
+        // Call this function to check unread notifications every .5 second
+        setInterval(fetchUnreadCount, 900);
+        fetchUnreadCount();  // Initial call to set the count immediately
+	</script>
 	<script>
 		function checkAuthentication() {
 			fetch('/check-auth-status/')
@@ -767,7 +798,7 @@
 							chatbox.insertBefore(userMessageDiv, chatbox.firstChild);  // Insert at the top
 						} else {
 							chatbox.appendChild(userMessageDiv);  // Insert at the bottom
-					}
+					}					
 
 						// Insert bot's response at the top or bottom
 						const botResponseContainer = document.createElement('div');
@@ -989,8 +1020,65 @@
 				document.getElementById('langDropdown').classList.add('hidden');
 			}
 		});
-	</script>
 
+
+		function fetchUnreadMessagesCount() {
+		fetch('/get-unread-messages-count/')
+			.then(response => response.json())
+			.then(data => {
+				const indicator = document.querySelector('.message-indicator');
+				if (data.unread_count > 0) {
+					indicator.textContent = data.unread_count; // Update the count
+					console.log(data.unread_count)
+					indicator.classList.remove('hidden'); // Show the badge
+				} else {
+					indicator.classList.add('hidden'); // hide the badge
+				}
+			})
+			.catch(error => console.error('Error fetching unread messages count:', error));
+	}
+
+	// Call this function periodically (e.g., every 10 seconds)
+	setInterval(fetchUnreadMessagesCount, 1000);
+
+	// Initial call when the page loads
+	fetchUnreadMessagesCount();
+
+	// Get CSRF token from the meta tag
+	const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // Function to mark all messages as read
+	function markMessagesAsRead() {
+		const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); // Fetch CSRF token
+
+		fetch('/mark-all-messages-as-read/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-CSRFToken': csrfToken, // Include CSRF token
+			},
+		})
+			.then(response => response.json())
+			.then(data => {
+				if (data.status === 'success') {
+					const countSpan = document.querySelector('.bi-chat .absolute');
+					countSpan.classList.add('hidden'); // Hide the unread badge
+				} else {
+					console.error('Error marking messages as read:', data.message);
+				}
+			})
+			.catch(error => console.error('Error marking messages as read:', error));
+	}
+
+    // Event listener for click to mark all messages as read
+    document.querySelector('#chatBtn').addEventListener('click', markMessagesAsRead);
+
+    // Fetch unread message count periodically (e.g., every 10 seconds)
+    setInterval(fetchUnreadMessagesCount, 10000);
+
+    // Fetch unread count on page load
+    fetchUnreadMessagesCount();
+	</script>
 
 	<!--hide chatbubble on live chat-->
 	<script>
@@ -1005,6 +1093,36 @@
 		});
 	</script>
 
+	<script>
+		function handleBotResponse(response) {
+			if (typeof response === "object" && response.button_html) {
+				// Display the message
+				displayMessage(response.message);
+
+				// Append the button to the chat
+				appendButton(response.button_html);
+			} else {
+				// Display the plain message in the chat interface
+				displayMessage(response);
+			}
+		}
+
+		// Function to display a message in the chat
+		function displayMessage(message) {
+			const chatContainer = document.getElementById('chat-container'); // Replace with your chat container ID
+			const messageElement = document.createElement('div');
+			messageElement.textContent = message;
+			chatContainer.appendChild(messageElement);
+		}
+
+		// Function to append a button to the chat
+		function appendButton(buttonHtml) {
+			const chatContainer = document.getElementById('chat-container'); // Replace with your chat container ID
+			const buttonContainer = document.createElement('div');
+			buttonContainer.innerHTML = buttonHtml; // Insert the HTML directly
+			chatContainer.appendChild(buttonContainer);
+		}
+	</script>
 	{% block extra_js %}
 	{% endblock extra_js %}
 </body>

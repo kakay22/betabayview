@@ -6,6 +6,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{{ user|title }}'s  {% block title %} {% endblock title %}</title>
+	<meta name="csrf-token" content="{{ csrf_token }}">
 	<link rel="icon" href="{% static 'users/betaIcon (1).png' %}" type="image/x-icon">
 	<script src="https://cdn.tailwindcss.com"></script>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -130,7 +131,15 @@
 					</button>
 				</div>
 			</div>
-			
+
+			<!--messages-->
+			<a id="chatBtn" href="{% url 'admin_live_chat' %}" class="bi bi-chat-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="messages">
+				<span class="message-indicator absolute top-0 right-0 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs">
+                    0
+                </span>
+			</a>
+			<!--end messages-->
+	
 			<!--notifications-->
 			<p id="notifBtn" onclick="gotoNotif()" class="bi bi-bell-fill text-gray-700 text-[1.2rem] px-[.8rem] py-2 rounded-full hover:bg-gray-400 bg-gray-300 relative cursor-pointer" title="notifications">
 				<span class="notification-badge absolute top-0 right-0 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs hidden">
@@ -209,6 +218,9 @@
 				class="material-icons p-1 px-2 rounded-md bg-[#304650]">build</i> Maintenance request
 				<span id="message-indicator2" class="bg-red-600 hidden text-gray-300 rounded-full px-2 flex items-center justify-center text-xs"></span>
 			</a>
+		<a href="{% url 'admin_live_chat' %}"
+			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"><i
+					class="material-icons p-1 px-2 rounded-md bg-[#304650]">handyman</i> Messages</a>
 		<a href="{% url 'admin_maintenance_personnel_list' %}"
 			class="flex items-center gap-2 px-4 py-3 hover:bg-[#214f64] transition-colors duration-200 text-gray-300 hover:text-white"><i
 					class="material-icons p-1 px-2 rounded-md bg-[#304650]">handyman</i> Maintenance presonnels</a>
@@ -444,6 +456,88 @@
 			// Call this function to check unread notifications every .5 second
 			setInterval(fetchUnreadCount, 2000);
 			fetchUnreadCount();  // Initial call to set the count immediately
+
+
+	//fetch new messages
+	$(document).ready(function () {
+			function fetchMessages() {
+				$.ajax({
+					url: '{% url "admin_get_new_messages" %}',
+					method: 'GET',
+					success: function (data) {
+						if (data.length > 0) {
+							$('#message-indicator').show(); // Show the red dot indicator
+							$('#message-indicator').text(data.length); // Show the red dot indicator
+						} else {
+							$('#message-indicator').hide(); // Hide the red dot indicator
+						}
+					},
+					error: function (jqXHR, textStatus, errorThrown) {
+						console.error('Error fetching messages:', textStatus, errorThrown);
+					}
+				});
+			}
+
+			// Polling every 5 seconds
+			setInterval(fetchMessages, 1000);
+		})
+
+		function fetchUnreadMessagesCount() {
+		fetch('/get-unread-messages-count/')
+			.then(response => response.json())
+			.then(data => {
+				const indicator = document.querySelector('.message-indicator');
+				if (data.unread_count > 0) {
+					indicator.textContent = data.unread_count; // Update the count
+					console.log(data.unread_count)
+					indicator.classList.remove('hidden'); // Show the badge
+				} else {
+					indicator.classList.add('hidden'); // hide the badge
+				}
+			})
+			.catch(error => console.error('Error fetching unread messages count:', error));
+	}
+
+	// Call this function periodically (e.g., every 10 seconds)
+	setInterval(fetchUnreadMessagesCount, 1000);
+
+	// Initial call when the page loads
+	fetchUnreadMessagesCount();
+
+	// Get CSRF token from the meta tag
+	const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // Function to mark all messages as read
+	function markMessagesAsRead() {
+		const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); // Fetch CSRF token
+
+		fetch('/mark-all-messages-as-read/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-CSRFToken': csrfToken, // Include CSRF token
+			},
+		})
+			.then(response => response.json())
+			.then(data => {
+				if (data.status === 'success') {
+					const countSpan = document.querySelector('.bi-chat .absolute');
+					countSpan.classList.add('hidden'); // Hide the unread badge
+				} else {
+					console.error('Error marking messages as read:', data.message);
+				}
+			})
+			.catch(error => console.error('Error marking messages as read:', error));
+	}
+
+    // Event listener for click to mark all messages as read
+    document.querySelector('#chatBtn').addEventListener('click', markMessagesAsRead);
+
+    // Fetch unread message count periodically (e.g., every 10 seconds)
+    setInterval(fetchUnreadMessagesCount, 10000);
+
+    // Fetch unread count on page load
+    fetchUnreadMessagesCount();
 	</script>
 
 	{% block extra_js %}

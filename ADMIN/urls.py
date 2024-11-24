@@ -76,6 +76,11 @@ urlpatterns = [
 	path('admin_emergency_contact/', views.admin_emergency_contact, name='admin_emergency_contact'),
 	path('emergency-contacts/edit/<int:contact_id>/', views.edit_contact, name='edit_contact'),
     path('emergency-contacts/delete/<int:contact_id>/', views.delete_contact, name='delete_contact'),
+    path('admin-live-chat/', views.admin_live_chat, name='admin_live_chat'),
+	path('post-message/', views.admin_post_message, name='admin_post_message'),
+    path('get-new-messages/', views.admin_get_new_messages, name='admin_get_new_messages'),
+    path('get-unread-messages-count/', views.admin_get_unread_messages_count, name='admin_get_unread_messages_count'),
+    path('mark-all-messages-as-read/', views.admin_mark_all_messages_as_read, name='admin_mark_all_messages_as_read'),
 ]
 
 

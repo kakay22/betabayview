@@ -80,15 +80,33 @@ class Comment(models.Model):
 	def __str__(self):
 		return self.comment
 
-
 class Message(models.Model):
-	message = models.TextField()
-	sender = models.CharField(max_length=255)
-	sent_time = models.DateTimeField(auto_now_add=True)
-	is_read = models.BooleanField(default=False)
-	
-	def __str__(self):
-		return self.sender
+    message = models.TextField()
+    sender = models.CharField(max_length=255)  # Username of the sender
+    recipient = models.CharField(max_length=255, null=True, blank=True)  # Username of the recipient
+    sent_time = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)  # Whether the message has been read
+
+    def __str__(self):
+        return f"From {self.sender} to {self.recipient}: {self.message[:50]}"
+
+# class Conversation(models.Model):
+#     participants = models.ManyToManyField(User, related_name='conversations')  # Users in the conversation
+#     created_at = models.DateTimeField(auto_now_add=True)
+
+#     def __str__(self):
+#         return f"Conversation between: {', '.join([user.username for user in self.participants.all()])}"
+
+
+# class Message(models.Model):
+#     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages', null=True, blank=True)  # Link to the conversation
+#     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+#     content = models.TextField()
+#     sent_time = models.DateTimeField(auto_now_add=True)
+#     is_read = models.BooleanField(default=False)
+
+#     def __str__(self):
+#         return f"From {self.sender.username}: {self.content[:50]}"
 
 
 class NonSuperUserManager(models.Manager):

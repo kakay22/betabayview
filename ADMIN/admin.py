@@ -20,6 +20,7 @@ admin.site.register(ChatFeedback)
 admin.site.register(ChatHistoryMessage)
 admin.site.register(PropertyModel)
 admin.site.register(EmergencyContact)
+# admin.site.register(Conversation)
 
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):

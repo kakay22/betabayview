@@ -2052,7 +2052,6 @@ from .response import responses
 sia = SentimentIntensityAnalyzer()
 
 def get_bot_response(user_message, user_id, session, request):
-
     if any(keyword in user_message.lower() for keyword in ["emergency contacts", "emergency contact list", "show emergency contacts", "help contacts"]):
         # Fetch emergency contacts
         contacts = EmergencyContact.objects.all().values('name', 'department', 'phone')
@@ -2206,23 +2205,6 @@ def get_bot_response(user_message, user_id, session, request):
 
     # Retrieve all keys from the responses dictionary for exact and fuzzy matching
     user_message = user_message.lower()  # Normalize user input
-    # all_queries = list(responses.keys())
-
-    # # Check for an exact match in the predefined responses
-    # if user_message in all_queries:
-    #     return responses[user_message]  
-
-    # # Fuzzy matching for broader responses
-    # closest_match = process.extractOne(user_message, all_queries)
-    # if closest_match:  # Check if closest_match is valid
-    #     match_query, score = closest_match  # Unpack the match
-    #     if score >= 70:  # Ensure score is high enough for a match
-    #         return responses[match_query]  # Return a random response from the matched query
-
-    # # If no match was found, fallback to Dialogflow for a response
-    # dialogflow_response = get_dialogflow_response(user_message, request)  # Call your function to get the response from Dialogflow
-    # if dialogflow_response:
-    #     return dialogflow_response
 
     # Check for matches in your local system, or fallback to Chatbase if no match is found
     chatbase_response = get_chatbase_response(user_message, request)
@@ -2288,36 +2270,6 @@ def get_chatbase_response(user_message, request):
         return "Sorry, I encountered a connection error while processing your request."
 
 
-from google.cloud import dialogflow_v2 as dialogflow
-
-def get_dialogflow_response(user_message, request):
-    # Assuming the user is logged in and you can access their ID
-    user_id = request.user.id  # Get the logged-in user's ID
-    project_id = 'dynamic-cooler-434604-i2'
-
-    session_client = dialogflow.SessionsClient()
-    session = session_client.session_path(project_id, str(user_id))  # Use user ID as session ID
-
-    text_input = dialogflow.TextInput(text=user_message, language_code='en')
-    query_input = dialogflow.QueryInput(text=text_input)
-
-    try:
-        response = session_client.detect_intent(session=session, query_input=query_input)
-        print(response)
-        return response.query_result.fulfillment_text
-    except Exception as e:
-        print(f"Error communicating with Dialogflow: {e}")
-        return "I'm having trouble connecting to my support service."
-
-
-# Functions like get_current_time_response(), get_current_date_response(), etc. remain the same
-#prompt suggestions
-# 1. About my property
-# 2. Upcoming events
-# 3. Latest Announcements
-# 4. Submit maintenance request
-# 5. Support team contact info
-
 def submit_chatFeedback(request):
     if request.method == 'POST':
         bot_response = request.POST.get('bot_response')
@@ -2382,3 +2334,46 @@ def delete_contact(request, contact_id):
         return redirect('admin_emergency_contact')
     messages.error(request, 'Invalid request.')
     return redirect('admin_emergency_contact')
+
+def admin_live_chat(request):
+    return render(request, 'admin_live_chat.html')
+
+@login_required
+def admin_get_unread_messages_count(request):
+    unread_count = Message.objects.filter(
+        is_read=False
+    ).exclude(sender=request.user.username).count()
+    return JsonResponse({'unread_count': unread_count})
+
+@login_required
+def admin_mark_all_messages_as_read(request):
+    # Mark all messages sent to the current user as read
+    Message.objects.filter(
+        is_read=False
+    ).exclude(sender=request.user.username).update(is_read=True)
+    return JsonResponse({'status': 'success'})
+
+@csrf_exempt
+def admin_post_message(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        message = data.get('message')
+        sender = data.get('sender')
+
+        if message and sender:
+            Message.objects.create(message=message, sender=sender)
+            return JsonResponse({'status': 'success'}, status=200)
+    return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+
+def admin_get_new_messages(request):
+    last_message_id = request.GET.get('last_message_id', 0)
+    messages = Message.objects.filter(id__gt=last_message_id).order_by('sent_time')
+    message_list = [
+        {
+            'id': msg.id,
+            'message': msg.message,
+            'sender': msg.sender,
+            'sent_time': msg.sent_time,
+        } for msg in messages
+    ]
+    return JsonResponse({'messages': message_list})

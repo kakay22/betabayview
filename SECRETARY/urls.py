@@ -51,6 +51,11 @@ urlpatterns = [
 	path('unread_notifications_count/', views.unread_notifications_count, name='unread_notifications_count'),
 	path('sec_mark_notifications_as_read/', views.sec_mark_notifications_as_read, name='sec_mark_notifications_as_read'),
 	path('sec_mark_single_notification_as_read/<int:notification_id>/', views.sec_mark_single_notification_as_read, name='sec_mark_single_notification_as_read'),	
+	path('sec_live_chat/', views.sec_live_chat, name='sec_live_chat'),
+	path('post-message/', views.sec_post_message, name='sec_post_message'),
+    path('get-new-messages/', views.sec_get_new_messages, name='sec_get_new_messages'),
+    path('get-unread-messages-count/', views.sec_get_unread_messages_count, name='sec_get_unread_messages_count'),
+    path('mark-all-messages-as-read/', views.sec_mark_all_messages_as_read, name='sec_mark_all_messages_as_read'),
 ]
 
 

@@ -1265,3 +1265,52 @@ def sec_mark_single_notification_as_read(request, notification_id):
         except SecNotification.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Notification not found.'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request.'})
+
+import json
+
+@csrf_exempt
+def sec_post_message(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        message = data.get('message')
+        sender = data.get('sender')
+
+        if message and sender:
+            Message.objects.create(message=message, sender=sender)
+            return JsonResponse({'status': 'success'}, status=200)
+    return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+
+def sec_get_new_messages(request):
+    last_message_id = request.GET.get('last_message_id', 0)
+    messages = Message.objects.filter(id__gt=last_message_id).order_by('sent_time')
+    message_list = [
+        {
+            'id': msg.id,
+            'message': msg.message,
+            'sender': msg.sender,
+            'sent_time': msg.sent_time,
+        } for msg in messages
+    ]
+    return JsonResponse({'messages': message_list})
+
+
+def sec_live_chat(request):    
+    user = User.objects.get(username=request.user)
+    secretary = Secretary.objects.get(user=user)
+    profile = secretary.profile_picture.url
+    return render(request, 'sec_live_chat.html', {'profile':profile})
+
+@login_required
+def sec_get_unread_messages_count(request):
+    unread_count = Message.objects.filter(
+        is_read=False
+    ).exclude(sender=request.user.username).count()
+    return JsonResponse({'unread_count': unread_count})
+
+@login_required
+def sec_mark_all_messages_as_read(request):
+    # Mark all messages sent to the current user as read
+    Message.objects.filter(
+        is_read=False
+    ).exclude(sender=request.user.username).update(is_read=True)
+    return JsonResponse({'status': 'success'})
