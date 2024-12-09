@@ -227,6 +227,15 @@ background-color: rgb(216, 209, 209); /* Darker shade on hover */
 
                 <!-- Container for house buttons -->
                 <div id="house-buttons" class="text-sm">
+                    <div class="house-button shadow-md rounded-[20px] px-4 flex gap-2 items-center" data-index="{{ forloop.counter0 }}">
+                        <img class="w-8 h-8 rounded-full" src="{% static 'users/pope-francis-village.png' %}" alt="" srcset=""> House1
+                    </div>
+                    <div class="house-button shadow-md rounded-[20px] px-4 flex gap-2 items-center" data-index="{{ forloop.counter0 }}">
+                        <img class="w-8 h-8 rounded-full" src="{% static 'users/athena.jpeg' %}" alt="" srcset=""> House2
+                    </div>
+                    <div class="house-button shadow-md rounded-[20px] px-4 flex gap-2 items-center" data-index="{{ forloop.counter0 }}">
+                        <img class="w-8 h-8 rounded-full" src="{% static 'users/aphrodite.jpeg' %}" alt="" srcset=""> House3
+                    </div>
                     {% for house in labels %}
                         <div class="house-button shadow-md rounded-[20px] px-4 flex gap-2 items-center" data-index="{{ forloop.counter0 }}">
                             <img class="w-8 h-8 rounded-full" src="{{ house.photo.url }}" alt="" srcset=""> {{ house.property_name }}

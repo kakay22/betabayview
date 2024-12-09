@@ -24,7 +24,6 @@ from datetime import datetime
 from dateutil import parser
 from django.utils import timezone
 
-
 # views.py
 from django.http import JsonResponse
 

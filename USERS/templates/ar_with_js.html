@@ -51,6 +51,163 @@
 </head>
 
 <body style='margin: 0; overflow: hidden;'>
+    <!-- Full-Screen Video Instruction Modal -->
+<div id="videoModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+    <!-- Video Background -->
+    <video id="instructionVideo" class="absolute inset-0 w-full h-full object-cover" autoplay muted>
+        <source src="{% static 'users/hand_gesture_animation_cartoon_hand.webm' %}" type="video/webm">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Text Overlay -->
+    <div id="text" class="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-4 sm:px-6 lg:px-8">
+        <h1 class="text-2xl w-full text-center sm:text-3xl md:text-4xl lg:text-5xl font-bold drop-shadow-lg leading-tight">
+            Hover Your Phone to Use AR
+        </h1>
+    </div>
+
+    <!-- Skip Button -->
+    <button id="closeVideoButton" 
+            class="absolute top-[55%] left-[47%] text-white bg-red-600 hover:bg-red-700 transition-all duration-300 rounded-full px-4 sm:px-5 py-2 sm:py-3 text-sm sm:text-lg font-semibold shadow-lg z-50">
+        Skip
+    </button>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const videoModal = document.getElementById("videoModal");
+        const closeVideoButton = document.getElementById("closeVideoButton");
+        const instructionVideo = document.getElementById("instructionVideo");
+
+        // Function to close the modal
+        function closeModal() {
+            videoModal.style.opacity = 0;
+            setTimeout(() => {
+                videoModal.style.display = "none";
+            }, 300); // Fade-out transition duration
+        }
+
+        // Automatically close modal after 3 seconds
+        instructionVideo.addEventListener("loadeddata", function () {
+            setTimeout(() => {
+                closeModal();
+            }, 3000); // 3-second delay
+        });
+
+        // Close the video modal when "Skip" button is clicked
+        closeVideoButton.addEventListener("click", function () {
+            closeModal();
+        });
+    });
+</script>
+
+<style>
+    /* Styling for a professional, modern UI/UX */
+    #videoModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+
+    #instructionVideo {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .absolute {
+        z-index: 10; /* Ensure text and button are above the video */
+    }
+
+    #closeVideoButton {
+        position: absolute;
+        top: 55%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: red;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 5px;
+        border: none;
+    }
+
+    #closeVideoButton:hover {
+        background-color: rgb(216, 54, 54);
+    }
+
+    h1, p {
+        text-shadow: 0px 4px 6px rgba(0, 0, 0, 0.7);
+    }
+    #text{
+        width: 100%;
+        font-size: .8rem;
+        color: white;
+        text-align: center;
+    }
+</style>
+
+    </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const videoModal = document.getElementById("videoModal");
+        const closeVideoButton = document.getElementById("closeVideoButton");
+        const instructionVideo = document.getElementById("instructionVideo");
+
+        // Automatically close modal after 3 seconds
+        instructionVideo.addEventListener("ended", function () {
+            videoModal.style.display = "none";
+        });
+
+        // Close the video modal when "Skip" button is clicked
+        closeVideoButton.addEventListener("click", function () {
+            videoModal.style.display = "none";
+        });
+    });
+</script>
+
+<style>
+    /* Styling for a professional, modern UI/UX */
+    #videoModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+    }
+
+    #instructionVideo {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    #closeVideoButton {
+        transition: transform 0.2s ease-in-out, background-color 0.3s;
+    }
+
+    #closeVideoButton:hover {
+        transform: scale(1.1);
+    }
+
+    h1, p {
+        text-shadow: 0px 4px 6px rgba(0, 0, 0, 0.7);
+    }
+</style>
+
+
     <!-- Overlay with exit button and visit info -->
     <div class="w-full" id="overlay">
         <div class="flex flex-col" id="visitInfo">
@@ -67,8 +224,6 @@
         <a class="text-lg" href="{% url 'map' %}" id="exitButton"><i class="bi bi-x"></i></a>
     </div>
 
-    <!-- <img class="absolute top-2 right-2" src="{% static 'users/arrow.glb' %}" alt="" srcset=""> -->
-
     <a-scene embedded arjs="sourceType: webcam;">
         <a-assets timeout="10000">
             <a-asset-item id="arrow" src="{% static 'users/direction_arrows(2).glb' %}"></a-asset-item>
@@ -76,25 +231,26 @@
     
         <!-- Set the position to center the model on the screen -->
         <a-entity
-            class="absolute top-[50%] left-[50%] z-[9999]"
+            id="arrowEntity"
             gltf-model="#arrow"
             position="0 -0.3 -3"
-            scale="0.1 0.1 0.1"
-            animation="property: rotation; to: 0 360 0; loop: true; dur: 4500; easing: linear"
-        ></a-entity>
-
+            scale="0.1 0.1 0.1">
+        </a-entity>
         
         <a-entity camera look-controls="pointerLockEnabled: true" position="0 0 0" near="0.5"></a-entity>
     </a-scene>    
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+
+            //ar
             const targetLat = parseFloat(document.getElementById('lat').textContent);
             const targetLng = parseFloat(document.getElementById('lng').textContent);
     
             if (isNaN(targetLat) || isNaN(targetLng)) {
                 console.error("Invalid target coordinates:", targetLat, targetLng);
             } else {
+                // Haversine formula to calculate the distance between two points (in meters)
                 function calculateDistance(lat1, lng1, lat2, lng2) {
                     const R = 6371e3; // Earth's radius in meters
                     const phi1 = lat1 * (Math.PI / 180);
@@ -109,30 +265,75 @@
     
                     return R * c; // Distance in meters
                 }
+
+                const arrowEntity = document.getElementById('arrowEntity');
+                
+                // Calculate bearing (angle between two geographic points)
+                function calculateBearing(lat1, lon1, lat2, lon2) {
+                    const toRadians = (degree) => degree * Math.PI / 180;
+                    const lat1Rad = toRadians(lat1);
+                    const lon1Rad = toRadians(lon1);
+                    const lat2Rad = toRadians(lat2);
+                    const lon2Rad = toRadians(lon2);
     
-                // Get arrow entity here to ensure it's available after DOM is loaded
-                const arrowEntity = document.getElementById('arrow');
+                    const deltaLon = lon2Rad - lon1Rad;
+                    const x = Math.sin(deltaLon) * Math.cos(lat2Rad);
+                    const y = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(deltaLon);
     
+                    const initialBearing = Math.atan2(x, y);
+                    return (initialBearing * 180 / Math.PI + 360) % 360; // Normalize bearing to 0-360 degrees
+                }
+
+                // Watch the position of the user in real-time
                 navigator.geolocation.watchPosition(position => {
                     const { latitude, longitude } = position.coords;
                     const distance = calculateDistance(latitude, longitude, targetLat, targetLng);
                     document.getElementById('distance').textContent = `${distance.toFixed(2)} meters`;
     
-                    // Calculate the angle to the target
-                    const angle = Math.atan2(targetLng - longitude, targetLat - latitude) * (180 / Math.PI);
+                    // Calculate the bearing to the target location
+                    const bearing = calculateBearing(latitude, longitude, targetLat, targetLng);
     
-                    // Update arrow orientation if arrowEntity is available
+                    // Update the arrow's rotation based on the bearing
                     if (arrowEntity) {
-                        arrowEntity.setAttribute('rotation', `0 ${angle} 0`);
+                        arrowEntity.setAttribute('rotation', `0 ${bearing} 0`);
                     }
                 }, error => {
                     console.error("Error getting position", error);
                 }, {
                     enableHighAccuracy: true,
                     maximumAge: 0,
-                    timeout: 5000
+                    timeout: 10000
                 });
-            }s
+
+                // Handle device orientation to adjust the arrow based on the user's direction
+                if (window.DeviceOrientationEvent) {
+                    window.addEventListener("deviceorientation", function (event) {
+                        const heading = event.alpha;
+
+                        if (heading !== null) {
+                            arrowEntity.setAttribute('rotation', `0 ${heading} 0`);
+                        }
+                    });
+                } else {
+                    console.error("Device Orientation not supported on this device/browser.");
+                }
+
+                // For iOS, request permission to access device orientation if needed
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    DeviceOrientationEvent.requestPermission().then(response => {
+                        if (response === 'granted') {
+                            window.addEventListener("deviceorientation", function (event) {
+                                const heading = event.alpha;
+                                if (heading !== null) {
+                                    arrowEntity.setAttribute('rotation', `0 ${heading} 0`);
+                                }
+                            });
+                        } else {
+                            console.error("Permission denied to access device orientation.");
+                        }
+                    }).catch(console.error);
+                }
+            }
         });
     </script>
     
